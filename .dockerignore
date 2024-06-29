@@ -1,0 +1,39 @@
+# Files and directories to exclude from the Docker image
+
+# Node.js modules
+node_modules
+
+# Development and build files
+npm-debug.log
+yarn-error.log
+Dockerfile.dev
+.dockerignore
+.eslintignore
+.eslintrc.js
+.git
+.gitignore
+.editorconfig
+*.md
+*.markdown
+*.log
+*.log.*
+*.swp
+.vscode
+.idea
+
+# Dependency lock files
+!package-lock.json
+!yarn.lock
+
+# Tests and test-related files
+__tests__
+__mocks__
+
+# Docker-related files
+.dockerignore
+.docker
+.dockerignore
+Dockerfile
+
+# Env files
+.env
