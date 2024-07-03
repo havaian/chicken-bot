@@ -1,7 +1,7 @@
 const axios = require("axios").default;
 
 // Define your backend API base URL
-const baseURL = `${process.env.API_HOST}:${process.env.API_PORT}`;
+const baseURL = process.env.API_URL;
 
 // Create an Axios instance with baseURL configured
 const axiosClient = axios.create({
