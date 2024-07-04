@@ -35,7 +35,4 @@ module.exports = async (ctx) => {
             ]));
             break;
     }
-
-    // Delete the previous message
-    await ctx.deleteMessage();
 };

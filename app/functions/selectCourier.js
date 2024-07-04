@@ -21,9 +21,6 @@ module.exports = async (ctx) => {
             ...buttons,
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
-
-        // Delete the previous message
-        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
         await ctx.reply('Failed to fetch couriers. Please try again.');
@@ -40,9 +37,6 @@ module.exports.selectAmount = async (ctx) => {
         [Markup.button.callback('150', `confirm-distribution:${courierId}:150`), Markup.button.callback('180', `confirm-distribution:${courierId}:180`)],
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
-
-    // Delete the previous message
-    await ctx.deleteMessage();
 };
 
 module.exports.confirmDistribution = async (ctx) => {
@@ -52,9 +46,6 @@ module.exports.confirmDistribution = async (ctx) => {
         [Markup.button.callback('Tasdiqlash', `accept-distribution:${courierId}:${amount}`)],
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
-
-    // Delete the previous message
-    await ctx.deleteMessage();
 };
 
 module.exports.acceptDistribution = async (ctx) => {
@@ -74,9 +65,6 @@ module.exports.acceptDistribution = async (ctx) => {
             [Markup.button.callback('Accept', `courier-accept:${courierId}:${amountInt}`)],
             [Markup.button.callback('Reject', 'courier-reject')]
         ]));
-
-        // Delete the previous message
-        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
         await ctx.reply('Failed to notify the courier. Please try again.');
@@ -107,10 +95,7 @@ module.exports.courierAccept = async (ctx) => {
         };
 
         await axios.put(`/warehouse/activity/${warehouseActivity._id}`, updatedWarehouseActivity);
-
-        // Delete the message
-        await ctx.deleteMessage();
-
+        
         await ctx.reply('Distribution confirmed and recorded successfully.');
     } catch (error) {
         console.log(error);
@@ -119,8 +104,5 @@ module.exports.courierAccept = async (ctx) => {
 };
 
 module.exports.courierReject = async (ctx) => {
-    // Delete the message
-    await ctx.deleteMessage();
-
     await ctx.reply('Distribution rejected.');
 };

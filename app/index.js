@@ -71,9 +71,6 @@ bot.action('cancel', async (ctx) => {
   // Reset session
   ctx.session = { user: ctx.session.user };
 
-  // Delete the previous message
-  await ctx.deleteMessage();
-
   if (ctx.session.user.userType === 'courier') {
     await ctx.reply('Operation cancelled.', Markup.keyboard([
       ['Tuxum yetkazildi', 'Singan tuxumlar'],

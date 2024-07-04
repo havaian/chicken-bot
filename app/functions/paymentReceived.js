@@ -24,9 +24,6 @@ module.exports = async (ctx) => {
             await completeTransaction(ctx, parseInt(amount, 10));
             break;
     }
-
-    // Delete the previous message
-    await ctx.deleteMessage();
 };
 
 async function completeTransaction(ctx, paymentAmount) {
@@ -99,7 +96,4 @@ module.exports.confirmTransaction = async (ctx) => {
         console.log(error);
         await ctx.reply('Failed to complete transaction. Please try again.');
     }
-
-    // Delete the previous message
-    await ctx.deleteMessage();
 };

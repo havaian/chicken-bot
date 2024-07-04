@@ -21,9 +21,6 @@ module.exports = async (ctx) => {
             [Markup.button.callback('Yes', 'eggs_delivered_yes'), Markup.button.callback('No', 'eggs_delivered_no')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
-
-        // Delete the previous message
-        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
         await ctx.reply('Failed to select buyer. Please try again.');

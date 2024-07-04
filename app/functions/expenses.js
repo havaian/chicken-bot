@@ -9,9 +9,6 @@ module.exports = (bot) => {
             [Markup.button.callback('150', 'expenses:150'), Markup.button.callback('180', 'expenses:180')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
-
-        // Delete the previous message
-        await ctx.deleteMessage();
     });
 
     bot.action(/expenses:\d+/, async (ctx) => {
@@ -30,9 +27,6 @@ module.exports = (bot) => {
             };
 
             await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
-
-            // Delete the previous message
-            await ctx.deleteMessage();
 
             await ctx.reply(`Recorded ${amount} expenses.`, Markup.keyboard([
                 ['Tuxum yetkazildi', 'Singan tuxumlar'],

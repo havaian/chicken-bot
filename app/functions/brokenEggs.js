@@ -9,9 +9,6 @@ module.exports = (bot) => {
             [Markup.button.callback('150', 'broken_eggs:150'), Markup.button.callback('180', 'broken_eggs:180')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
-
-        // Delete the previous message
-        await ctx.deleteMessage();
     });
 
     bot.action(/broken_eggs:\d+/, async (ctx) => {
@@ -30,9 +27,6 @@ module.exports = (bot) => {
         };
 
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
-
-        // Delete the previous message
-        await ctx.deleteMessage();
 
         await ctx.reply(`Recorded ${amount} broken eggs.`, Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
