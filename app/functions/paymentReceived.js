@@ -81,11 +81,10 @@ module.exports.confirmTransaction = async (ctx) => {
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
 
         // Send today's report and "Yana qo'shish" button
-        let report = `Today's Report:\nDelivered to: ${updatedCourierActivity.delivered_to.length} clients\nRemained: ${updatedCourierActivity.remained}\nTotal Earnings: ${updatedCourierActivity.earnings}\nBroken Eggs: ${updatedCourierActivity.broken}\nExpenses: ${updatedCourierActivity.expenses}\n\nDetails:\n`;
-        updatedCourierActivity.delivered_to.forEach((delivery, index) => {
-            report += `${index + 1}. ${delivery.name}: ${delivery.eggs} eggs, ${delivery.payment} received, Time: ${delivery.time}\n`;
+        let report = `Today's Deliveries:\nDelivered to: ${courierActivity.delivered_to.length} clients\nRemained: ${courierActivity.remained}\nTotal Earnings: ${courierActivity.earnings}\nBroken Eggs: ${courierActivity.broken}\nExpenses: ${courierActivity.expenses}\nTotal Eggs Delivered: ${totalEggsDelivered}\n\nDetails:\n`;
+        courierActivity.delivered_to.forEach((delivery, index) => {
+            report += `${index + 1}. ${delivery.name}: ${delivery.eggs ? delivery.eggs : 0} eggs, ${delivery.payment ? delivery.payment : 0} received, Time: ${delivery.time}\n`;
         });
-
         await ctx.reply(report, Markup.inlineKeyboard([
             [Markup.button.callback("Yana qo'shish", 'add_more')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
