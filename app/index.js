@@ -16,12 +16,6 @@ const selectCourier = require("./functions/selectCourier");
 const bot = new Telegraf(process.env.TG_TOKEN);
 const app = express();
 
-app.get("/", (req, res) => {
-  res.send({
-    chicken_bot: "It's working! 🙌",
-  });
-});
-
 // Use session middleware
 bot.use(session());
 

@@ -2,10 +2,11 @@
 FROM node:18-alpine
 
 # Set the working directory within the container
-WORKDIR /app
+WORKDIR /semurg
 
 # Copy the package.json files to the container
 COPY package.json ./
+COPY entrypoint.sh ./
 
 # Install app dependencies using Yarn
 RUN apk add --update curl && \
@@ -15,6 +16,9 @@ RUN apk add --update curl && \
 
 # Copy the rest of the application code to the container
 COPY . ./
+
+# Expose the port your application will run on
+EXPOSE 1234
 
 # Run start command
 CMD ["npm", "run", "build"]
