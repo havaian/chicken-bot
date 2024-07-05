@@ -17,14 +17,14 @@ module.exports = async (ctx) => {
         });
 
         // Create report
-        let report = `Today's Deliveries:\nDelivered to: ${courierActivity.delivered_to.length} clients\nRemained: ${courierActivity.remained}\nTotal Earnings: ${courierActivity.earnings}\nBroken Eggs: ${courierActivity.broken}\nExpenses: ${courierActivity.expenses}\nTotal Eggs Delivered: ${totalEggsDelivered}\n\nDetails:\n`;
+        let report = `Bugungi Yetkazmalar:\nYetkazilgan joylar: ${courierActivity.delivered_to.length} mijozlar\nQolgan tuxumlar: ${courierActivity.remained}\nUmumiy daromad: ${courierActivity.earnings}\nSingan tuxumlar: ${courierActivity.broken}\nChiqimlar: ${courierActivity.expenses}\nUmumiy yetkazilgan tuxumlar: ${totalEggsDelivered}\nUmumiy olingan pul: ${totalMoneyReceived}\n\nBatafsil ma'lumot:\n`;
         courierActivity.delivered_to.forEach((delivery, index) => {
-            report += `${index + 1}. ${delivery.name}: ${delivery.eggs ? delivery.eggs : 0} eggs, ${delivery.payment ? delivery.payment : 0} received, Time: ${delivery.time}\n`;
+            report += `${index + 1}. ${delivery.name}: ${delivery.eggs ? delivery.eggs : 0} tuxum, ${delivery.payment ? delivery.payment : 0} olindi, Vaqt: ${delivery.time}\n`;
         });
 
         await ctx.reply(report);
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to fetch today\'s deliveries. Please try again.');
+        await ctx.reply('Bugungi yetkazmalarni olishda xatolik yuz berdi. Qayta urunib ko\'ring.');
     }
 };

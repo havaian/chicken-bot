@@ -7,23 +7,32 @@ module.exports = async (ctx) => {
         const couriers = response.data;
 
         if (couriers.length === 0) {
-            await ctx.reply('No couriers found.');
+            await ctx.reply('Yo\'q couriers found.');
             return;
         }
 
         let message = "Kuryerni tanlang:\n";
         const buttons = couriers.map((courier, index) => {
             message += `${index + 1}. ${courier.full_name}\n`;
-            return [Markup.button.callback(`${index + 1}`, `select-courier:${courier._id}`)];
+            return Markup.button.callback(`${index + 1}`, `select-courier:${courier._id}`);
         });
 
+        // Create rows of 5 buttons each
+        const buttonRows = [];
+        for (let i = 0; i < buttons.length; i += 5) {
+            buttonRows.push(buttons.slice(i, i + 5));
+        }
+
         await ctx.reply(message, Markup.inlineKeyboard([
-            ...buttons,
+            ...buttonRows,
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
+
+        // Delete the previous message
+        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to fetch couriers. Please try again.');
+        await ctx.reply('Failed to fetch couriers. Qayta urunib ko\'ring');
     }
 };
 
@@ -37,6 +46,9 @@ module.exports.selectAmount = async (ctx) => {
         [Markup.button.callback('150', `confirm-distribution:${courierId}:150`), Markup.button.callback('180', `confirm-distribution:${courierId}:180`)],
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
+
+    // Delete the previous message
+    await ctx.deleteMessage();
 };
 
 module.exports.confirmDistribution = async (ctx) => {
@@ -46,6 +58,9 @@ module.exports.confirmDistribution = async (ctx) => {
         [Markup.button.callback('Tasdiqlash', `accept-distribution:${courierId}:${amount}`)],
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
+
+    // Delete the previous message
+    await ctx.deleteMessage();
 };
 
 module.exports.acceptDistribution = async (ctx) => {
@@ -58,16 +73,19 @@ module.exports.acceptDistribution = async (ctx) => {
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierId}`);
         const courierActivity = courierActivityResponse.data;
 
-        ctx.reply("Message sent to courier!");
+        ctx.reply("Xabar kuryerga yetkazildi!");
 
         // Send message to the courier with inline buttons for accepting or rejecting the distribution
-        await ctx.telegram.sendMessage(courier.telegram_chat_id, `You have received ${amountInt} eggs. Please confirm.`, Markup.inlineKeyboard([
-            [Markup.button.callback('Accept', `courier-accept:${courierId}:${amountInt}`)],
-            [Markup.button.callback('Reject', 'courier-reject')]
+        await ctx.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum qo\'shildi. Iltimos, tasdiqlang.`, Markup.inlineKeyboard([
+            [Markup.button.callback('Tasdiqlash', `courier-accept:${courierId}:${amountInt}`)],
+            [Markup.button.callback('Rad etish', 'courier-reject')]
         ]));
+
+        // Delete the previous message
+        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to notify the courier. Please try again.');
+        await ctx.reply('Kuryerga xabar yetkazishda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
 };
 
@@ -95,14 +113,20 @@ module.exports.courierAccept = async (ctx) => {
         };
 
         await axios.put(`/warehouse/activity/${warehouseActivity._id}`, updatedWarehouseActivity);
+
+        // Delete the previous message
+        await ctx.deleteMessage();
         
-        await ctx.reply('Distribution confirmed and recorded successfully.');
+        await ctx.reply('Tuxum xisobingizga muvaffaqiyatli qo\'shildi va saqlandi.');
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to update activities. Please try again.');
+        await ctx.reply('Tuxum xisobingizga qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
 };
 
 module.exports.courierReject = async (ctx) => {
-    await ctx.reply('Distribution rejected.');
+    // Delete the previous message
+    await ctx.deleteMessage();
+
+    await ctx.reply('Tuxum xisobga qo\'shish rad etildi.');
 };

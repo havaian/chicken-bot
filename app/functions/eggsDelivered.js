@@ -16,23 +16,26 @@ module.exports = async (ctx) => {
         
         case 'eggs_delivered_no':
             await ctx.reply('Pul olindimi?', Markup.inlineKeyboard([
-                [Markup.button.callback('Yes', 'payment_received_yes'), Markup.button.callback('No', 'payment_received_no')],
+                [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
                 [Markup.button.callback('Bekor qilish', 'cancel')]
             ]));
             break;
 
         default:
             const amount = action.split(':')[1];
-            await ctx.reply(`You selected ${amount} eggs.`);
+            await ctx.reply(`Siz ${amount}ta tuxum yetkazilganini tanladingiz.`);
 
             // Save the number of eggs delivered in the session
             ctx.session.buyers[ctx.session.buyers.length - 1].eggsDelivered = parseInt(amount, 10);
 
             // Ask if payment was received
             await ctx.reply('Pul olindimi?', Markup.inlineKeyboard([
-                [Markup.button.callback('Yes', 'payment_received_yes'), Markup.button.callback('No', 'payment_received_no')],
+                [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
                 [Markup.button.callback('Bekor qilish', 'cancel')]
             ]));
             break;
     }
+
+    // Delete the previous message
+    await ctx.deleteMessage();
 };

@@ -9,6 +9,9 @@ module.exports = (bot) => {
             [Markup.button.callback('150', 'broken_eggs:150'), Markup.button.callback('180', 'broken_eggs:180')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
+
+        // Delete the previous message
+        await ctx.deleteMessage();
     });
 
     bot.action(/broken_eggs:\d+/, async (ctx) => {
@@ -28,13 +31,16 @@ module.exports = (bot) => {
 
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
 
-        await ctx.reply(`Recorded ${amount} broken eggs.`, Markup.keyboard([
+        // Delete the previous message
+        await ctx.deleteMessage();
+
+        await ctx.reply(`${amount} singan tuxumlar hisobingizga qo'shildi.`, Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
             ['Chiqim', 'Bugungi yetkazilganlar']
         ]).resize());
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to record broken eggs. Please try again.');
+        await ctx.reply('Singan tuxumlar qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
     });
 };

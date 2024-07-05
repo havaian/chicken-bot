@@ -1,7 +1,7 @@
 const axios = require("../axios");
 const { Markup } = require("telegraf");
 
-module.exports = async (ctx) => {
+module.exports.selectBuyer = async (ctx) => {
     const buyerId = ctx.match[1];
     ctx.session.selectedBuyerId = buyerId;
 
@@ -18,11 +18,14 @@ module.exports = async (ctx) => {
         });
 
         await ctx.reply('Tuxum yetkazildimi?', Markup.inlineKeyboard([
-            [Markup.button.callback('Yes', 'eggs_delivered_yes'), Markup.button.callback('No', 'eggs_delivered_no')],
+            [Markup.button.callback('Ha', 'eggs_delivered_yes'), Markup.button.callback('Yo\'q', 'eggs_delivered_no')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
+
+        // Delete the previous message
+        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to select buyer. Please try again.');
+        await ctx.reply('Klient tanlashda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
 };

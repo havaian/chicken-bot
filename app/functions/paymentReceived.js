@@ -23,12 +23,16 @@ module.exports = async (ctx) => {
             const amount = action.split(':')[1];
             await completeTransaction(ctx, parseInt(amount, 10));
             break;
-    }
+    } 
+
+    // Delete the previous message
+    await ctx.deleteMessage();
 };
 
 async function completeTransaction(ctx, paymentAmount) {
     const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
 
+    await ctx.reply(`Siz ${paymentAmount} pul olinganini tanladingiz.`);
     selectedBuyer.paymentAmount = paymentAmount;
 
     await ctx.reply('Tasdiqlaysizmi?', Markup.inlineKeyboard([
@@ -58,6 +62,9 @@ module.exports.confirmTransaction = async (ctx) => {
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
         const courierActivity = courierActivityResponse.data;
 
+        // Calculate total eggs delivered
+        const totalEggsDelivered = courierActivity.delivered_to.reduce((sum, delivery) => sum + (delivery.eggs || 0), 0);
+
         // Create delivered_to object with details
         const deliveryDetails = {
             id: selectedBuyer._id,
@@ -78,9 +85,9 @@ module.exports.confirmTransaction = async (ctx) => {
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
 
         // Send today's report and "Yana qo'shish" button
-        let report = `Today's Report:\nDelivered to: ${updatedCourierActivity.delivered_to.length} clients\nRemained: ${updatedCourierActivity.remained}\nTotal Earnings: ${updatedCourierActivity.earnings}\nBroken Eggs: ${updatedCourierActivity.broken}\nExpenses: ${updatedCourierActivity.expenses}\n\nDetails:\n`;
+        let report = `Bugungi Hisobot:\nYetkazilgan joylar: ${updatedCourierActivity.delivered_to.length} mijozlar\nQolgan tuxumlar: ${updatedCourierActivity.remained}\nUmumiy daromad: ${updatedCourierActivity.earnings}\nSingan tuxumlar: ${updatedCourierActivity.broken}\nChiqimlar: ${updatedCourierActivity.expenses}\nUmumiy yetkazilgan tuxumlar: ${totalEggsDelivered}\n\nBatafsil ma'lumot:\n`;
         updatedCourierActivity.delivered_to.forEach((delivery, index) => {
-            report += `${index + 1}. ${delivery.name}: ${delivery.eggs} eggs, ${delivery.payment} received, Time: ${delivery.time}\n`;
+            report += `${index + 1}. ${delivery.name}: ${delivery.eggs} tuxum, ${delivery.payment} olindi, Vaqt: ${delivery.time}\n`;
         });
 
         await ctx.reply(report, Markup.inlineKeyboard([
@@ -89,12 +96,16 @@ module.exports.confirmTransaction = async (ctx) => {
         ]));
 
         // Show main menu buttons
-        await ctx.reply('Menu:', Markup.keyboard([
+        await ctx.reply('Tanlang:', Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
             ['Chiqim', 'Bugungi yetkazilganlar']
         ]).resize());
+
+        // Delete the previous message
+        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to complete transaction. Please try again.');
+        await ctx.reply('Tranzaktsiyani yakunlashda xatolik yuz berdi. Qayta urunib ko\'ring.');
     }
 };
+

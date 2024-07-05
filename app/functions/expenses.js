@@ -9,6 +9,9 @@ module.exports = (bot) => {
             [Markup.button.callback('150', 'expenses:150'), Markup.button.callback('180', 'expenses:180')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
+
+        // Delete the previous message
+        await ctx.deleteMessage();
     });
 
     bot.action(/expenses:\d+/, async (ctx) => {
@@ -28,13 +31,16 @@ module.exports = (bot) => {
 
             await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
 
-            await ctx.reply(`Recorded ${amount} expenses.`, Markup.keyboard([
+            // Delete the previous message
+            await ctx.deleteMessage();
+
+            await ctx.reply(`${amount} chiqim hisobingizga qo'shildi.`, Markup.keyboard([
                 ['Tuxum yetkazildi', 'Singan tuxumlar'],
                 ['Chiqim', 'Bugungi yetkazilganlar']
             ]).resize());
         } catch (error) {
             console.log(error);
-            await ctx.reply('Failed to record expenses. Please try again.');
+            await ctx.reply('Chiqim qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
         }
     });
 };

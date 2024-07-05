@@ -6,7 +6,7 @@ module.exports = async (ctx) => {
     const userId = ctx.from.id;
 
     if (contact.user_id !== userId) {
-        await ctx.reply('The contact information does not match your user ID.');
+        await ctx.reply('Tugma yordamida o\'zingizni kontaktingizni yuboring');
         return;
     }
 
@@ -30,17 +30,17 @@ module.exports = async (ctx) => {
         ctx.session.user = user;
         
         if (ctx.session.user.userType === 'courier') {
-            await ctx.reply('User authenticated successfully.', Markup.keyboard([
+            await ctx.reply('Salom!', Markup.keyboard([
                 ['Tuxum yetkazildi', 'Singan tuxumlar'],
                 ['Chiqim', 'Bugungi yetkazilganlar']
             ]).resize().oneTime());
         } else if (ctx.session.user.userType === 'warehouse') {
-            await ctx.reply('User authenticated successfully.', Markup.keyboard([
+            await ctx.reply('Salom!', Markup.keyboard([
                 ['Tuxum chiqimi']
             ]).resize().oneTime());
         }
     } catch (error) {
         console.log(error);
-        await ctx.reply('Failed to authenticate user. Please try again.');
+        await ctx.reply('Sizning telegram nomeringiz tizimda topilmadi. Qayta urunib ko\'ring');
     }
 };
