@@ -1,6 +1,8 @@
 const { Telegraf, Markup, session } = require("telegraf");
 const express = require("express");
-const { middleware } = require("./middleware");
+const { middleware } = require("./middleware/index.js");
+const textCommandHandler = require("./middleware/textCommandHandler.js"); 
+const awaitingPromptHandler = require("./middleware/awaitingPromptHandler.js"); 
 const start = require("./functions/start");
 const contact = require("./functions/contact");
 const location = require("./functions/location");
@@ -8,6 +10,7 @@ const chooseBuyer = require("./functions/chooseBuyer");
 const eggsDelivered = require("./functions/eggsDelivered");
 const paymentReceived = require("./functions/paymentReceived");
 const addMore = require("./functions/addMore");
+const cancel = require("./functions/cancel");
 const brokenEggs = require("./functions/brokenEggs");
 const expenses = require("./functions/expenses");
 const todayDeliveries = require("./functions/todayDeliveries");
@@ -23,6 +26,12 @@ bot.use(session());
 bot.use(async (ctx, next) => {
   await middleware(ctx, next);
 });
+
+// Use text command handler middleware
+bot.use(textCommandHandler);
+
+// Use awaiting prompt handler middleware
+bot.use(awaitingPromptHandler);
 
 // Command handling
 bot.start(async (ctx) => {
@@ -49,10 +58,16 @@ bot.action(/eggs_delivered_(yes|no)/, async (ctx) => {
 bot.action(/eggs_amount:\d+/, async (ctx) => {
   await eggsDelivered(ctx);
 });
+bot.action(/eggs_other/, async (ctx) => {
+  await eggsDelivered(ctx);
+});
 bot.action(/payment_received_(yes|no)/, async (ctx) => {
   await paymentReceived(ctx);
 });
 bot.action(/payment_amount:\d+/, async (ctx) => {
+  await paymentReceived(ctx);
+});
+bot.action(/payment_other/, async (ctx) => {
   await paymentReceived(ctx);
 });
 bot.action('confirm_transaction', async (ctx) => {
@@ -62,22 +77,7 @@ bot.action('add_more', async (ctx) => {
   await addMore(ctx);
 });
 bot.action('cancel', async (ctx) => {
-  // Reset session
-  ctx.session = { user: ctx.session.user };
-
-  if (ctx.session.user.userType === 'courier') {
-    await ctx.reply('Bekor qilindi.', Markup.keyboard([
-      ['Tuxum yetkazildi', 'Singan tuxumlar'],
-      ['Chiqim', 'Bugungi yetkazilganlar']
-    ]).resize().oneTime());
-
-    // Delete the previous message
-    await ctx.deleteMessage();
-  } else if (ctx.session.user.userType === 'warehouse') {
-    await ctx.reply('Bekor qilindi.', Markup.keyboard([
-      ['Tuxum chiqimi']
-    ]).resize().oneTime());
-  }
+  await cancel(ctx);
 });
 
 // Handling warehouse user actions
@@ -98,16 +98,19 @@ bot.action('courier-reject', async (ctx) => {
 });
 
 // Handling broken eggs and expenses
-bot.action(/broken_eggs:\d+/, async (ctx) => {
-  await brokenEggs.confirmBrokenEggs(ctx);
+bot.hears('Chiqim', async (ctx) => {
+  await expenses.sendExpenses(ctx);
 });
-bot.action(/expenses:\d+/, async (ctx) => {
-  await expenses.confirmExpenses(ctx);
+bot.hears('Singan tuxumlar', async (ctx) => {
+  await brokenEggs.sendBrokenEggs(ctx);
 });
 
-// Initialize the broken eggs and expenses handlers
-brokenEggs(bot);
-expenses(bot);
+bot.action(/confirm_broken_eggs:\d+/, async (ctx) => {
+  await brokenEggs.addBrokenEggs(ctx);
+});
+bot.action(/confirm_expenses:\d+/, async (ctx) => {
+  await expenses.addExpenses(ctx);
+});
 
 // Menu button handling
 bot.hears('Tuxum yetkazildi', async (ctx) => {
@@ -124,7 +127,10 @@ bot.hears('Bugungi yetkazilganlar', async (ctx) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`${PORT} ✅`);
-  console.log("Bot ✅");
 });
 
 bot.launch();
+console.log("Bot ✅");
+
+// Pass bot instance to checkPendingDistributions
+selectCourier.setBotInstance(bot);

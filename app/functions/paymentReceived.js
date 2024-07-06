@@ -11,12 +11,18 @@ module.exports = async (ctx) => {
                 [Markup.button.callback('30', 'payment_amount:30'), Markup.button.callback('60', 'payment_amount:60')],
                 [Markup.button.callback('90', 'payment_amount:90'), Markup.button.callback('120', 'payment_amount:120')],
                 [Markup.button.callback('150', 'payment_amount:150'), Markup.button.callback('180', 'payment_amount:180')],
+                [Markup.button.callback('Boshqa', 'payment_other')],
                 [Markup.button.callback('Bekor qilish', 'cancel')]
             ]));
             break;
 
         case 'payment_received_no':
             await completeTransaction(ctx, 0);
+            break;
+
+        case 'payment_other':
+            ctx.session.awaitingPaymentAmount = true;
+            await ctx.reply('Iltimos, qancha pul olganingizni kiriting:');
             break;
 
         default:
@@ -53,7 +59,7 @@ module.exports.confirmTransaction = async (ctx) => {
         const updatedBuyerActivity = {
             ...buyerActivity,
             remained: buyerActivity.remained + (selectedBuyer.eggsDelivered || 0),
-            debt: buyerActivity.debt + selectedBuyer.paymentAmount
+            payment: buyerActivity.payment + selectedBuyer.paymentAmount
         };
 
         await axios.put(`/buyer/activity/${buyerActivity._id}`, updatedBuyerActivity);
@@ -61,9 +67,6 @@ module.exports.confirmTransaction = async (ctx) => {
         // Get today's activity for the courier
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
         const courierActivity = courierActivityResponse.data;
-
-        // Calculate total eggs delivered
-        const totalEggsDelivered = courierActivity.delivered_to.reduce((sum, delivery) => sum + (delivery.eggs || 0), 0);
 
         // Create delivered_to object with details
         const deliveryDetails = {
@@ -82,10 +85,18 @@ module.exports.confirmTransaction = async (ctx) => {
             remained: courierActivity.remained - (selectedBuyer.eggsDelivered || 0) // Subtract eggs delivered from remaining
         };
 
+        // Calculate total eggs delivered
+        let totalEggsDelivered = 0;
+        let totalMoneyReceived = 0;
+        updatedCourierActivity.delivered_to.forEach(delivery => {
+            totalEggsDelivered += delivery.eggs ? delivery.eggs : 0;
+            totalMoneyReceived += delivery.payment;
+        });
+
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
 
         // Send today's report and "Yana qo'shish" button
-        let report = `Bugungi Hisobot:\nYetkazilgan joylar: ${updatedCourierActivity.delivered_to.length} mijozlar\nQolgan tuxumlar: ${updatedCourierActivity.remained}\nUmumiy daromad: ${updatedCourierActivity.earnings}\nSingan tuxumlar: ${updatedCourierActivity.broken}\nChiqimlar: ${updatedCourierActivity.expenses}\nUmumiy yetkazilgan tuxumlar: ${totalEggsDelivered}\n\nBatafsil ma'lumot:\n`;
+        let report = `Bugungi Hisobot:\nYetkazilgan: ${updatedCourierActivity.delivered_to.length} mijozlar\nQolgan tuxumlar: ${updatedCourierActivity.remained}\nUmumiy daromad: ${updatedCourierActivity.earnings}\nSingan tuxumlar: ${updatedCourierActivity.broken}\nChiqim: ${updatedCourierActivity.expenses}\nUmumiy yetkazilgan tuxumlar: ${totalEggsDelivered}\n\nBatafsil ma'lumot:\n`;
         updatedCourierActivity.delivered_to.forEach((delivery, index) => {
             report += `${index + 1}. ${delivery.name}: ${delivery.eggs} tuxum, ${delivery.payment} olindi, Vaqt: ${delivery.time}\n`;
         });
@@ -108,4 +119,3 @@ module.exports.confirmTransaction = async (ctx) => {
         await ctx.reply('Tranzaktsiyani yakunlashda xatolik yuz berdi. Qayta urunib ko\'ring.');
     }
 };
-

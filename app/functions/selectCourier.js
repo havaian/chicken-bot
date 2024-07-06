@@ -1,5 +1,24 @@
 const axios = require("../axios");
+const Redis = require("ioredis");
 const { Markup } = require("telegraf");
+
+const redis = new Redis(process.env.REDIS_URL);
+let botInstance = null;
+
+redis.on('connect', () => {
+    console.log('Redis✅');
+    checkPendingDistributions();
+});
+
+redis.on('error', (err) => {
+    console.log('❌ Redis:', err);
+});
+
+const setBotInstance = (bot) => {
+    botInstance = bot;
+    // Set interval to check for pending distributions every 10 minutes
+    setInterval(checkPendingDistributions, 10 * 60 * 1000);
+};
 
 module.exports = async (ctx) => {
     try {
@@ -73,13 +92,31 @@ module.exports.acceptDistribution = async (ctx) => {
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierId}`);
         const courierActivity = courierActivityResponse.data;
 
-        ctx.reply("Xabar kuryerga yetkazildi!");
+        ctx.reply(`Xabar ${courier.full_name
+
+            
+        }ga yetkazildi!`);
 
         // Send message to the courier with inline buttons for accepting or rejecting the distribution
-        await ctx.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum qo\'shildi. Iltimos, tasdiqlang.`, Markup.inlineKeyboard([
+        await botInstance.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum qo\'shildi. Iltimos, tasdiqlang. Agar 15 daqiqa ichida tasdiqlamasangiz, tuxumlar avtomatik tarzda qabul qilinadi.`, Markup.inlineKeyboard([
             [Markup.button.callback('Tasdiqlash', `courier-accept:${courierId}:${amountInt}`)],
             [Markup.button.callback('Rad etish', 'courier-reject')]
         ]));
+
+        // Store the confirmation request in Redis without an expiration time
+        const redisKey = `distribution:${courierId}:${amountInt}`;
+        const expirationTimestamp = Date.now() + 15 * 60 * 1000; // 15 minutes from now
+        await redis.set(redisKey, JSON.stringify({ courierId, amountInt, expirationTimestamp }));
+
+        // Set a timeout to automatically accept the distribution if the courier doesn't respond
+        setTimeout(async () => {
+            const distributionData = await redis.get(redisKey);
+            if (distributionData) {
+                await automaticallyAcceptDistribution(courierId, amountInt);
+                const courier = (await axios.get(`/courier/${courierId}`)).data;
+                await botInstance.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum avtomatik tarzda qabul qilindi.`);
+            }
+        }, 15 * 60 * 1000);
 
         // Delete the previous message
         await ctx.deleteMessage();
@@ -89,9 +126,13 @@ module.exports.acceptDistribution = async (ctx) => {
     }
 };
 
-module.exports.courierAccept = async (ctx) => {
-    const [action, courierId, amount] = ctx.match[0].split(':');
-    const amountInt = parseInt(amount, 10);
+const automaticallyAcceptDistribution = async (courierId, amountInt) => {
+    const redisKey = `distribution:${courierId}:${amountInt}`;
+    const distributionData = await redis.get(redisKey);
+
+    if (!distributionData) {
+        return;
+    }
 
     try {
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierId}`);
@@ -114,19 +155,92 @@ module.exports.courierAccept = async (ctx) => {
 
         await axios.put(`/warehouse/activity/${warehouseActivity._id}`, updatedWarehouseActivity);
 
-        // Delete the previous message
-        await ctx.deleteMessage();
+        await redis.del(redisKey);
         
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+const checkPendingDistributions = async () => {
+    try {
+        const keys = await redis.keys('distribution:*');
+        for (const key of keys) {
+            const distributionData = await redis.get(key);
+            if (distributionData) {
+                const { courierId, amountInt, expirationTimestamp } = JSON.parse(distributionData);
+                if (Date.now() >= expirationTimestamp) {
+                    await automaticallyAcceptDistribution(courierId, amountInt);
+                    const courier = (await axios.get(`/courier/${courierId}`)).data;
+                    await botInstance.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum avtomatik tarzda qabul qilindi.`);
+                } else {
+                    const remainingTime = expirationTimestamp - Date.now();
+                    setTimeout(async () => {
+                        await automaticallyAcceptDistribution(courierId, amountInt);
+                        const courier = (await axios.get(`/courier/${courierId}`)).data;
+                        await botInstance.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum avtomatik tarzda qabul qilindi.`);
+                    }, remainingTime);
+                }
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+module.exports.courierAccept = async (ctx) => {
+    const [action, courierId, amount] = ctx.match[0].split(':');
+    const amountInt = parseInt(amount, 10);
+
+    const redisKey = `distribution:${courierId}:${amountInt}`;
+    const distributionData = await redis.get(redisKey);
+
+    if (!distributionData) {
+        await ctx.reply('Tasdiqlash vaqti tugagan yoki kutilmagan xatolik yuz berdi.');
+        return;
+    }
+
+    try {
+        const courierActivityResponse = await axios.get(`/courier/activity/today/${courierId}`);
+        const courierActivity = courierActivityResponse.data;
+
+        const updatedCourierActivity = {
+            ...courierActivity,
+            remained: courierActivity.remained + amountInt
+        };
+
+        await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
+
+        const warehouseActivityResponse = await axios.get('/warehouse/activity/today');
+        const warehouseActivity = warehouseActivityResponse.data;
+
+        const updatedWarehouseActivity = {
+            ...warehouseActivity,
+            remained: warehouseActivity.remained - amountInt
+        };
+
+        await axios.put(`/warehouse/activity/${warehouseActivity._id}`, updatedWarehouseActivity);
+
+        await ctx.deleteMessage();
         await ctx.reply('Tuxum xisobingizga muvaffaqiyatli qo\'shildi va saqlandi.');
     } catch (error) {
         console.log(error);
         await ctx.reply('Tuxum xisobingizga qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
+    } finally {
+        await redis.del(redisKey);
     }
 };
 
 module.exports.courierReject = async (ctx) => {
-    // Delete the previous message
-    await ctx.deleteMessage();
+    const [action, courierId, amount] = ctx.match[0].split(':');
+    const amountInt = parseInt(amount, 10);
 
+    const redisKey = `distribution:${courierId}:${amountInt}`;
+    
+    await ctx.deleteMessage();
     await ctx.reply('Tuxum xisobga qo\'shish rad etildi.');
+
+    await redis.del(redisKey);
 };
+
+module.exports.setBotInstance = setBotInstance;

@@ -1,21 +1,34 @@
 const { Markup } = require("telegraf");
 const axios = require("../axios");
 
-module.exports = (bot) => {
-    bot.hears('Singan tuxumlar', async (ctx) => {
-        await ctx.reply('Nechta tuxum sindi?', Markup.inlineKeyboard([
-            [Markup.button.callback('30', 'broken_eggs:30'), Markup.button.callback('60', 'broken_eggs:60')],
-            [Markup.button.callback('90', 'broken_eggs:90'), Markup.button.callback('120', 'broken_eggs:120')],
-            [Markup.button.callback('150', 'broken_eggs:150'), Markup.button.callback('180', 'broken_eggs:180')],
+exports.sendBrokenEggs = async (ctx) => {
+    ctx.session.awaitingBrokenEggs = true;
+    await ctx.reply('Nechta tuxum sindi? Iltimos, singan tuxumlar miqdorini yozib yuboring.', Markup.inlineKeyboard([
+        [Markup.button.callback('Bekor qilish', 'cancel')]
+    ]));
+};
+
+exports.confirmBrokenEggs = async (ctx) => {
+    if (ctx.session.awaitingBrokenEggs) {
+        const amount = parseInt(ctx.message.text, 10);
+        if (isNaN(amount) || amount <= 0) {
+            await ctx.reply('Noto\'g\'ri qiymat. Iltimos, singan tuxumlar miqdorini yozib yuboring.');
+            return;
+        }
+        ctx.session.brokenEggsAmount = amount;
+        await ctx.reply(`Siz ${amount} singan tuxumlar qo'shmoqchimisiz?`, Markup.inlineKeyboard([
+            [Markup.button.callback('Tasdiqlash', `confirm_broken_eggs:${amount}`)],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
 
         // Delete the previous message
         await ctx.deleteMessage();
-    });
+        ctx.session.awaitingBrokenEggs = false;
+    }
+};
 
-    bot.action(/broken_eggs:\d+/, async (ctx) => {
-        const amount = parseInt(ctx.match[0].split(':')[1], 10);
+exports.addBrokenEggs = async (ctx) => {
+    const amount = ctx.session.brokenEggsAmount;
     const courierPhoneNum = ctx.session.user.phone_num;
 
     try {
@@ -38,9 +51,11 @@ module.exports = (bot) => {
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
             ['Chiqim', 'Bugungi yetkazilganlar']
         ]).resize());
+
+        // Clear the session variable
+        delete ctx.session.brokenEggsAmount;
     } catch (error) {
         console.log(error);
         await ctx.reply('Singan tuxumlar qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
-    });
 };

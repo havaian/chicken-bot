@@ -1,7 +1,7 @@
 const axios = require("../axios");
 const { Markup } = require("telegraf");
 
-module.exports.selectBuyer = async (ctx) => {
+module.exports = async (ctx) => {
     const buyerId = ctx.match[1];
     ctx.session.selectedBuyerId = buyerId;
 

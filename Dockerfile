@@ -17,5 +17,5 @@ RUN apk add --update curl && \
 COPY . ./
 
 # Run start command
-# CMD ["npm", "run", "build"]
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "build"]
+# CMD ["npm", "run", "dev"]
