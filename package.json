@@ -15,6 +15,7 @@
     "express": "^4.19.2",
     "ioredis": "^5.4.1",
     "nodemon": "^3.1.4",
+    "puppeteer": "^22.12.1",
     "telegraf": "^4.16.3"
   }
 }
