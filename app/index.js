@@ -15,6 +15,8 @@ const brokenEggs = require("./functions/brokenEggs");
 const expenses = require("./functions/expenses");
 const todayDeliveries = require("./functions/todayDeliveries");
 const selectCourier = require("./functions/selectCourier");
+const eggIntake = require("./functions/eggIntake");
+const warehouseStatus = require("./functions/warehouseStatus");
 
 const bot = new Telegraf(process.env.TG_TOKEN);
 const app = express();
@@ -103,6 +105,12 @@ bot.hears('Chiqim', async (ctx) => {
 });
 bot.hears('Singan tuxumlar', async (ctx) => {
   await brokenEggs.sendBrokenEggs(ctx);
+});
+bot.hears('Tuxum kirimi', async (ctx) => {
+  await eggIntake.promptEggIntake(ctx);
+});
+bot.hears('Ombor holati', async (ctx) => {
+  await warehouseStatus(ctx);
 });
 
 bot.action(/confirm_broken_eggs:\d+/, async (ctx) => {

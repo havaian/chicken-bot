@@ -1,4 +1,8 @@
 const axios = require("../axios");
+const generateHTML = require("./report/generateHTML");
+const convertHTMLToImage = require("./report/convertHTMLToImage");
+const path = require("path");
+const fs = require("fs");
 
 module.exports = async (ctx) => {
     const courierPhoneNum = ctx.session.user.phone_num;
@@ -7,21 +11,24 @@ module.exports = async (ctx) => {
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
         const courierActivity = courierActivityResponse.data;
 
-        // Aggregate total number of eggs delivered and total money received
-        let totalEggsDelivered = 0;
-        let totalMoneyReceived = 0;
-        courierActivity.delivered_to.forEach(delivery => {
-            totalEggsDelivered += delivery.eggs ? delivery.eggs : 0;
-            totalMoneyReceived += delivery.payment;
-        });
+        // File paths
+        const reportDate = new Date().toISOString().split('T')[0];
+        const reportDir = path.join('reports', courierPhoneNum, reportDate);
+        if (!fs.existsSync(reportDir)) {
+            fs.mkdirSync(reportDir, { recursive: true });
+        }
+        const htmlFilename = path.join(reportDir, `${courierActivity._id}.html`);
+        const imageFilename = path.join(reportDir, `${courierActivity._id}.jpg`);
 
-        // Create report
-        let report = `Bugungi Yetkazmalar:\nYetkazilgan: ${courierActivity.delivered_to.length} mijozlar\nQolgan tuxumlar: ${courierActivity.remained}\nUmumiy daromad: ${courierActivity.earnings}\nSingan tuxumlar: ${courierActivity.broken}\nChiqim: ${courierActivity.expenses}\nUmumiy yetkazilgan tuxumlar: ${totalEggsDelivered}\n\nBatafsil ma'lumot:\n`;
-        courierActivity.delivered_to.forEach((delivery, index) => {
-            report += `${index + 1}. ${delivery.name}: ${delivery.eggs ? delivery.eggs : 0} tuxum, ${delivery.payment ? delivery.payment : 0} olindi, Vaqt: ${delivery.time}\n`;
-        });
+        // Generate HTML report
+        generateHTML(courierActivity, htmlFilename);
 
-        await ctx.reply(report);
+        // Convert HTML report to image
+        await convertHTMLToImage(htmlFilename, imageFilename);
+
+        // Send image to user
+        await ctx.replyWithPhoto({ source: imageFilename });
+
     } catch (error) {
         console.log(error);
         await ctx.reply('Bugungi yetkazmalarni olishda xatolik yuz berdi. Qayta urunib ko\'ring.');

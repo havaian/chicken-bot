@@ -1,5 +1,9 @@
 const axios = require("../axios");
+const generateHTML = require("./report/generateHTML");
+const convertHTMLToImage = require("./report/convertHTMLToImage");
 const { Markup } = require("telegraf");
+const path = require("path");
+const fs = require("fs");
 
 module.exports = async (ctx) => {
     const action = ctx.match[0];
@@ -95,16 +99,23 @@ module.exports.confirmTransaction = async (ctx) => {
 
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
 
-        // Send today's report and "Yana qo'shish" button
-        let report = `Bugungi Hisobot:\nYetkazilgan: ${updatedCourierActivity.delivered_to.length} mijozlar\nQolgan tuxumlar: ${updatedCourierActivity.remained}\nUmumiy daromad: ${updatedCourierActivity.earnings}\nSingan tuxumlar: ${updatedCourierActivity.broken}\nChiqim: ${updatedCourierActivity.expenses}\nUmumiy yetkazilgan tuxumlar: ${totalEggsDelivered}\n\nBatafsil ma'lumot:\n`;
-        updatedCourierActivity.delivered_to.forEach((delivery, index) => {
-            report += `${index + 1}. ${delivery.name}: ${delivery.eggs} tuxum, ${delivery.payment} olindi, Vaqt: ${delivery.time}\n`;
-        });
+        // File paths
+        const reportDate = new Date().toISOString().split('T')[0];
+        const reportDir = path.join('reports', courierPhoneNum, reportDate);
+        if (!fs.existsSync(reportDir)) {
+            fs.mkdirSync(reportDir, { recursive: true });
+        }
+        const htmlFilename = path.join(reportDir, `${courierActivity._id}.html`);
+        const imageFilename = path.join(reportDir, `${courierActivity._id}.jpg`);
 
-        await ctx.reply(report, Markup.inlineKeyboard([
-            [Markup.button.callback("Yana qo'shish", 'add_more')],
-            [Markup.button.callback('Bekor qilish', 'cancel')]
-        ]));
+        // Generate HTML report
+        generateHTML(updatedCourierActivity, htmlFilename);
+
+        // Convert HTML report to image
+        await convertHTMLToImage(htmlFilename, imageFilename);
+
+        // Send image to user
+        await ctx.replyWithPhoto({ source: imageFilename });
 
         // Show main menu buttons
         await ctx.reply('Tanlang:', Markup.keyboard([

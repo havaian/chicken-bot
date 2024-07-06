@@ -2,11 +2,12 @@ const expenses = require("../functions/expenses");
 const brokenEggs = require("../functions/brokenEggs");
 const eggsDelivered = require("../functions/eggsDelivered");
 const paymentReceived = require("../functions/paymentReceived");
+const eggIntake = require("../functions/eggIntake");
 
 const awaitingPromptHandler = async (ctx, next) => {
     if (ctx.message && ctx.message.text) {
         const text = ctx.message.text;
-        
+
         if (ctx.session.awaitingEggsDelivered) {
             if (isNaN(text)) {
                 await ctx.reply('Iltimos, to\'g\'ri tuxum miqdorini kiriting:');
@@ -39,6 +40,8 @@ const awaitingPromptHandler = async (ctx, next) => {
                 ctx.match = [`confirm_broken_eggs:${text}`];
                 await brokenEggs.confirmBrokenEggs(ctx);
             }
+        } else if (ctx.session.awaitingEggIntake) {
+            await eggIntake.handleEggIntake(ctx);
         } else {
             await next();
         }
