@@ -1,34 +1,34 @@
 const { Markup } = require("telegraf");
-const axios = require("../axios");
+const axios = require("../../axios");
 
-exports.sendExpenses = async (ctx) => {
-    ctx.session.awaitingExpenses = true;
-    await ctx.reply('Nech pul chiqimi? Iltimos, chiqim miqdorini yozib yuboring.', Markup.inlineKeyboard([
+exports.sendBrokenEggs = async (ctx) => {
+    ctx.session.awaitingBrokenEggs = true;
+    await ctx.reply('Nechta tuxum sindi? Iltimos, singan tuxumlar miqdorini yozib yuboring.', Markup.inlineKeyboard([
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
 };
 
-exports.confirmExpenses = async (ctx) => {
-    if (ctx.session.awaitingExpenses) {
+exports.confirmBrokenEggs = async (ctx) => {
+    if (ctx.session.awaitingBrokenEggs) {
         const amount = parseInt(ctx.message.text, 10);
         if (isNaN(amount) || amount <= 0) {
-            await ctx.reply('Noto\'g\'ri qiymat. Iltimos, chiqim miqdorini yozib yuboring.');
+            await ctx.reply('Noto\'g\'ri qiymat. Iltimos, singan tuxumlar miqdorini yozib yuboring.');
             return;
         }
-        ctx.session.expenseAmount = amount;
-        await ctx.reply(`Siz ${amount} chiqim qo'shmoqchimisiz?`, Markup.inlineKeyboard([
-            [Markup.button.callback('Tasdiqlash', `confirm_expenses:${amount}`)],
+        ctx.session.brokenEggsAmount = amount;
+        await ctx.reply(`Siz ${amount} singan tuxumlar qo'shmoqchimisiz?`, Markup.inlineKeyboard([
+            [Markup.button.callback('Tasdiqlash', `confirm_broken_eggs:${amount}`)],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
 
         // Delete the previous message
         await ctx.deleteMessage();
-        ctx.session.awaitingExpenses = false;
+        ctx.session.awaitingBrokenEggs = false;
     }
 };
 
-exports.addExpenses = async (ctx) => {
-    const amount = ctx.session.expenseAmount;
+exports.addBrokenEggs = async (ctx) => {
+    const amount = ctx.session.brokenEggsAmount;
     const courierPhoneNum = ctx.session.user.phone_num;
 
     try {
@@ -36,10 +36,10 @@ exports.addExpenses = async (ctx) => {
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
         const courierActivity = courierActivityResponse.data;
 
-        // Update courier's activity with expenses
+        // Update courier's activity with broken eggs
         const updatedCourierActivity = {
             ...courierActivity,
-            expenses: courierActivity.expenses + amount
+            broken: courierActivity.broken + amount
         };
 
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
@@ -47,15 +47,15 @@ exports.addExpenses = async (ctx) => {
         // Delete the previous message
         await ctx.deleteMessage();
 
-        await ctx.reply(`${amount} chiqim hisobingizga qo'shildi.`, Markup.keyboard([
+        await ctx.reply(`${amount} singan tuxumlar hisobingizga qo'shildi.`, Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
             ['Chiqim', 'Bugungi yetkazilganlar']
         ]).resize());
 
         // Clear the session variable
-        delete ctx.session.expenseAmount;
+        delete ctx.session.brokenEggsAmount;
     } catch (error) {
         console.log(error);
-        await ctx.reply('Chiqim qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
+        await ctx.reply('Singan tuxumlar qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
 };

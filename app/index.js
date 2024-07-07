@@ -3,20 +3,20 @@ const express = require("express");
 const { middleware } = require("./middleware/index.js");
 const textCommandHandler = require("./middleware/textCommandHandler.js"); 
 const awaitingPromptHandler = require("./middleware/awaitingPromptHandler.js"); 
-const start = require("./functions/start");
-const contact = require("./functions/contact");
-const location = require("./functions/location");
-const chooseBuyer = require("./functions/chooseBuyer");
-const eggsDelivered = require("./functions/eggsDelivered");
-const paymentReceived = require("./functions/paymentReceived");
-const addMore = require("./functions/addMore");
-const cancel = require("./functions/cancel");
-const brokenEggs = require("./functions/brokenEggs");
-const expenses = require("./functions/expenses");
-const todayDeliveries = require("./functions/todayDeliveries");
-const selectCourier = require("./functions/selectCourier");
-const eggIntake = require("./functions/eggIntake");
-const warehouseStatus = require("./functions/warehouseStatus");
+const start = require("./functions/general/start.js");
+const contact = require("./functions/general/contact");
+const location = require("./functions/courier/location");
+const chooseBuyer = require("./functions/courier/chooseBuyer");
+const eggsDelivered = require("./functions/courier/eggsDelivered");
+const paymentReceived = require("./functions/courier/paymentReceived");
+const addMore = require("./functions/courier/addMore");
+const cancel = require("./functions/general/cancel.js");
+const brokenEggs = require("./functions/courier/brokenEggs");
+const expenses = require("./functions/courier/expenses");
+const todayDeliveries = require("./functions/courier/todayDeliveries");
+const selectCourier = require("./functions/warehouse/selectCourier");
+const eggIntake = require("./functions/warehouse/eggIntake");
+const warehouseStatus = require("./functions/warehouse/warehouseStatus");
 
 const bot = new Telegraf(process.env.TG_TOKEN);
 const app = express();
@@ -27,6 +27,10 @@ bot.use(session());
 // Middleware to check user authorization before processing any command
 bot.use(async (ctx, next) => {
   await middleware(ctx, next);
+});
+
+bot.action('cancel', async (ctx) => {
+  await cancel(ctx);
 });
 
 // Use text command handler middleware
@@ -78,9 +82,6 @@ bot.action('confirm_transaction', async (ctx) => {
 bot.action('add_more', async (ctx) => {
   await addMore(ctx);
 });
-bot.action('cancel', async (ctx) => {
-  await cancel(ctx);
-});
 
 // Handling warehouse user actions
 bot.action(/select-courier:(.+)/, async (ctx) => {
@@ -97,6 +98,14 @@ bot.action(/courier-accept:(.+):(\d+)/, async (ctx) => {
 });
 bot.action('courier-reject', async (ctx) => {
   await selectCourier.courierReject(ctx);
+});
+
+bot.action('confirm_egg_intake', async (ctx) => {
+  await eggIntake.confirmEggIntake(ctx);
+});
+
+bot.action('cancel', async (ctx) => {
+  await eggIntake.cancelEggIntake(ctx);
 });
 
 // Handling broken eggs and expenses

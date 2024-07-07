@@ -1,6 +1,6 @@
-const axios = require("../axios");
-const generateHTML = require("./report/generateHTML");
-const convertHTMLToImage = require("./report/convertHTMLToImage");
+const axios = require("../../axios");
+const generateCourierHTML = require("../report/courierReport");
+const convertHTMLToImage = require("../report/convertHTMLToImage");
 const { Markup } = require("telegraf");
 const path = require("path");
 const fs = require("fs");
@@ -62,7 +62,7 @@ module.exports.confirmTransaction = async (ctx) => {
         // Update buyer's activity
         const updatedBuyerActivity = {
             ...buyerActivity,
-            remained: buyerActivity.remained + (selectedBuyer.eggsDelivered || 0),
+            current: buyerActivity.current + (selectedBuyer.eggsDelivered || 0),
             payment: buyerActivity.payment + selectedBuyer.paymentAmount
         };
 
@@ -71,6 +71,10 @@ module.exports.confirmTransaction = async (ctx) => {
         // Get today's activity for the courier
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
         const courierActivity = courierActivityResponse.data;
+        
+        const courierResponse = await axios.get(`/courier/${courierPhoneNum}`);
+        const courier = courierResponse.data;
+        courierActivity.courier_name = courier.full_name;
 
         // Create delivered_to object with details
         const deliveryDetails = {
@@ -86,30 +90,28 @@ module.exports.confirmTransaction = async (ctx) => {
             ...courierActivity,
             delivered_to: [...courierActivity.delivered_to, deliveryDetails],
             earnings: courierActivity.earnings + selectedBuyer.paymentAmount,
-            remained: courierActivity.remained - (selectedBuyer.eggsDelivered || 0) // Subtract eggs delivered from remaining
+            current: courierActivity.current - (selectedBuyer.eggsDelivered || 0) // Subtract eggs delivered from current
         };
-
-        // Calculate total eggs delivered
-        let totalEggsDelivered = 0;
-        let totalMoneyReceived = 0;
-        updatedCourierActivity.delivered_to.forEach(delivery => {
-            totalEggsDelivered += delivery.eggs ? delivery.eggs : 0;
-            totalMoneyReceived += delivery.payment;
-        });
 
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
 
         // File paths
         const reportDate = new Date().toISOString().split('T')[0];
-        const reportDir = path.join('reports', courierPhoneNum, reportDate);
+        const reportDir = path.join('reports', `courier/${reportDate}`, courierPhoneNum);
         if (!fs.existsSync(reportDir)) {
             fs.mkdirSync(reportDir, { recursive: true });
         }
+
+        // Delete old reports
+        fs.readdirSync(reportDir).forEach(file => {
+            fs.unlinkSync(path.join(reportDir, file));
+        });
+
         const htmlFilename = path.join(reportDir, `${courierActivity._id}.html`);
         const imageFilename = path.join(reportDir, `${courierActivity._id}.jpg`);
 
         // Generate HTML report
-        generateHTML(updatedCourierActivity, htmlFilename);
+        generateCourierHTML(updatedCourierActivity, htmlFilename);
 
         // Convert HTML report to image
         await convertHTMLToImage(htmlFilename, imageFilename);

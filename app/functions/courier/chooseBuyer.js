@@ -1,4 +1,4 @@
-const axios = require("../axios");
+const axios = require("../../axios");
 const { Markup } = require("telegraf");
 
 module.exports = async (ctx) => {

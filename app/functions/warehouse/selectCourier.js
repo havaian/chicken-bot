@@ -1,4 +1,4 @@
-const axios = require("../axios");
+const axios = require("../../axios");
 const Redis = require("ioredis");
 const { Markup } = require("telegraf");
 
@@ -16,7 +16,6 @@ redis.on('error', (err) => {
 
 const setBotInstance = (bot) => {
     botInstance = bot;
-    // Set interval to check for pending distributions every 10 minutes
     setInterval(checkPendingDistributions, 10 * 60 * 1000);
 };
 
@@ -36,7 +35,6 @@ module.exports = async (ctx) => {
             return Markup.button.callback(`${index + 1}`, `select-courier:${courier._id}`);
         });
 
-        // Create rows of 5 buttons each
         const buttonRows = [];
         for (let i = 0; i < buttons.length; i += 5) {
             buttonRows.push(buttons.slice(i, i + 5));
@@ -47,7 +45,6 @@ module.exports = async (ctx) => {
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
 
-        // Delete the previous message
         await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
@@ -66,7 +63,6 @@ module.exports.selectAmount = async (ctx) => {
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
 
-    // Delete the previous message
     await ctx.deleteMessage();
 };
 
@@ -78,7 +74,6 @@ module.exports.confirmDistribution = async (ctx) => {
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
 
-    // Delete the previous message
     await ctx.deleteMessage();
 };
 
@@ -89,26 +84,18 @@ module.exports.acceptDistribution = async (ctx) => {
     try {
         const courierResponse = await axios.get(`/courier/${courierId}`);
         const courier = courierResponse.data;
-        const courierActivityResponse = await axios.get(`/courier/activity/today/${courierId}`);
-        const courierActivity = courierActivityResponse.data;
 
-        ctx.reply(`Xabar ${courier.full_name
+        ctx.reply(`Xabar ${courier.full_name}ga yetkazildi!`);
 
-            
-        }ga yetkazildi!`);
-
-        // Send message to the courier with inline buttons for accepting or rejecting the distribution
         await botInstance.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum qo\'shildi. Iltimos, tasdiqlang. Agar 15 daqiqa ichida tasdiqlamasangiz, tuxumlar avtomatik tarzda qabul qilinadi.`, Markup.inlineKeyboard([
             [Markup.button.callback('Tasdiqlash', `courier-accept:${courierId}:${amountInt}`)],
             [Markup.button.callback('Rad etish', 'courier-reject')]
         ]));
 
-        // Store the confirmation request in Redis without an expiration time
         const redisKey = `distribution:${courierId}:${amountInt}`;
-        const expirationTimestamp = Date.now() + 15 * 60 * 1000; // 15 minutes from now
+        const expirationTimestamp = Date.now() + 15 * 60 * 1000;
         await redis.set(redisKey, JSON.stringify({ courierId, amountInt, expirationTimestamp }));
 
-        // Set a timeout to automatically accept the distribution if the courier doesn't respond
         setTimeout(async () => {
             const distributionData = await redis.get(redisKey);
             if (distributionData) {
@@ -118,7 +105,6 @@ module.exports.acceptDistribution = async (ctx) => {
             }
         }, 15 * 60 * 1000);
 
-        // Delete the previous message
         await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
@@ -140,7 +126,7 @@ const automaticallyAcceptDistribution = async (courierId, amountInt) => {
 
         const updatedCourierActivity = {
             ...courierActivity,
-            remained: courierActivity.remained + amountInt
+            current: courierActivity.current + amountInt
         };
 
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
@@ -148,9 +134,17 @@ const automaticallyAcceptDistribution = async (courierId, amountInt) => {
         const warehouseActivityResponse = await axios.get('/warehouse/activity/today');
         const warehouseActivity = warehouseActivityResponse.data;
 
+        const distributionDetails = {
+            courier_id: courierId,
+            courier_name: updatedCourierActivity.courier_name,
+            eggs: amountInt,
+            time: new Date().toLocaleString()
+        };
+
         const updatedWarehouseActivity = {
             ...warehouseActivity,
-            remained: warehouseActivity.remained - amountInt
+            current: warehouseActivity.current - amountInt,
+            distributed_to: [...warehouseActivity.distributed_to, distributionDetails]
         };
 
         await axios.put(`/warehouse/activity/${warehouseActivity._id}`, updatedWarehouseActivity);
@@ -201,12 +195,15 @@ module.exports.courierAccept = async (ctx) => {
     }
 
     try {
+        const courierResponse = await axios.get(`/courier/${courierId}`);
+        const courier = courierResponse.data;
+        
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierId}`);
         const courierActivity = courierActivityResponse.data;
 
         const updatedCourierActivity = {
             ...courierActivity,
-            remained: courierActivity.remained + amountInt
+            current: courierActivity.current + amountInt
         };
 
         await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
@@ -214,9 +211,18 @@ module.exports.courierAccept = async (ctx) => {
         const warehouseActivityResponse = await axios.get('/warehouse/activity/today');
         const warehouseActivity = warehouseActivityResponse.data;
 
+        // Update warehouse distributed_to
+        const distributionDetails = {
+            courier_id: courierId,
+            courier_name: courier.full_name,
+            eggs: amountInt,
+            time: new Date().toLocaleString()
+        };
+
         const updatedWarehouseActivity = {
             ...warehouseActivity,
-            remained: warehouseActivity.remained - amountInt
+            current: warehouseActivity.current - amountInt,
+            distributed_to: [...warehouseActivity.distributed_to, distributionDetails]
         };
 
         await axios.put(`/warehouse/activity/${warehouseActivity._id}`, updatedWarehouseActivity);

@@ -1,6 +1,7 @@
-const axios = require("../axios");
-const generateHTML = require("./report/generateHTML");
-const convertHTMLToImage = require("./report/convertHTMLToImage");
+const axios = require("../../axios");
+const generateCourierHTML = require("../report/courierReport");
+const convertHTMLToImage = require("../report/convertHTMLToImage");
+const { Markup } = require("telegraf");
 const path = require("path");
 const fs = require("fs");
 
@@ -10,18 +11,28 @@ module.exports = async (ctx) => {
         // Get today's activity for the courier
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
         const courierActivity = courierActivityResponse.data;
+        
+        const courierResponse = await axios.get(`/courier/${courierPhoneNum}`);
+        const courier = courierResponse.data;
+        courierActivity.courier_name = courier.full_name;
 
         // File paths
         const reportDate = new Date().toISOString().split('T')[0];
-        const reportDir = path.join('reports', courierPhoneNum, reportDate);
+        const reportDir = path.join('reports', `courier/${reportDate}`, courierPhoneNum);
         if (!fs.existsSync(reportDir)) {
             fs.mkdirSync(reportDir, { recursive: true });
         }
+
+        // Delete old reports
+        fs.readdirSync(reportDir).forEach(file => {
+            fs.unlinkSync(path.join(reportDir, file));
+        });
+
         const htmlFilename = path.join(reportDir, `${courierActivity._id}.html`);
         const imageFilename = path.join(reportDir, `${courierActivity._id}.jpg`);
 
         // Generate HTML report
-        generateHTML(courierActivity, htmlFilename);
+        generateCourierHTML(courierActivity, htmlFilename);
 
         // Convert HTML report to image
         await convertHTMLToImage(htmlFilename, imageFilename);
@@ -29,6 +40,14 @@ module.exports = async (ctx) => {
         // Send image to user
         await ctx.replyWithPhoto({ source: imageFilename });
 
+        // Show main menu buttons
+        await ctx.reply('Tanlang:', Markup.keyboard([
+            ['Tuxum yetkazildi', 'Singan tuxumlar'],
+            ['Chiqim', 'Bugungi yetkazilganlar']
+        ]).resize());
+
+        // Delete the previous message
+        await ctx.deleteMessage();
     } catch (error) {
         console.log(error);
         await ctx.reply('Bugungi yetkazmalarni olishda xatolik yuz berdi. Qayta urunib ko\'ring.');

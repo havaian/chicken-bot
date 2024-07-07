@@ -1,8 +1,8 @@
-const start = require("../functions/start");
-const addMore = require("../functions/addMore");
-const selectCourier = require("../functions/selectCourier");
-const todayDeliveries = require("../functions/todayDeliveries");
-const cancel = require("../functions/cancel");
+const start = require("../functions/general/start");
+const addMore = require("../functions/courier/addMore");
+const selectCourier = require("../functions/warehouse/selectCourier");
+const todayDeliveries = require("../functions/courier/todayDeliveries");
+const cancel = require("../functions/general/cancel");
 
 const commands = {
     'start': start,

@@ -1,4 +1,4 @@
-const axios = require("../axios");
+const axios = require("../../axios");
 const { Markup } = require("telegraf");
 
 module.exports = async (ctx) => {
@@ -36,7 +36,8 @@ module.exports = async (ctx) => {
             ]).resize().oneTime());
         } else if (ctx.session.user.userType === 'warehouse') {
             await ctx.reply('Salom!', Markup.keyboard([
-                ['Tuxum kirimi', 'Tuxum chiqimi', 'Ombor holati']
+                ['Tuxum kirimi', 'Tuxum chiqimi'],
+                ['Ombor holati']
             ]).resize().oneTime());
         }
     } catch (error) {
