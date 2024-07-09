@@ -14,8 +14,7 @@ const generateWarehouseHTML = (data, filename) => {
     nasechka = 0,
     melaj = 0,
     kamomat = 0,
-    accepted = 0,
-    ombor_mudiri = ''
+    accepted = 0
   } = data;
 
   const totalDistributed = distributed_to.reduce((acc, distribution) => acc + distribution.eggs, 0);
@@ -87,9 +86,8 @@ const generateWarehouseHTML = (data, filename) => {
         <td>${melaj}</td>
       </tr>
       <tr>
-        <td>Ombor mudiri</td>
-        <td colspan="3">${ombor_mudiri}</td>
-        <td>/* CONFIRMED BY OMBOR MUDIRI */</td>
+        <td colspan="3">Ombor mudiri</td>
+        <td colspan="2">_____________</td>
       </tr>
     </table>
   `;
@@ -100,8 +98,6 @@ const generateWarehouseHTML = (data, filename) => {
   }
 
   fs.writeFileSync(filename, summaryHtml);
-
-  generateWarehouseExcel(data, filename);
 };
 
 const generateWarehouseExcel = async (data, filename) => {
@@ -116,8 +112,7 @@ const generateWarehouseExcel = async (data, filename) => {
     nasechka = 0,
     melaj = 0,
     kamomat = 0,
-    accepted = 0,
-    ombor_mudiri = ''
+    accepted = 0
   } = data;
 
   const totalDistributed = distributed_to.reduce((acc, distribution) => acc + distribution.eggs, 0);
@@ -151,7 +146,7 @@ const generateWarehouseExcel = async (data, filename) => {
   sheet.addRow(['Kun yakuniga xisobot', 'Butun', butun]);
   sheet.addRow(['Kamomat', kamomat, '', 'Nasechka', nasechka]);
   sheet.addRow(['Qolgan tuxum soni', current, '', 'Melaj', melaj]);
-  sheet.addRow(['Ombor mudiri', ombor_mudiri, '', '', '/* CONFIRMED BY OMBOR MUDIRI */']);
+  sheet.addRow(['Ombor mudiri_____________']);
 
   const directory = path.dirname(filename);
   if (!fs.existsSync(directory)) {

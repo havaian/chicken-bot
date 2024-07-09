@@ -1,8 +1,8 @@
 const { Telegraf, Markup, session } = require("telegraf");
 const express = require("express");
 const { middleware } = require("./middleware/index.js");
-const textCommandHandler = require("./middleware/textCommandHandler.js"); 
-const awaitingPromptHandler = require("./middleware/awaitingPromptHandler.js"); 
+const textCommandHandler = require("./middleware/textCommandHandler.js");
+const awaitingPromptHandler = require("./middleware/awaitingPromptHandler.js");
 const start = require("./functions/general/start.js");
 const contact = require("./functions/general/contact");
 const location = require("./functions/courier/location");
@@ -17,6 +17,8 @@ const todayDeliveries = require("./functions/courier/todayDeliveries");
 const selectCourier = require("./functions/warehouse/selectCourier");
 const eggIntake = require("./functions/warehouse/eggIntake");
 const warehouseStatus = require("./functions/warehouse/warehouseStatus");
+
+const { logger, readLog } = require("./utils/logs");
 
 const bot = new Telegraf(process.env.TG_TOKEN);
 const app = express();
@@ -53,6 +55,10 @@ bot.on('contact', async (ctx) => {
 bot.on('location', async (ctx) => {
   await location(ctx);
 });
+// Handling button presses
+bot.action(/location-buyer:(.+)/, async (ctx) => {
+  await location(ctx);
+});
 
 // Handling button presses
 bot.action(/choose-buyer:(.+)/, async (ctx) => {
@@ -87,7 +93,7 @@ bot.action('add_more', async (ctx) => {
 bot.action(/select-courier:(.+)/, async (ctx) => {
   await selectCourier.selectAmount(ctx);
 });
-bot.action(/confirm-distribution:(.+):(\d+)/, async (ctx) => {
+bot.action(/confirm-distribution:(.+):(.+)/, async (ctx) => {
   await selectCourier.confirmDistribution(ctx);
 });
 bot.action(/accept-distribution:(.+):(\d+)/, async (ctx) => {
@@ -140,14 +146,37 @@ bot.hears('Bugungi yetkazilganlar', async (ctx) => {
   await todayDeliveries(ctx);
 });
 
+// Handle circle video
+bot.on('video_note', async (ctx) => {
+  if (ctx.session.awaitingCircleVideo) {
+    await paymentReceived.handleCircleVideo(ctx);
+  }
+});
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`${PORT} ✅`);
+  logger.info(`${PORT} ✅`);
+});
+
+app.get("/", (req, res) => {
+  res.send({
+    chicken_bot: "It's working! 🙌",
+  });
+});
+
+app.get("/logs", (req, res) => {
+  try {
+    const result = readLog();
+    res.set('Content-Type', 'text/plain');
+    return res.send(result);
+  } catch(e) {
+    return res.sendStatus(500);
+  }
 });
 
 bot.launch();
-console.log("Bot ✅");
+logger.info("Bot ✅");
 
 // Pass bot instance to checkPendingDistributions
 selectCourier.setBotInstance(bot);

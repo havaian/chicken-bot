@@ -1,5 +1,7 @@
 const { Markup } = require("telegraf");
 
+const { logger, readLog } = require("../../utils/logs");
+
 module.exports = async (ctx) => {
     // Reset session
     ctx.session = { user: ctx.session.user };
@@ -9,6 +11,8 @@ module.exports = async (ctx) => {
     ctx.session.awaitingExpenses = false;
     ctx.session.awaitingBrokenEggs = false;
     ctx.session.awaitingEggIntake = false;
+    ctx.session.awaitingDistributedEggs = false;
+    ctx.session.awaitingClientName = false;
 
     let replyMessage;
     let keyboardOptions;
@@ -34,6 +38,6 @@ module.exports = async (ctx) => {
     try {
         await ctx.deleteMessage();
     } catch (error) {
-        console.log('Error deleting message:', error);
+        logger.info('Error deleting message:', error);
     }
 }

@@ -1,6 +1,8 @@
 const { Markup } = require("telegraf");
 const axios = require("../../axios");
 
+const { logger, readLog } = require("../../utils/logs");
+
 exports.sendExpenses = async (ctx) => {
     ctx.session.awaitingExpenses = true;
     await ctx.reply('Nech pul chiqimi? Iltimos, chiqim miqdorini yozib yuboring.', Markup.inlineKeyboard([
@@ -33,7 +35,11 @@ exports.addExpenses = async (ctx) => {
 
     try {
         // Get today's activity for the courier
-        const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
+        const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
         const courierActivity = courierActivityResponse.data;
 
         // Update courier's activity with expenses
@@ -42,7 +48,11 @@ exports.addExpenses = async (ctx) => {
             expenses: courierActivity.expenses + amount
         };
 
-        await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
+        await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
 
         // Delete the previous message
         await ctx.deleteMessage();
@@ -55,7 +65,7 @@ exports.addExpenses = async (ctx) => {
         // Clear the session variable
         delete ctx.session.expenseAmount;
     } catch (error) {
-        console.log(error);
+        logger.info(error);
         await ctx.reply('Chiqim qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
 };

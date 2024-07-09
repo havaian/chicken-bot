@@ -1,9 +1,13 @@
 const axios = require("../../axios");
-const generateCourierHTML = require("../report/courierReport");
+const { generateCourierHTML, generateCourierExcel } = require("../report/courierReport");
 const convertHTMLToImage = require("../report/convertHTMLToImage");
 const { Markup } = require("telegraf");
 const path = require("path");
 const fs = require("fs");
+const groups = require("../../groups");
+const egg_price = require("../../prices");
+
+const { logger, readLog } = require("../../utils/logs");
 
 module.exports = async (ctx) => {
     const action = ctx.match[0];
@@ -33,7 +37,7 @@ module.exports = async (ctx) => {
             const amount = action.split(':')[1];
             await completeTransaction(ctx, parseInt(amount, 10));
             break;
-    } 
+    }
 
     // Delete the previous message
     await ctx.deleteMessage();
@@ -52,27 +56,67 @@ async function completeTransaction(ctx, paymentAmount) {
 }
 
 module.exports.confirmTransaction = async (ctx) => {
-    const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
+    await ctx.reply('Iltimos, atrofingizni ko‘rsatadigan video yuboring.');
+    ctx.session.awaitingCircleVideo = true;
+};
+
+module.exports.handleCircleVideo = async (ctx) => {
+    if (!ctx.message.video_note || ctx.message.forward_from) {
+        await ctx.reply('Iltimos, atrofingizni ko‘rsatadigan video yuboring.');
+        return;
+    }
+
     const courierPhoneNum = ctx.session.user.phone_num;
+
+    // Find the group id by courier's phone number
+    let groupId = null;
+    for (const [id, numbers] of Object.entries(groups)) {
+        if (numbers.includes(courierPhoneNum)) {
+            groupId = id;
+            break;
+        }
+    }
+
+    if (!groupId) {
+        await ctx.reply('Guruh topilmadi. Qayta urunib ko‘ring.');
+        return;
+    }
+
     try {
+        // Forward the video to the group
+        await ctx.forwardMessage(groupId);
+
+        const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
         // Get today's activity for the buyer
-        const buyerActivityResponse = await axios.get(`/buyer/activity/today/${selectedBuyer.phone_num}`);
+        const buyerActivityResponse = await axios.get(`/buyer/activity/today/${selectedBuyer.phone_num}`, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
         const buyerActivity = buyerActivityResponse.data;
 
         // Update buyer's activity
         const updatedBuyerActivity = {
             ...buyerActivity,
             current: buyerActivity.current + (selectedBuyer.eggsDelivered || 0),
-            payment: buyerActivity.payment + selectedBuyer.paymentAmount
+            payment: buyerActivity.payment - selectedBuyer.paymentAmount + ((selectedBuyer.eggsDelivered || 0) * egg_price)
         };
 
         await axios.put(`/buyer/activity/${buyerActivity._id}`, updatedBuyerActivity);
 
         // Get today's activity for the courier
-        const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`);
+        const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
         const courierActivity = courierActivityResponse.data;
-        
-        const courierResponse = await axios.get(`/courier/${courierPhoneNum}`);
+
+        const courierResponse = await axios.get(`/courier/${courierPhoneNum}`, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
         const courier = courierResponse.data;
         courierActivity.courier_name = courier.full_name;
 
@@ -93,7 +137,11 @@ module.exports.confirmTransaction = async (ctx) => {
             current: courierActivity.current - (selectedBuyer.eggsDelivered || 0) // Subtract eggs delivered from current
         };
 
-        await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity);
+        await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
 
         // File paths
         const reportDate = new Date().toISOString().split('T')[0];
@@ -109,15 +157,22 @@ module.exports.confirmTransaction = async (ctx) => {
 
         const htmlFilename = path.join(reportDir, `${courierActivity._id}.html`);
         const imageFilename = path.join(reportDir, `${courierActivity._id}.jpg`);
+        const excelFilename = path.join(reportDir, `${courierActivity._id}.xlsx`);
 
-        // Generate HTML report
+        // Generate HTML and Excel reports
         generateCourierHTML(updatedCourierActivity, htmlFilename);
+        await generateCourierExcel(updatedCourierActivity, excelFilename);
 
         // Convert HTML report to image
         await convertHTMLToImage(htmlFilename, imageFilename);
 
-        // Send image to user
+        // Send image and Excel file to user
         await ctx.replyWithPhoto({ source: imageFilename });
+        await ctx.replyWithDocument({ source: excelFilename });
+
+        // Forward reports to the group
+        await ctx.telegram.sendDocument(groupId, { source: excelFilename }, { caption: `Xisobot: ${courier.full_name}` });
+        await ctx.telegram.sendPhoto(groupId, { source: imageFilename }, { caption: `Xisobot: ${courier.full_name}` });
 
         // Show main menu buttons
         await ctx.reply('Tanlang:', Markup.keyboard([
@@ -125,10 +180,10 @@ module.exports.confirmTransaction = async (ctx) => {
             ['Chiqim', 'Bugungi yetkazilganlar']
         ]).resize());
 
-        // Delete the previous message
-        await ctx.deleteMessage();
+        // Clear session video flag
+        ctx.session.awaitingCircleVideo = false;
     } catch (error) {
-        console.log(error);
-        await ctx.reply('Tranzaktsiyani yakunlashda xatolik yuz berdi. Qayta urunib ko\'ring.');
+        logger.info(error);
+        await ctx.reply('Tranzaktsiyani yakunlashda xatolik yuz berdi. Qayta urunib ko‘ring.');
     }
 };

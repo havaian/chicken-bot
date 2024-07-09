@@ -1,12 +1,18 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
 
+const { logger, readLog } = require("../../utils/logs");
+
 module.exports = async (ctx) => {
     const buyerId = ctx.match[1];
     ctx.session.selectedBuyerId = buyerId;
 
     try {
-        const response = await axios.get(`/buyer/${buyerId}`);
+        const response = await axios.get(`/buyer/${buyerId}`, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
         const buyer = response.data;
 
         ctx.session.buyers = ctx.session.buyers || [];
@@ -22,10 +28,10 @@ module.exports = async (ctx) => {
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
 
-        // Delete the previous message
-        await ctx.deleteMessage();
+        // // Delete the previous message
+        // await ctx.deleteMessage();
     } catch (error) {
-        console.log(error);
+        logger.info(error);
         await ctx.reply('Klient tanlashda xatolik yuz berdi. Qayta urunib ko\'ring');
     }
 };

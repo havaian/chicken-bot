@@ -1,4 +1,8 @@
 exports.middleware = async (ctx, next) => {
+    if (ctx.chat.type != "private") {
+        return;
+    }
+
     // Initialize user session and user data field
     ctx.session = ctx.session || {};
     ctx.session.user = ctx.session.user || {};

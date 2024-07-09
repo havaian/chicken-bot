@@ -7,17 +7,19 @@ module.exports = async (ctx) => {
     switch (action) {
         case 'eggs_delivered_yes':
             await ctx.reply('Nechta tuxum yetkazildi?', Markup.inlineKeyboard([
-                [Markup.button.callback('30', 'eggs_amount:30'), Markup.button.callback('60', 'eggs_amount:60')],
-                [Markup.button.callback('90', 'eggs_amount:90'), Markup.button.callback('120', 'eggs_amount:120')],
-                [Markup.button.callback('150', 'eggs_amount:150'), Markup.button.callback('180', 'eggs_amount:180')],
+                [Markup.button.callback('180', 'eggs_amount:180'), Markup.button.callback('360', 'eggs_amount:360')],
+                [Markup.button.callback('540', 'eggs_amount:540'), Markup.button.callback('720', 'eggs_amount:720')],
+                [Markup.button.callback('1080', 'eggs_amount:1080'), Markup.button.callback('1440', 'eggs_amount:1440')],
                 [Markup.button.callback('Boshqa', 'eggs_other')],
                 [Markup.button.callback('Bekor qilish', 'cancel')]
             ]));
             break;
         
         case 'eggs_delivered_no':
+        await ctx.reply(`Siz 0ta tuxum yetkazilganini tanladingiz.`);
             await ctx.reply('Pul olindimi?', Markup.inlineKeyboard([
-                [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
+                // [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
+                [Markup.button.callback('Ha', 'payment_other'), Markup.button.callback('Yo\'q', 'payment_received_no')],
                 [Markup.button.callback('Bekor qilish', 'cancel')]
             ]));
             break;
@@ -45,7 +47,8 @@ async function completeEggsDelivery(ctx, eggsAmount) {
 
     // Ask if payment was received
     await ctx.reply('Pul olindimi?', Markup.inlineKeyboard([
-        [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
+        // [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
+        [Markup.button.callback('Ha', 'payment_other'), Markup.button.callback('Yo\'q', 'payment_received_no')],
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
 }
