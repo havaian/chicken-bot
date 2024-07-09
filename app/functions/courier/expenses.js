@@ -5,7 +5,7 @@ const { logger, readLog } = require("../../utils/logs");
 
 exports.sendExpenses = async (ctx) => {
     ctx.session.awaitingExpenses = true;
-    await ctx.reply('Nech pul chiqimi? Iltimos, chiqim miqdorini yozib yuboring.', Markup.inlineKeyboard([
+    await ctx.reply('Bugungi chiqim miqdori necha so’mligini kiriting', Markup.inlineKeyboard([
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
 };
@@ -14,11 +14,11 @@ exports.confirmExpenses = async (ctx) => {
     if (ctx.session.awaitingExpenses) {
         const amount = parseInt(ctx.message.text, 10);
         if (isNaN(amount) || amount <= 0) {
-            await ctx.reply('Noto\'g\'ri qiymat. Iltimos, chiqim miqdorini yozib yuboring.');
+            await ctx.reply('Noto’g’ri qiymat. Iltimos, chiqim miqdorini yozib yuboring.');
             return;
         }
         ctx.session.expenseAmount = amount;
-        await ctx.reply(`Siz ${amount} chiqim qo'shmoqchimisiz?`, Markup.inlineKeyboard([
+        await ctx.reply(`Siz ${amount} so’m chiqim kiritmoqchimisiz?`, Markup.inlineKeyboard([
             [Markup.button.callback('Tasdiqlash', `confirm_expenses:${amount}`)],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
@@ -57,7 +57,7 @@ exports.addExpenses = async (ctx) => {
         // Delete the previous message
         await ctx.deleteMessage();
 
-        await ctx.reply(`${amount} chiqim hisobingizga qo'shildi.`, Markup.keyboard([
+        await ctx.reply(`${amount} so’m chiqim hisobingizga qo'shildi.`, Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
             ['Chiqim', 'Bugungi yetkazilganlar']
         ]).resize());
@@ -66,6 +66,6 @@ exports.addExpenses = async (ctx) => {
         delete ctx.session.expenseAmount;
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Chiqim qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
+        await ctx.reply('Chiqim qo’shishda xatolik yuz berdi. Qayta urunib ko’ring');
     }
 };

@@ -18,8 +18,8 @@ module.exports = async (ctx) => {
         case 'eggs_delivered_no':
         await ctx.reply(`Siz 0ta tuxum yetkazilganini tanladingiz.`);
             await ctx.reply('Pul olindimi?', Markup.inlineKeyboard([
-                // [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
-                [Markup.button.callback('Ha', 'payment_other'), Markup.button.callback('Yo\'q', 'payment_received_no')],
+                // [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo’q', 'payment_received_no')],
+                [Markup.button.callback('Ha', 'payment_other'), Markup.button.callback('Yo’q', 'payment_received_no')],
                 [Markup.button.callback('Bekor qilish', 'cancel')]
             ]));
             break;
@@ -47,8 +47,8 @@ async function completeEggsDelivery(ctx, eggsAmount) {
 
     // Ask if payment was received
     await ctx.reply('Pul olindimi?', Markup.inlineKeyboard([
-        // [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo\'q', 'payment_received_no')],
-        [Markup.button.callback('Ha', 'payment_other'), Markup.button.callback('Yo\'q', 'payment_received_no')],
+        // [Markup.button.callback('Ha', 'payment_received_yes'), Markup.button.callback('Yo’q', 'payment_received_no')],
+        [Markup.button.callback('Ha', 'payment_other'), Markup.button.callback('Yo’q', 'payment_received_no')],
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
 }

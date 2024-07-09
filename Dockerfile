@@ -4,18 +4,27 @@ FROM node:18-alpine
 # Set the working directory within the container
 WORKDIR /chicken
 
-# Copy the package.json files to the container
-COPY package.json ./
-
-# Install app dependencies using npm
+# Install tzdata package and set the timezone
 RUN apk add --no-cache \
+      tzdata \
       chromium \
       nss \
       freetype \
       harfbuzz \
       ca-certificates \
       ttf-freefont && \
-    npm install -g npm@latest && \
+    cp /usr/share/zoneinfo/Asia/Tashkent /etc/localtime && \
+    echo "Asia/Tashkent" > /etc/timezone && \
+    apk del tzdata
+
+# Set the timezone environment variable
+ENV TZ="Asia/Tashkent"
+
+# Copy the package.json files to the container
+COPY package.json ./
+
+# Install app dependencies using npm
+RUN npm install -g npm@latest && \
     npm install -g nodemon@latest && \
     npm install
 

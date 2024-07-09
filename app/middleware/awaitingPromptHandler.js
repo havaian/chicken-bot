@@ -12,7 +12,7 @@ const awaitingPromptHandler = async (ctx, next) => {
 
         if (ctx.session.awaitingEggsDelivered) {
             if (isNaN(text)) {
-                await ctx.reply('Iltimos, tuxum miqdorini to\'g\'ri kiriting:');
+                await ctx.reply('Iltimos, tuxum miqdorini to’g’ri kiriting:');
             } else {
                 ctx.match = [`eggs_amount:${text}`];
                 await eggsDelivered(ctx);
@@ -20,7 +20,7 @@ const awaitingPromptHandler = async (ctx, next) => {
             }
         } else if (ctx.session.awaitingPaymentAmount) {
             if (isNaN(text)) {
-                await ctx.reply('Iltimos, pul miqdorini to\'g\'ri kiriting:');
+                await ctx.reply('Iltimos, pul miqdorini to’g’ri kiriting:');
             } else {
                 ctx.match = [`payment_amount:${text}`];
                 await paymentReceived(ctx);
@@ -28,7 +28,7 @@ const awaitingPromptHandler = async (ctx, next) => {
             }
         } else if (ctx.session.awaitingExpenses) {
             if (isNaN(text)) {
-                await ctx.reply('Iltimos, chiqim miqdorini to\'g\'ri kiriting:');
+                await ctx.reply('Chiqim miqdori noto’g’ri kiritilgan. Iltimos, to’g’rilab kiriting.:');
             } else {
                 ctx.match = [`confirm_expenses:${text}`];
                 await expenses.confirmExpenses(ctx);
@@ -36,7 +36,7 @@ const awaitingPromptHandler = async (ctx, next) => {
             }
         } else if (ctx.session.awaitingBrokenEggs) {
             if (isNaN(text)) {
-                await ctx.reply('Iltimos, singan tuxum miqdorini to\'g\'ri kiriting:');
+                await ctx.reply('Iltimos, singan tuxum miqdorini to’g’ri kiriting:');
             } else {
                 ctx.match = [`confirm_broken_eggs:${text}`];
                 await brokenEggs.confirmBrokenEggs(ctx);
@@ -44,7 +44,7 @@ const awaitingPromptHandler = async (ctx, next) => {
             }
         } else if (ctx.session.awaitingDistributedEggs) {
             if (isNaN(text)) {
-                await ctx.reply('Iltimos, tarqatilgan tuxum miqdorini to\'g\'ri kiriting:');
+                await ctx.reply('Iltimos, tarqatilgan tuxum miqdorini to’g’ri kiriting:');
             } else {
                 ctx.match = [`confirm-distribution:${ctx.session.selectedCourierId}:${text}`];
                 await selectCourier.confirmDistribution(ctx);

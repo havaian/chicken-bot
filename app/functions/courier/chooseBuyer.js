@@ -24,7 +24,7 @@ module.exports = async (ctx) => {
         });
 
         await ctx.reply('Tuxum yetkazildimi?', Markup.inlineKeyboard([
-            [Markup.button.callback('Ha', 'eggs_delivered_yes'), Markup.button.callback('Yo\'q', 'eggs_delivered_no')],
+            [Markup.button.callback('Ha', 'eggs_delivered_yes'), Markup.button.callback('Yo’q', 'eggs_delivered_no')],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
 
@@ -32,6 +32,6 @@ module.exports = async (ctx) => {
         // await ctx.deleteMessage();
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Klient tanlashda xatolik yuz berdi. Qayta urunib ko\'ring');
+        await ctx.reply('Klient tanlashda xatolik yuz berdi. Qayta urunib ko’ring');
     }
 };

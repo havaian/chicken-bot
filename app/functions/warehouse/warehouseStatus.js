@@ -50,6 +50,6 @@ module.exports = async (ctx) => {
         ]).resize());
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Ombor holatini olishda xatolik yuz berdi. Qayta urunib ko\'ring.');
+        await ctx.reply('Ombor holatini olishda xatolik yuz berdi. Qayta urunib ko’ring.');
     }
 };

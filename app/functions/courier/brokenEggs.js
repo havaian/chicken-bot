@@ -5,7 +5,7 @@ const { logger, readLog } = require("../../utils/logs");
 
 exports.sendBrokenEggs = async (ctx) => {
     ctx.session.awaitingBrokenEggs = true;
-    await ctx.reply('Nechta tuxum sindi? Iltimos, singan tuxumlar miqdorini yozib yuboring.', Markup.inlineKeyboard([
+    await ctx.reply('Iltimos, singan tuxumlar miqdorini yozib yuboring.', Markup.inlineKeyboard([
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
 };
@@ -14,11 +14,11 @@ exports.confirmBrokenEggs = async (ctx) => {
     if (ctx.session.awaitingBrokenEggs) {
         const amount = parseInt(ctx.message.text, 10);
         if (isNaN(amount) || amount <= 0) {
-            await ctx.reply('Noto\'g\'ri qiymat. Iltimos, singan tuxumlar miqdorini yozib yuboring.');
+            await ctx.reply('Noto’g’ri qiymat. Iltimos, singan tuxumlar miqdorini yozib yuboring.');
             return;
         }
         ctx.session.brokenEggsAmount = amount;
-        await ctx.reply(`Siz ${amount} singan tuxumlar qo'shmoqchimisiz?`, Markup.inlineKeyboard([
+        await ctx.reply(`Siz ${amount}ta singan tuxum kiritilganini tasdiqlaysizmi?`, Markup.inlineKeyboard([
             [Markup.button.callback('Tasdiqlash', `confirm_broken_eggs:${amount}`)],
             [Markup.button.callback('Bekor qilish', 'cancel')]
         ]));
@@ -57,7 +57,7 @@ exports.addBrokenEggs = async (ctx) => {
         // Delete the previous message
         await ctx.deleteMessage();
 
-        await ctx.reply(`${amount} singan tuxumlar hisobingizga qo'shildi.`, Markup.keyboard([
+        await ctx.reply(`Sizning hisobingizga ${amount}ta singan tuxum qo’shildi`, Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
             ['Chiqim', 'Bugungi yetkazilganlar']
         ]).resize());
@@ -66,6 +66,6 @@ exports.addBrokenEggs = async (ctx) => {
         delete ctx.session.brokenEggsAmount;
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Singan tuxumlar qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
+        await ctx.reply('Singan tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring');
     }
 };

@@ -31,7 +31,7 @@ module.exports = async (ctx) => {
         const couriers = response.data;
 
         if (couriers.length === 0) {
-            await ctx.reply('Yo\'q couriers found.');
+            await ctx.reply('Kuryerlar topilmadi.');
             return;
         }
 
@@ -54,7 +54,7 @@ module.exports = async (ctx) => {
         await ctx.deleteMessage();
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Failed to fetch couriers. Qayta urunib ko\'ring');
+        await ctx.reply('Failed to fetch couriers. Qayta urunib ko’ring');
     }
 };
 
@@ -78,7 +78,7 @@ module.exports.confirmDistribution = async (ctx) => {
 
     if (amount === "other") {
         ctx.session.awaitingDistributedEggs = true;
-        await ctx.reply('Iltimos, qancha pul olganingizni kiriting:');
+        await ctx.reply('Iltimos, nechta tuxum tarqatilganini kiriting.');
     } else {
         const courierResponse = await axios.get(`/courier/${courierId}`);
         const courier = courierResponse.data;
@@ -107,7 +107,7 @@ module.exports.acceptDistribution = async (ctx) => {
 
         ctx.reply(`Xabar ${courier.full_name}ga yetkazildi!`);
 
-        await botInstance.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum qo\'shildi. Iltimos, tasdiqlang. Agar 15 daqiqa ichida tasdiqlamasangiz, tuxumlar avtomatik tarzda qabul qilinadi.`, Markup.inlineKeyboard([
+        await botInstance.telegram.sendMessage(courier.telegram_chat_id, `Sizning xisobingizga ${amountInt} tuxum qo’shildi. Iltimos, tasdiqlang. Agar 15 daqiqa ichida tasdiqlamasangiz, tuxumlar avtomatik tarzda qabul qilinadi.`, Markup.inlineKeyboard([
             [Markup.button.callback('Tasdiqlash', `courier-accept:${courierId}:${amountInt}`)],
             [Markup.button.callback('Rad etish', 'courier-reject')]
         ]));
@@ -132,7 +132,7 @@ module.exports.acceptDistribution = async (ctx) => {
         await ctx.deleteMessage();
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Kuryerga xabar yetkazishda xatolik yuz berdi. Qayta urunib ko\'ring');
+        await ctx.reply('Kuryerga xabar yetkazishda xatolik yuz berdi. Qayta urunib ko’ring');
     }
 };
 
@@ -290,10 +290,10 @@ module.exports.courierAccept = async (ctx) => {
         });
 
         await ctx.deleteMessage();
-        await ctx.reply('Tuxum xisobingizga muvaffaqiyatli qo\'shildi va saqlandi.');
+        await ctx.reply('Tuxum xisobingizga muvaffaqiyatli qo’shildi va saqlandi.');
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Tuxum xisobingizga qo\'shishda xatolik yuz berdi. Qayta urunib ko\'ring');
+        await ctx.reply('Tuxum xisobingizga qo’shishda xatolik yuz berdi. Qayta urunib ko’ring');
     } finally {
         await redis.del(redisKey);
     }
@@ -306,7 +306,7 @@ module.exports.courierReject = async (ctx) => {
     const redisKey = `distribution:${courierId}:${amountInt}`;
     
     await ctx.deleteMessage();
-    await ctx.reply('Tuxum xisobga qo\'shish rad etildi.');
+    await ctx.reply('Tuxum xisobga qo’shish rad etildi.');
 
     await redis.del(redisKey);
 };

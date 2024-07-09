@@ -60,6 +60,6 @@ module.exports = async (ctx) => {
         ]).resize());
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Bugungi yetkazmalarni olishda xatolik yuz berdi. Qayta urunib ko\'ring.');
+        await ctx.reply('Bugungi yetkazmalarni olishda xatolik yuz berdi. Qayta urunib ko’ring.');
     }
 };

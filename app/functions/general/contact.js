@@ -8,7 +8,7 @@ module.exports = async (ctx) => {
     const userId = ctx.from.id;
 
     if (contact.user_id !== userId) {
-        await ctx.reply('Tugma yordamida o\'zingizni kontaktingizni yuboring');
+        await ctx.reply('Tugma yordamida o’zingizni kontaktingizni yuboring');
         return;
     }
 
@@ -56,6 +56,6 @@ module.exports = async (ctx) => {
         }
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Sizning telegram nomeringiz tizimda topilmadi. Qayta urunib ko\'ring');
+        await ctx.reply('Sizning telegram nomeringiz tizimda topilmadi. Qayta urunib ko’ring');
     }
 };

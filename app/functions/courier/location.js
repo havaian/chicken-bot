@@ -19,11 +19,11 @@ const { logger, readLog } = require("../../utils/logs");
 
 //         const buyers = response.data;
 //         if (buyers.length === 0) {
-//             await ctx.reply('Siz yuborgan joylashuv bo\'yicha klient topilmadi.');
+//             await ctx.reply('Siz yuborgan joylashuv bo’yicha klient topilmadi.');
 //             return;
 //         }
 
-//         let message = "Klientni tanlang:\n";
+//         let message = "Ro’yxatdan do’konni tanlang:\n";
 //         const buttons = buyers.map((buyer, index) => {
 //             message += `${index + 1}. ${buyer.full_name}\n`;
 //             return Markup.button.callback(`${index + 1}`, `choose-buyer:${buyer._id}`);
@@ -41,7 +41,7 @@ const { logger, readLog } = require("../../utils/logs");
 //         ]));
 //     } catch (error) {
 //         logger.info(error);
-//         await ctx.reply('Klientlarni topishda xatolik yuz berdi. Qayta urunib ko\'ring');
+//         await ctx.reply('Ushbu do’kon ro’yxatdan topilmadi. Kiritilgan ma’lutni tekshirib, qaytadan urunib ko'ring.');
 //     }
 // };
 
@@ -52,8 +52,8 @@ module.exports = async (ctx) => {
             await ctx.deleteMessage();
 
             ctx.session.match = ctx.match;
-            await ctx.reply('Joylashuvni yuboring.', Markup.keyboard([
-                [{ text: "Joylashuvni yuborish", request_location: true }],
+            await ctx.reply('Geolokatsiyani yuboring.', Markup.keyboard([
+                [{ text: "Yuborish", request_location: true }],
                 ['Bekor qilish']
             ]).resize().oneTime());
         } else if (ctx.message && ctx.message.text) {
@@ -66,11 +66,11 @@ module.exports = async (ctx) => {
     
             const buyers = response.data;
             if (buyers.length === 0) {
-                await ctx.reply('Siz yuborgan nom bo\'yicha klient topilmadi.');
+                await ctx.reply('Siz yuborgan nom bo’yicha do’kon topilmadi.');
                 return;
             }
     
-            let message = "Klientni tanlang:\n";
+            let message = "Ro’yxatdan do’konni tanlang:\n";
             const buttons = buyers.map((buyer, index) => {
                 message += `${index + 1}. ${buyer.full_name}\n`;
                 return Markup.button.callback(`${index + 1}`, `location-buyer:${buyer._id}`);
@@ -116,6 +116,6 @@ module.exports = async (ctx) => {
         }
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Klientlarni topishda xatolik yuz berdi. Qayta urunib ko\'ring');
+        await ctx.reply('Ushbu do’kon ro’yxatdan topilmadi. Kiritilgan ma’lutni tekshirib, qaytadan urunib ko’ring.');
     }
 };

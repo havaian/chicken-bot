@@ -3,7 +3,7 @@ module.exports = async (ctx) => {
         await ctx.reply('Kontaktingizni yuboring.', {
             reply_markup: {
                 keyboard: [
-                    [{ text: "Kontantni yuborish", request_contact: true }]
+                    [{ text: "Yuborish", request_contact: true }]
                 ],
                 one_time_keyboard: true
             }

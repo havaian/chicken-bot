@@ -12,7 +12,7 @@ module.exports.promptEggIntake = async (ctx) => {
 
 module.exports.handleEggIntake = async (ctx) => {
     if (isNaN(ctx.message.text)) {
-        await ctx.reply('Iltimos, to\'g\'ri tuxum miqdorini kiriting:');
+        await ctx.reply('Iltimos, to’g’ri tuxum miqdorini kiriting:');
         return;
     }
 
@@ -61,7 +61,7 @@ module.exports.confirmEggIntake = async (ctx) => {
         await ctx.deleteMessage();
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Tuxum kirimini saqlashda xatolik yuz berdi. Qayta urunib ko\'ring.');
+        await ctx.reply('Tuxum kirimini saqlashda xatolik yuz berdi. Qayta urunib ko’ring.');
     }
 };
 

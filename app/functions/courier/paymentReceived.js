@@ -30,7 +30,7 @@ module.exports = async (ctx) => {
 
         case 'payment_other':
             ctx.session.awaitingPaymentAmount = true;
-            await ctx.reply('Iltimos, qancha pul olganingizni kiriting:');
+            await ctx.reply('Iltimos, necha pul olganingizni kiriting:');
             break;
 
         default:
@@ -46,7 +46,7 @@ module.exports = async (ctx) => {
 async function completeTransaction(ctx, paymentAmount) {
     const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
 
-    await ctx.reply(`Siz ${paymentAmount} pul olinganini tanladingiz.`);
+    await ctx.reply(`Siz ${paymentAmount} so’m pul olinganingizni kiritdingiz. Tasdiqlaysizmi?`);
     selectedBuyer.paymentAmount = paymentAmount;
 
     await ctx.reply('Tasdiqlaysizmi?', Markup.inlineKeyboard([
@@ -56,13 +56,13 @@ async function completeTransaction(ctx, paymentAmount) {
 }
 
 module.exports.confirmTransaction = async (ctx) => {
-    await ctx.reply('Iltimos, atrofingizni ko‘rsatadigan video yuboring.');
+    await ctx.reply('Iltimos, hisobot uchun dumaloq video yuboring.');
     ctx.session.awaitingCircleVideo = true;
 };
 
 module.exports.handleCircleVideo = async (ctx) => {
     if (!ctx.message.video_note || ctx.message.forward_from) {
-        await ctx.reply('Iltimos, atrofingizni ko‘rsatadigan video yuboring.');
+        await ctx.reply('Iltimos, hisobot uchun dumaloq video yuboring.');
         return;
     }
 
