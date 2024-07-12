@@ -59,7 +59,7 @@ exports.addBrokenEggs = async (ctx) => {
 
         await ctx.reply(`Sizning hisobingizga ${amount}ta singan tuxum qo’shildi`, Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
-            ['Chiqim', 'Bugungi yetkazilganlar']
+            ['Chiqim', 'Hisobot']
         ]).resize());
 
         // Clear the session variable

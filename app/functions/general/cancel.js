@@ -13,6 +13,7 @@ module.exports = async (ctx) => {
     ctx.session.awaitingEggIntake = false;
     ctx.session.awaitingDistributedEggs = false;
     ctx.session.awaitingClientName = false;
+    ctx.session.awaitingClientLocation = false;
 
     let replyMessage;
     let keyboardOptions;
@@ -21,7 +22,7 @@ module.exports = async (ctx) => {
         replyMessage = 'Bekor qilindi.';
         keyboardOptions = Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
-            ['Chiqim', 'Bugungi yetkazilganlar']
+            ['Chiqim', 'Hisobot']
         ]).resize().oneTime();
     } else if (ctx.session.user.userType === 'warehouse') {
         replyMessage = 'Bekor qilindi.';
@@ -29,6 +30,8 @@ module.exports = async (ctx) => {
             ['Tuxum kirimi', 'Tuxum chiqimi'],
             ['Ombor holati']
         ]).resize().oneTime();
+    } else {
+        replyMessage = 'Bekor qilindi.';
     }
 
     // Send the reply message and show the main menu

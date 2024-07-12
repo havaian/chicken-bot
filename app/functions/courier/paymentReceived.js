@@ -4,8 +4,8 @@ const convertHTMLToImage = require("../report/convertHTMLToImage");
 const { Markup } = require("telegraf");
 const path = require("path");
 const fs = require("fs");
-const groups = require("../../groups");
-const egg_price = require("../../prices");
+const groups = require("../data/groups");
+const egg_price = require("../data/prices");
 
 const { logger, readLog } = require("../../utils/logs");
 
@@ -45,11 +45,17 @@ module.exports = async (ctx) => {
 
 async function completeTransaction(ctx, paymentAmount) {
     const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
-
-    await ctx.reply(`Siz ${paymentAmount} so’m pul olinganingizni kiritdingiz. Tasdiqlaysizmi?`);
+    
     selectedBuyer.paymentAmount = paymentAmount;
 
-    await ctx.reply('Tasdiqlaysizmi?', Markup.inlineKeyboard([
+    if (paymentAmount < 0) {
+        await ctx.reply('Noldan baland bo’lgan pul qiymatini kiriting');
+        return;
+    }
+
+    await ctx.reply(`Siz ${paymentAmount} so’m pul olganingizni kiritdingiz`);
+
+    await ctx.reply(`Tasdiqlaysizmi?`, Markup.inlineKeyboard([
         [Markup.button.callback('Tasdiqlash', 'confirm_transaction')],
         [Markup.button.callback('Bekor qilish', 'cancel')]
     ]));
@@ -58,6 +64,9 @@ async function completeTransaction(ctx, paymentAmount) {
 module.exports.confirmTransaction = async (ctx) => {
     await ctx.reply('Iltimos, hisobot uchun dumaloq video yuboring.');
     ctx.session.awaitingCircleVideo = true;
+
+    // Delete the previous message
+    await ctx.deleteMessage();
 };
 
 module.exports.handleCircleVideo = async (ctx) => {
@@ -88,21 +97,12 @@ module.exports.handleCircleVideo = async (ctx) => {
 
         const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
         // Get today's activity for the buyer
-        const buyerActivityResponse = await axios.get(`/buyer/activity/today/${selectedBuyer.phone_num}`, {
+        const buyerActivityResponse = await axios.get(`/buyer/activity/today/${selectedBuyer.phone_num || selectedBuyer._id}`, {
             headers: {
                 'x-user-telegram-chat-id': ctx.chat.id
             }
         });
         const buyerActivity = buyerActivityResponse.data;
-
-        // Update buyer's activity
-        const updatedBuyerActivity = {
-            ...buyerActivity,
-            current: buyerActivity.current + (selectedBuyer.eggsDelivered || 0),
-            payment: buyerActivity.payment - selectedBuyer.paymentAmount + ((selectedBuyer.eggsDelivered || 0) * egg_price)
-        };
-
-        await axios.put(`/buyer/activity/${buyerActivity._id}`, updatedBuyerActivity);
 
         // Get today's activity for the courier
         const courierActivityResponse = await axios.get(`/courier/activity/today/${courierPhoneNum}`, {
@@ -121,18 +121,48 @@ module.exports.handleCircleVideo = async (ctx) => {
         courierActivity.courier_name = courier.full_name;
 
         // Create delivered_to object with details
-        const deliveryDetails = {
+        const deliveryDetailsBuyer = {
+            courier: {
+                _id: courier._id,
+                full_name: courier.full_name,
+                phone_num: courier.phone_num,
+                car_num: courier.car_num,
+            },
+            eggs: selectedBuyer.eggsDelivered || 0,
+            payment: selectedBuyer.paymentAmount || 0,
+            price: egg_price,
+            debt: buyerActivity.payment,
+            time: new Date().toLocaleString() // Add the time of the delivery
+        };
+
+        // Update buyer's activity
+        const updatedBuyerActivity = {
+            ...buyerActivity,
+            accepted: [...buyerActivity.accepted, deliveryDetailsBuyer],
+            payment: buyerActivity.payment - selectedBuyer.paymentAmount + ((selectedBuyer.eggsDelivered || 0) * egg_price)
+        };
+
+        await axios.put(`/buyer/activity/${buyerActivity._id}`, updatedBuyerActivity, {
+            headers: {
+                'x-user-telegram-chat-id': ctx.chat.id
+            }
+        });
+
+        // Create delivered_to object with details
+        const deliveryDetailsCourier = {
             id: selectedBuyer._id,
             name: selectedBuyer.full_name,
             eggs: selectedBuyer.eggsDelivered || 0,
             payment: selectedBuyer.paymentAmount || 0,
+            price: egg_price,
+            debt: updatedBuyerActivity.payment,
             time: new Date().toLocaleString() // Add the time of the delivery
         };
 
         // Update courier's activity
         const updatedCourierActivity = {
             ...courierActivity,
-            delivered_to: [...courierActivity.delivered_to, deliveryDetails],
+            delivered_to: [...courierActivity.delivered_to, deliveryDetailsCourier],
             earnings: courierActivity.earnings + selectedBuyer.paymentAmount,
             current: courierActivity.current - (selectedBuyer.eggsDelivered || 0) // Subtract eggs delivered from current
         };
@@ -177,7 +207,7 @@ module.exports.handleCircleVideo = async (ctx) => {
         // Show main menu buttons
         await ctx.reply('Tanlang:', Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
-            ['Chiqim', 'Bugungi yetkazilganlar']
+            ['Chiqim', 'Hisobot']
         ]).resize());
 
         // Clear session video flag

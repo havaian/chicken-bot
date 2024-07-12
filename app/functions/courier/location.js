@@ -52,11 +52,13 @@ module.exports = async (ctx) => {
             await ctx.deleteMessage();
 
             ctx.session.match = ctx.match;
+            ctx.session.awaitingClientLocation = true;
+
             await ctx.reply('Geolokatsiyani yuboring.', Markup.keyboard([
                 [{ text: "Yuborish", request_location: true }],
                 ['Bekor qilish']
             ]).resize().oneTime());
-        } else if (ctx.message && ctx.message.text) {
+        } else if (ctx.message && ctx.message.text && ctx.session.awaitingClientName) {
             const searchData = { client_name: ctx.message.text };
             const response = await axios.post("/buyer/search", searchData, {
                 headers: {
@@ -69,7 +71,7 @@ module.exports = async (ctx) => {
                 await ctx.reply('Siz yuborgan nom bo’yicha do’kon topilmadi.');
                 return;
             }
-    
+
             let message = "Ro’yxatdan do’konni tanlang:\n";
             const buttons = buyers.map((buyer, index) => {
                 message += `${index + 1}. ${buyer.full_name}\n`;
@@ -86,8 +88,20 @@ module.exports = async (ctx) => {
                 ...buttonRows,
                 [Markup.button.callback('Bekor qilish', 'cancel')]
             ]));
-        } else if (ctx.message && ctx.message.location) {
+
+            ctx.session.awaitingClientName = false;
+        } else if (ctx.message && ctx.message.location && ctx.session.awaitingClientLocation) {
+            if (ctx.message.forward_from) {
+                await ctx.reply('Turgan joyingizdan tugma yordamida geolokatsiyani yuboring.', Markup.keyboard([
+                    [{ text: "Yuborish", request_location: true }],
+                    ['Bekor qilish']
+                ]).resize().oneTime());
+                ctx.session.awaitingClientLocation = true;
+                return;
+            }
+
             const { latitude, longitude } = ctx.message.location;
+            ctx.session.awaitingClientLocation = true;
             ctx.match = ctx.session.match;
 
             const buyer = await axios.get(`/buyer/${ctx.match[1]}`, {
@@ -112,10 +126,13 @@ module.exports = async (ctx) => {
                 }
             });
     
+            ctx.session.awaitingClientLocation = false;
             chooseBuyer(ctx);
         }
     } catch (error) {
         logger.info(error);
-        await ctx.reply('Ushbu do’kon ro’yxatdan topilmadi. Kiritilgan ma’lutni tekshirib, qaytadan urunib ko’ring.');
+        await ctx.reply('Ushbu do’kon ro’yxatdan topilmadi. Kiritilgan ma’lutni tekshirib, qaytadan urunib ko’ring.', Markup.inlineKeyboard([
+            [Markup.button.callback('Bekor qilish', 'cancel')]
+        ]));
     }
 };

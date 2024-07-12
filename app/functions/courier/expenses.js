@@ -59,7 +59,7 @@ exports.addExpenses = async (ctx) => {
 
         await ctx.reply(`${amount} so’m chiqim hisobingizga qo'shildi.`, Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
-            ['Chiqim', 'Bugungi yetkazilganlar']
+            ['Chiqim', 'Hisobot']
         ]).resize());
 
         // Clear the session variable

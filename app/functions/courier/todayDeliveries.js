@@ -56,7 +56,7 @@ module.exports = async (ctx) => {
         // Show main menu buttons
         await ctx.reply('Tanlang:', Markup.keyboard([
             ['Tuxum yetkazildi', 'Singan tuxumlar'],
-            ['Chiqim', 'Bugungi yetkazilganlar']
+            ['Chiqim', 'Hisobot']
         ]).resize());
     } catch (error) {
         logger.info(error);

@@ -142,8 +142,15 @@ bot.hears('Tuxum yetkazildi', async (ctx) => {
 bot.hears('Tuxum chiqimi', async (ctx) => {
   await selectCourier(ctx);
 });
-bot.hears('Bugungi yetkazilganlar', async (ctx) => {
+bot.hears('Hisobot', async (ctx) => {
   await todayDeliveries(ctx);
+});
+
+// Handle voice messages
+bot.on('voice', async (ctx) => {
+  if (ctx.session.awaitingCircleVideo) {
+    ctx.reply('Iltimos, hisobot uchun dumaloq video yuboring.');
+  }
 });
 
 // Handle circle video
@@ -177,6 +184,3 @@ app.get("/logs", (req, res) => {
 
 bot.launch();
 logger.info("Bot ✅");
-
-// Pass bot instance to checkPendingDistributions
-selectCourier.setBotInstance(bot);

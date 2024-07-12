@@ -8,7 +8,7 @@ exports.middleware = async (ctx, next) => {
     ctx.session.user = ctx.session.user || {};
 
     // If user data is not present in session, show a button for user to send contact
-    if (Object.keys(ctx.session.user).length === 0 && (ctx.update.message && !ctx.update.message.contact)) {
+    if (Object.keys(ctx.session.user).length === 0 && (ctx.update && ((ctx.update.message && !ctx.update.message.contact)) || ctx.update.callback_query)) {
         await ctx.reply('Kontaktingizni yuboring.', {
             reply_markup: {
                 keyboard: [

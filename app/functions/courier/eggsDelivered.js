@@ -42,6 +42,12 @@ module.exports = async (ctx) => {
 async function completeEggsDelivery(ctx, eggsAmount) {
     const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
 
+    if (eggsAmount < 0) {
+        await ctx.reply('Noldan baland bo’lgan tuxum sonini kiriting');
+        ctx.match[0] = "eggs_other";
+        return;
+    }
+
     await ctx.reply(`Siz ${eggsAmount}ta tuxum yetkazilganini tanladingiz.`);
     selectedBuyer.eggsDelivered = eggsAmount;
 

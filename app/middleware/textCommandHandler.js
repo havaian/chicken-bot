@@ -8,7 +8,7 @@ const commands = {
     'start': start,
     'Tuxum yetkazildi': addMore,
     'Tuxum chiqimi': selectCourier,
-    'Bugungi yetkazilganlar': todayDeliveries,
+    'Hisobot': todayDeliveries,
     'Bekor qilish': cancel
 };
 

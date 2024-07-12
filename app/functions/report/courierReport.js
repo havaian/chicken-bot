@@ -39,9 +39,9 @@ const generateCourierHTML = (data, filename) => {
         <tr>
           <td>${index + 1}. ${delivery.name}</td>
           <td>${delivery.eggs}</td>
-          <td></td>
+          <td>${delivery.price}</td>
           <td>${delivery.payment}</td>
-          <td></td>
+          <td>${delivery.debt}</td>
         </tr>
       `).join('')}
     </table>
@@ -103,9 +103,9 @@ const generateCourierExcel = async (data, filename) => {
     sheet.addRow([
       `${index + 1}. ${delivery.name}`,
       delivery.eggs,
-      '',
+      delivery.price,
       delivery.payment,
-      ''
+      delivery.debt
     ]);
   });
 
