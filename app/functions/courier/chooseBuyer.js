@@ -27,8 +27,8 @@ module.exports = async (ctx) => {
       "Tuxum yetkazildimi?",
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("Ha", "eggs_delivered_yes"),
-          Markup.button.callback("Yo’q", "eggs_delivered_no"),
+          Markup.button.callback("Ha", "eggs-delivered-yes"),
+          Markup.button.callback("Yo’q", "eggs-delivered-no"),
         ],
         [Markup.button.callback("Bekor qilish", "cancel")],
       ])

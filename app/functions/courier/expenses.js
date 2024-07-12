@@ -24,7 +24,7 @@ exports.confirmExpenses = async (ctx) => {
     await ctx.reply(
       `Siz ${amount} so’m chiqim kiritmoqchimisiz?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Tasdiqlash", `confirm_expenses:${amount}`)],
+        [Markup.button.callback("Tasdiqlash", `confirm-expenses:${amount}`)],
         [Markup.button.callback("Bekor qilish", "cancel")],
       ])
     );
@@ -40,7 +40,7 @@ exports.addExpenses = async (ctx) => {
   const courierPhoneNum = ctx.session.user.phone_num;
 
   try {
-    // Get today"s activity for the courier
+    // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
       `/courier/activity/today/${courierPhoneNum}`,
       {
@@ -71,7 +71,7 @@ exports.addExpenses = async (ctx) => {
     await ctx.deleteMessage();
 
     await ctx.reply(
-      `${amount} so’m chiqim hisobingizga qo"shildi.`,
+      `${amount} so’m chiqim hisobingizga qo’shildi.`,
       Markup.keyboard([
         ["Tuxum yetkazildi", "Singan tuxumlar"],
         ["Chiqim", "Hisobot"],

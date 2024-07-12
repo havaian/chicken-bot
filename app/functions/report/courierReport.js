@@ -11,6 +11,7 @@ const generateCourierHTML = (data, filename) => {
     broken,
     expenses,
     courier_name,
+    car_num,
     date,
   } = data;
   const totalDelivered = delivered_to.reduce(
@@ -29,7 +30,8 @@ const generateCourierHTML = (data, filename) => {
   const summaryHtml = `
     <table style="width:100%">
       <tr>
-        <td colspan="2">Men yetkazib beruvchi F.I.O ${courier_name || ""}</td>
+        <td colspan="2">Men yetkazib beruvchi F.I.O: ${courier_name || ""}</td>
+        <td colspan="3">Avtomobil davlat raqami: ${car_num || ""}</td>
       </tr>
       <tr>
         <td colspan="2">Sana ${
@@ -46,9 +48,10 @@ const generateCourierHTML = (data, filename) => {
     <br>
     <table border="1" style="width:100%; border-collapse: collapse;">
       <tr>
-        <th style="width:150px; text-align: center; vertical-align: middle">Mijoz</th>
-        <th style="width:50px; text-align: center; vertical-align: middle">Tuxum soni</th>
-        <th style="width:50px; text-align: center; vertical-align: middle">Narxi</th>
+        <th style="width:15px; text-align: center; vertical-align: middle">№</th>
+        <th style="width:100px; text-align: center; vertical-align: middle">Mijoz</th>
+        <th style="width:75px; text-align: center; vertical-align: middle">Tuxum soni</th>
+        <th style="width:75px; text-align: center; vertical-align: middle">Narxi</th>
         <th style="width:100px; text-align: center; vertical-align: middle">Olingan pul</th>
         <th style="width:150px; text-align: center; vertical-align: middle">Qolgan pul</th>
       </tr>
@@ -56,6 +59,7 @@ const generateCourierHTML = (data, filename) => {
         .map(
           (delivery, index) => `
         <tr>
+          <td>${index + 1}</td>
           <td>${delivery.name}</td>
           <td>${delivery.eggs}</td>
           <td>${delivery.price}</td>
@@ -69,19 +73,20 @@ const generateCourierHTML = (data, filename) => {
     <br>
     <table style="width:100%">
       <tr>
-        <td>Tarqatilgan tuxum soni ${totalDelivered}</td>
-        <td>Umumiy yig‘ilgan pul ${totalPayments}</td>
+        <td>Tarqatilgan tuxum soni <b>${totalDelivered}</b></td>
+        <td>Umumiy yig‘ilgan pul <b>${totalPayments}</b></td>
       </tr>
       <tr>
-        <td>Qolgan tuxum soni ${current || 0}</td>
-        <td>Chiqim ${expenses || 0}</td>
+        <td>Qolgan tuxum soni <b>${current || 0}</b></td>
+        <td>Chiqim <b>${expenses || 0}</b></td>
       </tr>
       <tr>
-        <td>Singan tuxum soni ${broken || 0}</td>
-        <td>Topshirilgan kassa ${totalEarnings}</td>
+        <td>Singan tuxum soni <b>${broken || 0}</b></td>
+        <td>Topshirilgan kassa <b>${totalEarnings}</b></td>
       </tr>
     </table>
-    <p>Ushbu xisobot bo‘yicha qolib ketgan pullarni VTT«Nasriddinov Sirojiddin Nuriddinovich»ga olib kelib topshirishini o‘z zimamga olaman.</p>
+    <p>______________________________________________________________________________________________</p>
+    <p>______________________________________________________________________________________________</p>
     <table style="width:100%">
       <tr>
         <td>Yetkazib beruvchi ${courier_name || ""}</td>

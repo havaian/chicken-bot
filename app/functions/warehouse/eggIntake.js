@@ -13,7 +13,7 @@ module.exports.promptEggImporter = async (ctx) => {
 
     const importers = response.data;
 
-    let message = "Ro’yxatdan tanlang:\n";
+    let message = "Fabrikani ro’yxatdan tanlang:\n";
     const buttons = importers.map((importer, index) => {
       message += `${index + 1}. ${importer.full_name}\n`;
       return Markup.button.callback(
@@ -36,21 +36,20 @@ module.exports.promptEggImporter = async (ctx) => {
       ])
     );
   } catch (error) {
-    ctx.reply(
-      "Tuxum import qiluvchilarni ko’rsatishda xatolik yuz berdi. Qayta urunib ko’ring."
-    );
+    logger.info(error);
+    ctx.reply("Tuxum fabrikasini ko’rsatishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
 module.exports.promptEggIntake = async (ctx) => {
   try {
-    const { action, importerId, importerName } = ctx.match;
+    const [action, importerId, importerName] = ctx.match;
     ctx.session.selectedImporter = { importerId, importerName };
 
     ctx.session.awaitingEggIntake = true;
 
     await ctx.reply(
-      "Nechta tuxum olindi?",
+      "Tuxum sonini kiriting",
       Markup.inlineKeyboard([
         [Markup.button.callback("Bekor qilish", "cancel")],
       ])
@@ -59,14 +58,15 @@ module.exports.promptEggIntake = async (ctx) => {
     // Delete the previous message
     await ctx.deleteMessage();
   } catch (error) {
-    ctx.reply(
-      "Olingdan tuxum sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring."
-    );
+    logger.info(error);
+    ctx.reply("Olingdan tuxum sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
 module.exports.handleEggIntake = async (ctx) => {
   try {
+    const { importerName } = ctx.session.selectedImporter;
+    
     if (isNaN(ctx.message.text)) {
       await ctx.reply("Iltimos, to’g’ri tuxum miqdorini kiriting:");
       return;
@@ -77,21 +77,20 @@ module.exports.handleEggIntake = async (ctx) => {
     ctx.session.eggsReceived = { amount: eggsReceived, date: intakeTime };
 
     await ctx.reply(
-      `Siz ${eggsReceived} tuxumni ${intakeTime}da qabul qilganingizni tasdiqlaysizmi?`,
+      `Siz ${intakeTime}da ${eggsReceived} dona tuxumni ${importerName}dan qabul qilganingizni tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Tasdiqlash", "confirm_egg_intake")],
+        [Markup.button.callback("Tasdiqlash", "confirm-egg-intake")],
         [Markup.button.callback("Bekor qilish", "cancel")],
       ])
     );
   } catch (error) {
-    await ctx.reply(
-      "Tuxum kirimini qabul qilishda xatolik yuz berdi. Qayta urunib ko’ring."
-    );
+    logger.info(error);
+    await ctx.reply("Tuxum kirimini qabul qilishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
 module.exports.confirmEggIntake = async (ctx) => {
-  const { amount, time } = ctx.session.eggsReceived;
+  const { amount, date } = ctx.session.eggsReceived;
   const { importerId, importerName } = ctx.session.selectedImporter;
 
   try {
@@ -110,16 +109,16 @@ module.exports.confirmEggIntake = async (ctx) => {
 
     const importerActivity = importer.data;
 
-    // Ensure accepted_at is an array
-    const acceptedAtArray = Array.isArray(warehouseActivity.accepted_at)
-      ? warehouseActivity.accepted_at
+    // Ensure accepted_from is an array
+    const acceptedFromArray = Array.isArray(warehouseActivity.accepted_from)
+      ? warehouseActivity.accepted_from
       : [];
 
     const updatedWarehouseActivity = {
       ...warehouseActivity,
       current: warehouseActivity.current + amount,
       accepted: (warehouseActivity.accepted || 0) + amount,
-      accepted_at: [...acceptedAtArray, { importerId, importerName, amount, time }],
+      accepted_from: [...acceptedFromArray, { importerId, importerName, amount, date }],
     };
 
     await axios.put(
@@ -132,15 +131,14 @@ module.exports.confirmEggIntake = async (ctx) => {
       }
     );
 
-    importerActivity = {
-      ...importerActivity,
+    importerUpdate = {
       amount: amount,
-      date: time,
+      date: date,
     };
 
     await axios.put(
-      `/importer/${ctx.session.selectedImporter.importerId}`,
-      importerActivity,
+      `/importer/activity/${importerActivity._id}`,
+      importerUpdate,
       {
         headers: {
           "x-user-telegram-chat-id": ctx.chat.id,
@@ -149,7 +147,7 @@ module.exports.confirmEggIntake = async (ctx) => {
     );
 
     await ctx.reply(
-      `${amount} tuxum ${time} da qabul qilindi va qoldiq tuxum miqdoriga qo"shildi.`
+      `${amount} tuxum ${date} da qabul qilindi va qoldiq tuxum miqdoriga qo’shildi.`
     );
     ctx.session.awaitingEggIntake = false;
     ctx.session.eggsReceived = null;
@@ -159,19 +157,22 @@ module.exports.confirmEggIntake = async (ctx) => {
     await ctx.deleteMessage();
   } catch (error) {
     logger.info(error);
-    await ctx.reply(
-      "Tuxum kirimini saqlashda xatolik yuz berdi. Qayta urunib ko’ring."
-    );
+    await ctx.reply("Tuxum kirimini tasdiqlashda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
 module.exports.cancelEggIntake = async (ctx) => {
-  ctx.session.awaitingEggIntake = false;
-  ctx.session.eggsReceived = null;
-  ctx.session.selectedImporter = null;
-
-  await ctx.reply("Tuxum kirimi bekor qilindi.");
-
-  // Delete the previous message
-  await ctx.deleteMessage();
+  try {
+    ctx.session.awaitingEggIntake = false;
+    ctx.session.eggsReceived = null;
+    ctx.session.selectedImporter = null;
+  
+    await ctx.reply("Tuxum kirimi bekor qilindi.");
+  
+    // Delete the previous message
+    await ctx.deleteMessage();
+  } catch (error) {
+    logger.info(error);
+    await ctx.reply("Tuxum kirimini rad etishda xatolik yuz berdi. Qayta urunib ko’ring.");
+  }
 };

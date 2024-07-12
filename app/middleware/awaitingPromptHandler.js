@@ -18,6 +18,10 @@ const awaitingPromptHandler = async (ctx, next) => {
       sessionKey
     ) => {
       if (isNaN(text)) {
+        if (parseInt(text, 10) < 0) {
+          await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting");
+          return;
+        }
         await ctx.reply("Iltimos, qiymatni to’g’ri kiriting:");
       } else {
         ctx.match = [`${matchPrefix}:${text}`];
@@ -31,7 +35,7 @@ const awaitingPromptHandler = async (ctx, next) => {
         await handleNumericInput(
           ctx,
           text,
-          "eggs_amount",
+          "eggs-amount",
           eggsDelivered,
           "awaitingEggsDelivered"
         );
@@ -40,7 +44,7 @@ const awaitingPromptHandler = async (ctx, next) => {
         await handleNumericInput(
           ctx,
           text,
-          "payment_amount",
+          "payment-amount",
           paymentReceived,
           "awaitingPaymentAmount"
         );
@@ -49,7 +53,7 @@ const awaitingPromptHandler = async (ctx, next) => {
         await handleNumericInput(
           ctx,
           text,
-          "confirm_expenses",
+          "confirm-expenses",
           expenses.confirmExpenses,
           "awaitingExpenses"
         );
@@ -58,23 +62,10 @@ const awaitingPromptHandler = async (ctx, next) => {
         await handleNumericInput(
           ctx,
           text,
-          "confirm_broken_eggs",
+          "confirm-broken-eggs",
           brokenEggs.confirmBrokenEggs,
           "awaitingBrokenEggs"
         );
-        break;
-      case ctx.session.awaitingDistributedEggs:
-        if (isNaN(text)) {
-          await ctx.reply(
-            "Iltimos, tarqatilgan tuxum miqdorini to’g’ri kiriting:"
-          );
-        } else {
-          ctx.match = [
-            `confirm-distribution:${ctx.session.selectedCourierId}:${text}`,
-          ];
-          await selectCourier.confirmDistribution(ctx);
-          ctx.session.awaitingDistributedEggs = false;
-        }
         break;
       case ctx.session.awaitingEggIntake:
         await eggIntake.handleEggIntake(ctx);
@@ -84,11 +75,14 @@ const awaitingPromptHandler = async (ctx, next) => {
       case ctx.session.awaitingClientLocation:
         await location(ctx);
         break;
+      case ctx.session.awaitingDistributedEggs:
+        await selectCourier.confirmDistribution(ctx);
+        break;
       case ctx.session.awaitingCourierRemainedEggs:
-        await selectCourier.courierRemained(ctx);
+        await selectCourier.acceptCourierRemained(ctx);
         break;
       case ctx.session.awaitingCourierBrokenEggs:
-        await selectCourier.courierBroken(ctx);
+        await selectCourier.acceptCourierBroken(ctx);
         break;
       default:
         await next();

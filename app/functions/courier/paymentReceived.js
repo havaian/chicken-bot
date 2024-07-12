@@ -10,6 +10,8 @@ const fs = require("fs");
 const groups = require("../data/groups");
 const egg_price = require("../data/prices");
 
+const sendSMS = require("../../utils/message");
+
 const { logger, readLog } = require("../../utils/logs");
 
 module.exports = async (ctx) => {
@@ -17,33 +19,33 @@ module.exports = async (ctx) => {
   ctx.session.buyers = ctx.session.buyers || [];
 
   switch (action) {
-    case "payment_received_yes":
+    case "payment-received-yes":
       await ctx.reply(
         "Nech pul olindi?",
         Markup.inlineKeyboard([
           [
-            Markup.button.callback("30", "payment_amount:30"),
-            Markup.button.callback("60", "payment_amount:60"),
+            Markup.button.callback("30", "payment-amount:30"),
+            Markup.button.callback("60", "payment-amount:60"),
           ],
           [
-            Markup.button.callback("90", "payment_amount:90"),
-            Markup.button.callback("120", "payment_amount:120"),
+            Markup.button.callback("90", "payment-amount:90"),
+            Markup.button.callback("120", "payment-amount:120"),
           ],
           [
-            Markup.button.callback("150", "payment_amount:150"),
-            Markup.button.callback("180", "payment_amount:180"),
+            Markup.button.callback("150", "payment-amount:150"),
+            Markup.button.callback("180", "payment-amount:180"),
           ],
-          [Markup.button.callback("Boshqa", "payment_other")],
+          [Markup.button.callback("Boshqa", "payment-other")],
           [Markup.button.callback("Bekor qilish", "cancel")],
         ])
       );
       break;
 
-    case "payment_received_no":
+    case "payment-received-no":
       await completeTransaction(ctx, 0);
       break;
 
-    case "payment_other":
+    case "payment-other":
       ctx.session.awaitingPaymentAmount = true;
       await ctx.reply("Iltimos, necha pul olganingizni kiriting:");
       break;
@@ -73,7 +75,7 @@ async function completeTransaction(ctx, paymentAmount) {
   await ctx.reply(
     `Tasdiqlaysizmi?`,
     Markup.inlineKeyboard([
-      [Markup.button.callback("Tasdiqlash", "confirm_transaction")],
+      [Markup.button.callback("Tasdiqlash", "confirm-transaction")],
       [Markup.button.callback("Bekor qilish", "cancel")],
     ])
   );
@@ -90,6 +92,11 @@ module.exports.confirmTransaction = async (ctx) => {
 module.exports.handleCircleVideo = async (ctx) => {
   if (!ctx.message.video_note || ctx.message.forward_from) {
     await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
+    return;
+  }
+
+  if (ctx.message.video_note.duration < 5) {
+    await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.");
     return;
   }
 
@@ -114,7 +121,7 @@ module.exports.handleCircleVideo = async (ctx) => {
     await ctx.forwardMessage(groupId);
 
     const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
-    // Get today"s activity for the buyer
+    // Get today's activity for the buyer
     const buyerActivityResponse = await axios.get(
       `/buyer/activity/today/${selectedBuyer.phone_num || selectedBuyer._id}`,
       {
@@ -125,7 +132,7 @@ module.exports.handleCircleVideo = async (ctx) => {
     );
     const buyerActivity = buyerActivityResponse.data;
 
-    // Get today"s activity for the courier
+    // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
       `/courier/activity/today/${courierPhoneNum}`,
       {
@@ -235,9 +242,9 @@ module.exports.handleCircleVideo = async (ctx) => {
     // Convert HTML report to image
     await convertHTMLToImage(htmlFilename, imageFilename);
 
-    // // Send image and Excel file to user
-    // await ctx.replyWithPhoto({ source: imageFilename });
-    // await ctx.replyWithDocument({ source: excelFilename });
+    // Send image and Excel file to user
+    await ctx.replyWithPhoto({ source: imageFilename });
+    await ctx.replyWithDocument({ source: excelFilename });
 
     // Forward reports to the group
     await ctx.telegram.sendDocument(

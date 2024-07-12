@@ -3,6 +3,7 @@ const express = require("express");
 const { middleware } = require("./middleware/index.js");
 const textCommandHandler = require("./middleware/textCommandHandler.js");
 const awaitingPromptHandler = require("./middleware/awaitingPromptHandler.js");
+const courierAccepted = require("./middleware/courierAccepted.js");
 const start = require("./functions/general/start.js");
 const contact = require("./functions/general/contact");
 const location = require("./functions/courier/location");
@@ -35,11 +36,11 @@ bot.action("cancel", async (ctx) => {
   await cancel(ctx);
 });
 
-// Use text command handler middleware
 bot.use(textCommandHandler);
 
-// Use awaiting prompt handler middleware
 bot.use(awaitingPromptHandler);
+
+// bot.use(courierAccepted);
 
 // Command handling
 bot.start(async (ctx) => {
@@ -64,39 +65,51 @@ bot.action(/location-buyer:(.+)/, async (ctx) => {
 bot.action(/choose-buyer:(.+)/, async (ctx) => {
   await chooseBuyer(ctx);
 });
-bot.action(/eggs_delivered_(yes|no)/, async (ctx) => {
+bot.action(/eggs-delivered-(yes|no)/, async (ctx) => {
   await eggsDelivered(ctx);
 });
-bot.action(/eggs_amount:\d+/, async (ctx) => {
+bot.action(/eggs-amount:\d+/, async (ctx) => {
   await eggsDelivered(ctx);
 });
-bot.action(/eggs_other/, async (ctx) => {
+bot.action(/eggs-other/, async (ctx) => {
   await eggsDelivered(ctx);
 });
-bot.action(/payment_received_(yes|no)/, async (ctx) => {
+bot.action(/payment-received-(yes|no)/, async (ctx) => {
   await paymentReceived(ctx);
 });
-bot.action(/payment_amount:\d+/, async (ctx) => {
+bot.action(/payment-amount:\d+/, async (ctx) => {
   await paymentReceived(ctx);
 });
-bot.action(/payment_other/, async (ctx) => {
+bot.action(/payment-other/, async (ctx) => {
   await paymentReceived(ctx);
 });
-bot.action("confirm_transaction", async (ctx) => {
+bot.action("confirm-transaction", async (ctx) => {
   await paymentReceived.confirmTransaction(ctx);
 });
-bot.action("add_more", async (ctx) => {
+bot.action("add-more", async (ctx) => {
   await addMore(ctx);
 });
 
 // Handling warehouse user actions
 bot.action(/select-courier:(.+)/, async (ctx) => {
-  await selectCourier.selectAmount(ctx);
+  await selectCourier.courierBroken(ctx);
 });
-bot.action(/confirm-distribution:(.+):(.+)/, async (ctx) => {
+bot.action(/courier-broken-yes/, async (ctx) => {
+  await selectCourier.confirmCourierBroken(ctx);
+});
+bot.action(/courier-broken-no/, async (ctx) => {
+  await selectCourier.confirmCourierBroken(ctx);
+});
+bot.action(/courier-remained-yes/, async (ctx) => {
+  await selectCourier.confirmCourierRemained(ctx);
+});
+bot.action(/courier-remained-no/, async (ctx) => {
+  await selectCourier.confirmCourierRemained(ctx);
+});
+bot.action(/confirm-distribution:(.+)/, async (ctx) => {
   await selectCourier.confirmDistribution(ctx);
 });
-bot.action(/accept-distribution:(.+):(\d+)/, async (ctx) => {
+bot.action(/accept-distribution-yes/, async (ctx) => {
   await selectCourier.acceptDistribution(ctx);
 });
 bot.action(/courier-accept:(.+):(\d+)/, async (ctx) => {
@@ -106,7 +119,7 @@ bot.action("courier-reject", async (ctx) => {
   await selectCourier.courierReject(ctx);
 });
 
-bot.action("confirm_egg_intake", async (ctx) => {
+bot.action("confirm-egg-intake", async (ctx) => {
   await eggIntake.confirmEggIntake(ctx);
 });
 
@@ -133,10 +146,10 @@ bot.action(/choose-importer:(.+):(.+)/, async (ctx) => {
   await eggIntake.promptEggIntake(ctx);
 });
 
-bot.action(/confirm_broken_eggs:\d+/, async (ctx) => {
+bot.action(/confirm-broken-eggs:\d+/, async (ctx) => {
   await brokenEggs.addBrokenEggs(ctx);
 });
-bot.action(/confirm_expenses:\d+/, async (ctx) => {
+bot.action(/confirm-expenses:\d+/, async (ctx) => {
   await expenses.addExpenses(ctx);
 });
 
@@ -189,3 +202,6 @@ app.get("/logs", (req, res) => {
 
 bot.launch();
 logger.info("Bot ✅");
+
+// Pass bot instance to selectCourier
+selectCourier.setBotInstance(bot);

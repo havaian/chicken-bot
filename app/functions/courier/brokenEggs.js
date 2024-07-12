@@ -24,7 +24,7 @@ exports.confirmBrokenEggs = async (ctx) => {
     await ctx.reply(
       `Siz ${amount}ta singan tuxum kiritilganini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Tasdiqlash", `confirm_broken_eggs:${amount}`)],
+        [Markup.button.callback("Tasdiqlash", `confirm-broken-eggs:${amount}`)],
         [Markup.button.callback("Bekor qilish", "cancel")],
       ])
     );
@@ -40,7 +40,7 @@ exports.addBrokenEggs = async (ctx) => {
   const courierPhoneNum = ctx.session.user.phone_num;
 
   try {
-    // Get today"s activity for the courier
+    // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
       `/courier/activity/today/${courierPhoneNum}`,
       {

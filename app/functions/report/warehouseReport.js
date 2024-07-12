@@ -6,10 +6,8 @@ const generateWarehouseHTML = (data, filename) => {
   const {
     distributed_to = [],
     by_morning = 0,
-    accepted_at = [],
+    accepted_from = [],
     current = 0,
-    couriers_broken = 0,
-    couriers_current = 0,
     butun = 0,
     nasechka = 0,
     melaj = 0,
@@ -18,35 +16,53 @@ const generateWarehouseHTML = (data, filename) => {
   } = data;
 
   const totalDistributed = distributed_to.reduce(
-    (acc, distribution) => acc + distribution.eggs,
+    (acc, distribution) => acc + distribution.eggs || 0,
     0
   );
+
+  const totalRemained = distributed_to.reduce(
+    (acc, distribution) => acc + distribution.remained || 0,
+    0
+  );
+
+  const totalBroken = distributed_to.reduce(
+    (acc, distribution) => acc + distribution.broken || 0,
+    0
+  );
+
+  // Get today's date at 6 a.m.
+  const today6am = new Date();
+  today6am.setHours(6, 0, 0, 0);
+  const today6amStr = today6am.toLocaleString('uz-UZ', {
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
 
   const summaryHtml = `
     <table border="1" style="width:100%; border-collapse: collapse;">
       <tr>
-        <td>${new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
-          6,
-          0,
-          0,
-          0
-        )}</td>
-        <td colspan="2" rowspan="2">${by_morning}</td>
-        <td>Jami</td>
+        <td style="text-align: center; vertical-align: middle" colspan="1">${today6amStr}</td>
+        <td style="text-align: center; vertical-align: middle" colspan="1" rowspan="2">${by_morning}</td>
+        <td style="text-align: center; vertical-align: middle" colspan="3" rowspan="${Object.keys(accepted_from).length > 1 ? Object.keys(accepted_from).length + 2 : 3}">Jami:\n\n${accepted}</td>
       </tr>
       <tr>
         <td>Tong</td>
       </tr>
-      ${accepted_at
-        .map(
-          (accepted, index) => `
+      ${accepted_from
+      .map(
+        (accepted, index) => `
         <tr>
-          <td colspan="1">${accepted.importerName}</td>
-          <td colspan="1">${accepted.amount}</td>
+          <td style="text-align: center; vertical-align: middle" colspan="1">${accepted.importerName}</td>
+          <td style="text-align: center; vertical-align: middle" colspan="1">${accepted.amount}</td>
         </tr>
       `
-        )
-        .join("")}
+      )
+      .join("")}
       <tr>
         <th colspan="5"></th>
       </tr>
@@ -58,48 +74,48 @@ const generateWarehouseHTML = (data, filename) => {
         <th>Imzo</th>
       </tr>
       ${distributed_to
-        .map(
-          (distribution, index) => `
+      .map(
+        (distribution, index) => `
         <tr>
           <td style="text-align: center; vertical-align: middle">${index + 1}. ${distribution.courier_name}</td>
-          <td style="text-align: center; vertical-align: middle">${distribution.eggs}</td>
+          <td style="text-align: center; vertical-align: middle">${distribution.eggs || 0}</td>
           <td style="text-align: center; vertical-align: middle">${distribution.remained}</td>
           <td style="text-align: center; vertical-align: middle">${distribution.broken}</td>
           <td style="text-align: center; vertical-align: middle"></td>
         </tr>
       `
-        )
-        .join("")}
+      )
+      .join("")}
       <tr>
         <th colspan="5"></th>
       </tr>
       <tr>
         <th>Jami</th>
         <th>${totalDistributed}</th>
-        <th>${couriers_current}</th>
-        <th>${couriers_broken}</th>
+        <th>${totalRemained}</th>
+        <th>${totalBroken}</th>
         <th></th>
       </tr>
       <tr>
         <td colspan="3">Kun yakuniga xisobot</td>
         <td>Butun</td>
-        <td>${butun}</td>
+        <td style="text-align: center; vertical-align: middle">${butun}</td>
       </tr>
       <tr>
         <td>Kamomat</td>
-        <td colspan="2">${kamomat}</td>
+        <td style="text-align: center; vertical-align: middle" colspan="2">${kamomat}</td>
         <td>Nasechka</td>
-        <td>${nasechka}</td>
+        <td style="text-align: center; vertical-align: middle">${nasechka}</td>
       </tr>
       <tr>
         <td>Qolgan tuxum soni</td>
-        <td colspan="2">${current}</td>
+        <td style="text-align: center; vertical-align: middle" colspan="2">${current}</td>
         <td>Melaj</td>
-        <td>${melaj}</td>
+        <td style="text-align: center; vertical-align: middle">${melaj}</td>
       </tr>
       <tr>
         <td colspan="3">Ombor mudiri</td>
-        <td colspan="2">_____________</td>
+        <td colspan="2"></td>
       </tr>
     </table>
   `;

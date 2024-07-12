@@ -12,7 +12,7 @@ const { logger, readLog } = require("../../utils/logs");
 
 module.exports = async (ctx) => {
   try {
-    // Get today"s activity for the warehouse
+    // Get today's activity for the warehouse
     const warehouseActivityResponse = await axios.get(
       `/warehouse/activity/today`,
       {

@@ -10,8 +10,7 @@ exports.middleware = async (ctx, next) => {
   // If user data is not present in session, show a button for user to send contact
   if (
     Object.keys(ctx.session.user).length === 0 &&
-    ((ctx.update && ctx.update.message && !ctx.update.message.contact) ||
-      ctx.update.callback_query)
+    ((ctx.update && ctx.update.message && !ctx.update.message.contact))
   ) {
     await ctx.reply("Kontaktingizni yuboring.", {
       reply_markup: {

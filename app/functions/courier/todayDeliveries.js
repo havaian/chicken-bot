@@ -13,7 +13,7 @@ const { logger, readLog } = require("../../utils/logs");
 module.exports = async (ctx) => {
   const courierPhoneNum = ctx.session.user.phone_num;
   try {
-    // Get today"s activity for the courier
+    // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
       `/courier/activity/today/${courierPhoneNum}`,
       {
@@ -31,6 +31,7 @@ module.exports = async (ctx) => {
     });
     const courier = courierResponse.data;
     courierActivity.courier_name = courier.full_name;
+    courierActivity.car_num = courier.car_num;
 
     // File paths
     const reportDate = new Date().toISOString().split("T")[0];
