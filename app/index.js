@@ -31,7 +31,7 @@ bot.use(async (ctx, next) => {
   await middleware(ctx, next);
 });
 
-bot.action('cancel', async (ctx) => {
+bot.action("cancel", async (ctx) => {
   await cancel(ctx);
 });
 
@@ -47,12 +47,12 @@ bot.start(async (ctx) => {
 });
 
 // Handling contact message
-bot.on('contact', async (ctx) => {
+bot.on("contact", async (ctx) => {
   await contact(ctx);
 });
 
 // Handling location message
-bot.on('location', async (ctx) => {
+bot.on("location", async (ctx) => {
   await location(ctx);
 });
 // Handling button presses
@@ -82,10 +82,10 @@ bot.action(/payment_amount:\d+/, async (ctx) => {
 bot.action(/payment_other/, async (ctx) => {
   await paymentReceived(ctx);
 });
-bot.action('confirm_transaction', async (ctx) => {
+bot.action("confirm_transaction", async (ctx) => {
   await paymentReceived.confirmTransaction(ctx);
 });
-bot.action('add_more', async (ctx) => {
+bot.action("add_more", async (ctx) => {
   await addMore(ctx);
 });
 
@@ -102,30 +102,35 @@ bot.action(/accept-distribution:(.+):(\d+)/, async (ctx) => {
 bot.action(/courier-accept:(.+):(\d+)/, async (ctx) => {
   await selectCourier.courierAccept(ctx);
 });
-bot.action('courier-reject', async (ctx) => {
+bot.action("courier-reject", async (ctx) => {
   await selectCourier.courierReject(ctx);
 });
 
-bot.action('confirm_egg_intake', async (ctx) => {
+bot.action("confirm_egg_intake", async (ctx) => {
   await eggIntake.confirmEggIntake(ctx);
 });
 
-bot.action('cancel', async (ctx) => {
+bot.action("cancel", async (ctx) => {
   await eggIntake.cancelEggIntake(ctx);
 });
 
 // Handling broken eggs and expenses
-bot.hears('Chiqim', async (ctx) => {
+bot.hears("Chiqim", async (ctx) => {
   await expenses.sendExpenses(ctx);
 });
-bot.hears('Singan tuxumlar', async (ctx) => {
+bot.hears("Singan tuxumlar", async (ctx) => {
   await brokenEggs.sendBrokenEggs(ctx);
 });
-bot.hears('Tuxum kirimi', async (ctx) => {
-  await eggIntake.promptEggIntake(ctx);
+bot.hears("Tuxum kirimi", async (ctx) => {
+  await eggIntake.promptEggImporter(ctx);
 });
-bot.hears('Ombor holati', async (ctx) => {
+bot.hears("Ombor holati", async (ctx) => {
   await warehouseStatus(ctx);
+});
+
+// Handling button presses
+bot.action(/choose-importer:(.+):(.+)/, async (ctx) => {
+  await eggIntake.promptEggIntake(ctx);
 });
 
 bot.action(/confirm_broken_eggs:\d+/, async (ctx) => {
@@ -136,25 +141,25 @@ bot.action(/confirm_expenses:\d+/, async (ctx) => {
 });
 
 // Menu button handling
-bot.hears('Tuxum yetkazildi', async (ctx) => {
+bot.hears("Tuxum yetkazildi", async (ctx) => {
   await addMore(ctx);
 });
-bot.hears('Tuxum chiqimi', async (ctx) => {
+bot.hears("Tuxum chiqimi", async (ctx) => {
   await selectCourier(ctx);
 });
-bot.hears('Hisobot', async (ctx) => {
+bot.hears("Hisobot", async (ctx) => {
   await todayDeliveries(ctx);
 });
 
 // Handle voice messages
-bot.on('voice', async (ctx) => {
+bot.on("voice", async (ctx) => {
   if (ctx.session.awaitingCircleVideo) {
-    ctx.reply('Iltimos, hisobot uchun dumaloq video yuboring.');
+    ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
   }
 });
 
 // Handle circle video
-bot.on('video_note', async (ctx) => {
+bot.on("video_note", async (ctx) => {
   if (ctx.session.awaitingCircleVideo) {
     await paymentReceived.handleCircleVideo(ctx);
   }
@@ -175,7 +180,7 @@ app.get("/", (req, res) => {
 app.get("/logs", (req, res) => {
   try {
     const result = readLog();
-    res.set('Content-Type', 'text/plain');
+    res.set("Content-Type", "text/plain");
     return res.send(result);
   } catch(e) {
     return res.sendStatus(500);

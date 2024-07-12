@@ -1,13 +1,13 @@
 const { Markup } = require("telegraf");
 
 // module.exports = async (ctx) => {
-//     await ctx.reply('Geolokatsiyani yuboring.', Markup.keyboard([
+//     await ctx.reply("Geolokatsiyani yuboring.", Markup.keyboard([
 //         [{ text: "Yuborish", request_location: true }],
-//         ['Bekor qilish']
+//         ["Bekor qilish"]
 //     ]).resize().oneTime());
 // };
 
 module.exports = async (ctx) => {
-    ctx.session.awaitingClientName = true;
-    await ctx.reply('Do’kon nomini kiriting.');
+  ctx.session.awaitingClientName = true;
+  await ctx.reply("Do’kon nomini kiriting.");
 };

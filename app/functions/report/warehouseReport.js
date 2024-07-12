@@ -1,6 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const ExcelJS = require('exceljs');
+const fs = require("fs");
+const path = require("path");
+const ExcelJS = require("exceljs");
 
 const generateWarehouseHTML = (data, filename) => {
   const {
@@ -14,31 +14,39 @@ const generateWarehouseHTML = (data, filename) => {
     nasechka = 0,
     melaj = 0,
     kamomat = 0,
-    accepted = 0
+    accepted = 0,
   } = data;
 
-  const totalDistributed = distributed_to.reduce((acc, distribution) => acc + distribution.eggs, 0);
+  const totalDistributed = distributed_to.reduce(
+    (acc, distribution) => acc + distribution.eggs,
+    0
+  );
 
   const summaryHtml = `
     <table border="1" style="width:100%; border-collapse: collapse;">
       <tr>
+        <td>${new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
+          6,
+          0,
+          0,
+          0
+        )}</td>
+        <td colspan="2" rowspan="2">${by_morning}</td>
         <td>Jami</td>
-        <td colspan="4">${by_morning + accepted}</td>
       </tr>
       <tr>
         <td>Tong</td>
-        <td colspan="4">${by_morning}</td>
       </tr>
-      <tr>
-        <td>Kirim</td>
-        <td colspan="4">${accepted}</td>
-      </tr>
-      ${accepted_at.map((accepted, index) => `
+      ${accepted_at
+        .map(
+          (accepted, index) => `
         <tr>
-          <td colspan="2">${index + 1}. ${accepted.amount}</td>
-          <td colspan="3">${accepted.time}</td>
+          <td colspan="1">${accepted.importerName}</td>
+          <td colspan="1">${accepted.amount}</td>
         </tr>
-      `).join('')}
+      `
+        )
+        .join("")}
       <tr>
         <th colspan="5"></th>
       </tr>
@@ -49,15 +57,19 @@ const generateWarehouseHTML = (data, filename) => {
         <th>Singan</th>
         <th>Imzo</th>
       </tr>
-      ${distributed_to.map((distribution, index) => `
+      ${distributed_to
+        .map(
+          (distribution, index) => `
         <tr>
-          <td>${index + 1}. ${distribution.courier_name}</td>
-          <td>${distribution.eggs}</td>
-          <td></td>
-          <td></td>
-          <td></td>
+          <td style="text-align: center; vertical-align: middle">${index + 1}. ${distribution.courier_name}</td>
+          <td style="text-align: center; vertical-align: middle">${distribution.eggs}</td>
+          <td style="text-align: center; vertical-align: middle">${distribution.remained}</td>
+          <td style="text-align: center; vertical-align: middle">${distribution.broken}</td>
+          <td style="text-align: center; vertical-align: middle"></td>
         </tr>
-      `).join('')}
+      `
+        )
+        .join("")}
       <tr>
         <th colspan="5"></th>
       </tr>
@@ -112,41 +124,50 @@ const generateWarehouseExcel = async (data, filename) => {
     nasechka = 0,
     melaj = 0,
     kamomat = 0,
-    accepted = 0
+    accepted = 0,
   } = data;
 
-  const totalDistributed = distributed_to.reduce((acc, distribution) => acc + distribution.eggs, 0);
+  const totalDistributed = distributed_to.reduce(
+    (acc, distribution) => acc + distribution.eggs,
+    0
+  );
 
   const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet('Warehouse Report');
+  const sheet = workbook.addWorksheet("Warehouse Report");
 
-  sheet.addRow(['Jami', by_morning + accepted]);
-  sheet.addRow(['Tong', by_morning]);
-  sheet.addRow(['Kirim', accepted]);
+  sheet.addRow(["Jami", by_morning + accepted]);
+  sheet.addRow(["Tong", by_morning]);
+  sheet.addRow(["Kirim", accepted]);
 
   accepted_at.forEach((accepted, index) => {
     sheet.addRow([`${index + 1}. ${accepted.amount}`, accepted.time]);
   });
 
   sheet.addRow([]);
-  sheet.addRow(['Nomi', 'Yuklandi', 'Astatka', 'Singan', 'Imzo']);
+  sheet.addRow(["Nomi", "Yuklandi", "Astatka", "Singan", "Imzo"]);
 
   distributed_to.forEach((distribution, index) => {
     sheet.addRow([
       `${index + 1}. ${distribution.courier_name}`,
       distribution.eggs,
-      '',
-      '',
-      ''
+      "",
+      "",
+      "",
     ]);
   });
 
   sheet.addRow([]);
-  sheet.addRow(['Jami', totalDistributed, couriers_current, couriers_broken, '']);
-  sheet.addRow(['Kun yakuniga xisobot', 'Butun', butun]);
-  sheet.addRow(['Kamomat', kamomat, '', 'Nasechka', nasechka]);
-  sheet.addRow(['Qolgan tuxum soni', current, '', 'Melaj', melaj]);
-  sheet.addRow(['Ombor mudiri_____________']);
+  sheet.addRow([
+    "Jami",
+    totalDistributed,
+    couriers_current,
+    couriers_broken,
+    "",
+  ]);
+  sheet.addRow(["Kun yakuniga xisobot", "Butun", butun]);
+  sheet.addRow(["Kamomat", kamomat, "", "Nasechka", nasechka]);
+  sheet.addRow(["Qolgan tuxum soni", current, "", "Melaj", melaj]);
+  sheet.addRow(["Ombor mudiri_____________"]);
 
   const directory = path.dirname(filename);
   if (!fs.existsSync(directory)) {

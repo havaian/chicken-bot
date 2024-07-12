@@ -1,11 +1,26 @@
-const fs = require('fs');
-const path = require('path');
-const ExcelJS = require('exceljs');
+const fs = require("fs");
+const path = require("path");
+const ExcelJS = require("exceljs");
 
 const generateCourierHTML = (data, filename) => {
-  const { delivered_to, by_morning, current, accepted, broken, expenses, courier_name, date } = data;
-  const totalDelivered = delivered_to.reduce((acc, delivery) => acc + delivery.eggs, 0);
-  const totalPayments = delivered_to.reduce((acc, delivery) => acc + delivery.payment, 0);
+  const {
+    delivered_to,
+    by_morning,
+    current,
+    accepted,
+    broken,
+    expenses,
+    courier_name,
+    date,
+  } = data;
+  const totalDelivered = delivered_to.reduce(
+    (acc, delivery) => acc + delivery.eggs,
+    0
+  );
+  const totalPayments = delivered_to.reduce(
+    (acc, delivery) => acc + delivery.payment,
+    0
+  );
   const totalEarnings = totalPayments - expenses;
 
   // Limit to 40 entries
@@ -14,10 +29,12 @@ const generateCourierHTML = (data, filename) => {
   const summaryHtml = `
     <table style="width:100%">
       <tr>
-        <td colspan="2">Men yetkazib beruvchi F.I.O ${courier_name || ''}</td>
+        <td colspan="2">Men yetkazib beruvchi F.I.O ${courier_name || ""}</td>
       </tr>
       <tr>
-        <td colspan="2">Sana ${date ? new Date(date).toLocaleDateString() : ''}</td>
+        <td colspan="2">Sana ${
+          date ? new Date(date).toLocaleDateString() : ""
+        }</td>
       </tr>
       <tr>
         <td>Olingan tuxum soni ${accepted || 0}</td>
@@ -29,21 +46,25 @@ const generateCourierHTML = (data, filename) => {
     <br>
     <table border="1" style="width:100%; border-collapse: collapse;">
       <tr>
-        <th>Mijoz</th>
-        <th>Tuxum soni</th>
-        <th>Narxi</th>
-        <th>Olingan pul</th>
-        <th>Qolgan pul</th>
+        <th style="width:150px; text-align: center; vertical-align: middle">Mijoz</th>
+        <th style="width:50px; text-align: center; vertical-align: middle">Tuxum soni</th>
+        <th style="width:50px; text-align: center; vertical-align: middle">Narxi</th>
+        <th style="width:100px; text-align: center; vertical-align: middle">Olingan pul</th>
+        <th style="width:150px; text-align: center; vertical-align: middle">Qolgan pul</th>
       </tr>
-      ${limitedDeliveredTo.map((delivery, index) => `
+      ${limitedDeliveredTo
+        .map(
+          (delivery, index) => `
         <tr>
-          <td>${index + 1}. ${delivery.name}</td>
+          <td>${delivery.name}</td>
           <td>${delivery.eggs}</td>
           <td>${delivery.price}</td>
           <td>${delivery.payment}</td>
           <td>${delivery.debt}</td>
         </tr>
-      `).join('')}
+      `
+        )
+        .join("")}
     </table>
     <br>
     <table style="width:100%">
@@ -63,7 +84,7 @@ const generateCourierHTML = (data, filename) => {
     <p>Ushbu xisobot bo‘yicha qolib ketgan pullarni VTT«Nasriddinov Sirojiddin Nuriddinovich»ga olib kelib topshirishini o‘z zimamga olaman.</p>
     <table style="width:100%">
       <tr>
-        <td>Yetkazib beruvchi ${courier_name || ''}</td>
+        <td>Yetkazib beruvchi ${courier_name || ""}</td>
         <td>Tasdiqlayman_____________</td>
       </tr>
     </table>
@@ -78,26 +99,41 @@ const generateCourierHTML = (data, filename) => {
 };
 
 const generateCourierExcel = async (data, filename) => {
-  const { delivered_to, by_morning, current, accepted, broken, expenses, courier_name, date } = data;
-  const totalDelivered = delivered_to.reduce((acc, delivery) => acc + delivery.eggs, 0);
-  const totalPayments = delivered_to.reduce((acc, delivery) => acc + delivery.payment, 0);
+  const {
+    delivered_to,
+    by_morning,
+    current,
+    accepted,
+    broken,
+    expenses,
+    courier_name,
+    date,
+  } = data;
+  const totalDelivered = delivered_to.reduce(
+    (acc, delivery) => acc + delivery.eggs,
+    0
+  );
+  const totalPayments = delivered_to.reduce(
+    (acc, delivery) => acc + delivery.payment,
+    0
+  );
   const totalEarnings = totalPayments - expenses;
 
   // Limit to 40 entries
   const limitedDeliveredTo = delivered_to.slice(0, 40);
 
   const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet('Courier Report');
+  const sheet = workbook.addWorksheet("Courier Report");
 
-  sheet.addRow(['Men yetkazib beruvchi F.I.O', courier_name || '']);
-  sheet.addRow(['Sana', date ? new Date(date).toLocaleDateString() : '']);
-  sheet.addRow(['Olingan tuxum soni', accepted || '']);
-  sheet.addRow(['Bor edi', by_morning || '']);
-  sheet.addRow(['Jami', (accepted || 0) + (by_morning || 0)]);
-  sheet.addRow(['Sanab oldim_____________']);
+  sheet.addRow(["Men yetkazib beruvchi F.I.O", courier_name || ""]);
+  sheet.addRow(["Sana", date ? new Date(date).toLocaleDateString() : ""]);
+  sheet.addRow(["Olingan tuxum soni", accepted || ""]);
+  sheet.addRow(["Bor edi", by_morning || ""]);
+  sheet.addRow(["Jami", (accepted || 0) + (by_morning || 0)]);
+  sheet.addRow(["Sanab oldim_____________"]);
 
   sheet.addRow([]);
-  sheet.addRow(['Mijoz', 'Tuxum soni', 'Narxi', 'Olingan pul', 'Qolgan pul']);
+  sheet.addRow(["Mijoz", "Tuxum soni", "Narxi", "Olingan pul", "Qolgan pul"]);
 
   limitedDeliveredTo.forEach((delivery, index) => {
     sheet.addRow([
@@ -105,22 +141,24 @@ const generateCourierExcel = async (data, filename) => {
       delivery.eggs,
       delivery.price,
       delivery.payment,
-      delivery.debt
+      delivery.debt,
     ]);
   });
 
   sheet.addRow([]);
-  sheet.addRow(['Tarqatilgan tuxum soni', totalDelivered]);
-  sheet.addRow(['Umumiy yig‘ilgan pul', totalPayments]);
-  sheet.addRow(['Qolgan tuxum soni', current || 0]);
-  sheet.addRow(['Chiqim', expenses || 0]);
-  sheet.addRow(['Singan tuxum soni', broken || 0]);
-  sheet.addRow(['Topshirilgan kassa', totalEarnings]);
+  sheet.addRow(["Tarqatilgan tuxum soni", totalDelivered]);
+  sheet.addRow(["Umumiy yig‘ilgan pul", totalPayments]);
+  sheet.addRow(["Qolgan tuxum soni", current || 0]);
+  sheet.addRow(["Chiqim", expenses || 0]);
+  sheet.addRow(["Singan tuxum soni", broken || 0]);
+  sheet.addRow(["Topshirilgan kassa", totalEarnings]);
 
   sheet.addRow([]);
-  sheet.addRow(['Ushbu xisobot bo‘yicha qolib ketgan pullarni VTT«Nasriddinov Sirojiddin Nuriddinovich»ga olib kelib topshirishini o‘z zimamga olaman.']);
-  sheet.addRow(['Yetkazib beruvchi', courier_name || '']);
-  sheet.addRow(['Tasdiqlayman_____________']);
+  sheet.addRow([
+    "Ushbu xisobot bo‘yicha qolib ketgan pullarni VTT«Nasriddinov Sirojiddin Nuriddinovich»ga olib kelib topshirishini o‘z zimamga olaman.",
+  ]);
+  sheet.addRow(["Yetkazib beruvchi", courier_name || ""]);
+  sheet.addRow(["Tasdiqlayman_____________"]);
 
   const directory = path.dirname(filename);
   if (!fs.existsSync(directory)) {
