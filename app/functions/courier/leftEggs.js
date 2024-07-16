@@ -1,7 +1,7 @@
 const { Markup } = require("telegraf");
 const axios = require("../../axios");
 
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 
 const cancel = require("../general/cancel");
 

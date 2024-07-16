@@ -1,7 +1,7 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
 
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 
 module.exports = async (ctx) => {
   const buyerId = ctx.match[1];

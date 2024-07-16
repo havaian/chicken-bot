@@ -3,7 +3,7 @@ const { Markup } = require("telegraf");
 
 const cancel = require("../general/cancel");
 
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 
 module.exports.promptEggImporter = async (ctx) => {
   try {

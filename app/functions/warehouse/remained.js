@@ -11,7 +11,7 @@ const fs = require("fs");
 
 const cancel = require("../general/cancel");
 
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 
 let botInstance = null;
 

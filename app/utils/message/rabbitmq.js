@@ -1,7 +1,7 @@
 // rabbitmq.js
 const amqp = require('amqplib');
 
-const { logger, readLog } = require("../logs");
+const { logger, readLog } = require("../logging");
 
 let channel = null;
 

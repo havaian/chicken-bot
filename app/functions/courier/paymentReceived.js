@@ -15,7 +15,7 @@ const sendSMS = require("../../utils/message/index");
 
 const cancel = require("../general/cancel");
 
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 
 module.exports = async (ctx) => {
   const action = ctx.match[0];

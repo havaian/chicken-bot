@@ -8,7 +8,7 @@ const { Markup } = require("telegraf");
 const path = require("path");
 const fs = require("fs");
 
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 
 module.exports = async (ctx) => {
   const courierPhoneNum = ctx.session.user.phone_num;

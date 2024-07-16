@@ -1,5 +1,5 @@
 const { Markup } = require("telegraf");
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 const resetState = require("./reset");
 
 module.exports = async (ctx, message = "Bekor qilindi.", showKeyboard = true, deleteMessage = false) => {

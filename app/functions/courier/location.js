@@ -2,7 +2,7 @@ const axios = require("../../axios");
 const { Markup } = require("telegraf");
 const chooseBuyer = require("./chooseBuyer");
 
-const { logger, readLog } = require("../../utils/logs");
+const { logger, readLog } = require("../../utils/logging");
 
 // module.exports = async (ctx) => {
 //     const { latitude, longitude } = ctx.message.location;

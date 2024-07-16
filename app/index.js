@@ -20,7 +20,7 @@ const eggIntake = require("./functions/warehouse/eggIntake");
 const melange = require("./functions/warehouse/melange");
 const remained = require("./functions/warehouse/remained");
 
-const { logger, readLog } = require("./utils/logs");
+const { logger, readLog } = require("./utils/logging");
 
 const bot = new Telegraf(process.env.TG_TOKEN);
 const app = express();
@@ -214,7 +214,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/logs", (req, res) => {
+app.get("/logging", (req, res) => {
   try {
     const result = readLog();
     res.set("Content-Type", "text/plain");

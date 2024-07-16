@@ -5,7 +5,7 @@ const { connect, sendToQueue } = require('./rabbitmq');
   await connect();
 })();
 
-const { logger, readLog } = require("../logs");
+const { logger, readLog } = require("../logging");
 
 const sendSMS = async (phone_number, text) => {
   const queue = 'sms_queue';
