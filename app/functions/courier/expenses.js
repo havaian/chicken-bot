@@ -3,11 +3,15 @@ const axios = require("../../axios");
 
 const { logger, readLog } = require("../../utils/logs");
 
+const cancel = require("../general/cancel");
+
 exports.sendExpenses = async (ctx) => {
   ctx.session.awaitingExpenses = true;
   await ctx.reply(
     "Bugungi chiqim miqdori necha so’mligini kiriting",
-    Markup.inlineKeyboard([[Markup.button.callback("Bekor qilish", "cancel")]])
+    Markup.keyboard([
+      ["Bekor qilish"]
+    ]).resize().oneTime()
   );
 };
 
@@ -16,7 +20,10 @@ exports.confirmExpenses = async (ctx) => {
     const amount = parseInt(ctx.message.text, 10);
     if (isNaN(amount) || amount <= 0) {
       await ctx.reply(
-        "Noto’g’ri qiymat. Iltimos, chiqim miqdorini yozib yuboring."
+        "Noto’g’ri qiymat. Iltimos, chiqim miqdorini yozib yuboring.",
+        Markup.keyboard([
+            ["Bekor qilish"]
+        ]).resize().oneTime()
       );
       return;
     }
@@ -70,17 +77,7 @@ exports.addExpenses = async (ctx) => {
     // Delete the previous message
     await ctx.deleteMessage();
 
-    await ctx.reply(
-      `${amount} so’m chiqim hisobingizga qo’shildi.`,
-      Markup.keyboard([
-        ["Tuxum yetkazildi", "Singan tuxumlar"],
-        ["Chiqim", "Qolgan tuxumlar"],
-        ["Hisobot"]
-      ]).resize()
-    );
-
-    // Clear the session variable
-    delete ctx.session.expenseAmount;
+    cancel(ctx, `${amount} so’m chiqim hisobingizga qo’shildi.`);
   } catch (error) {
     logger.info(error);
     await ctx.reply(

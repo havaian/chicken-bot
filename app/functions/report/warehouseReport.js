@@ -14,6 +14,7 @@ const generateWarehouseHTML = (data, filename) => {
     melange = 0,
     broken = 0,
     accepted = 0,
+    remained = 0
   } = data;
 
   const totalDistributed = distributed_to.reduce(
@@ -107,14 +108,14 @@ const generateWarehouseHTML = (data, filename) => {
         <th style="text-align: center; vertical-align: middle">${intact}</th>
       </tr>
       <tr>
-        <td>Kamomat</td>
+        <td>Kamomad</td>
         <th style="text-align: center; vertical-align: middle" colspan="2">${deficit}</th>
         <td>Nasechka</td>
         <th style="text-align: center; vertical-align: middle">${incision}</th>
       </tr>
       <tr>
         <td>Qolgan tuxum soni</td>
-        <th style="text-align: center; vertical-align: middle" colspan="2">${current}</th>
+        <th style="text-align: center; vertical-align: middle" colspan="2">${remained}</th>
         <td>Melanj</td>
         <th style="text-align: center; vertical-align: middle">${melange}</th>
       </tr>
@@ -196,7 +197,7 @@ const generateWarehouseExcel = async (data, filename) => {
   ]);
   sheet.addRow(["Ombor singan", broken]);
   sheet.addRow(["Kun yakuniga xisobot", "Butun", intact]);
-  sheet.addRow(["Kamomat", deficit, "Nasechka", incision]);
+  sheet.addRow(["Kamomad", deficit, "Nasechka", incision]);
   sheet.addRow(["Qolgan tuxum soni", current, "Melaj", melange]);
   sheet.addRow(["Ombor mudiri_____________"]);
 

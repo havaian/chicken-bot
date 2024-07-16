@@ -1,3 +1,5 @@
+const { Markup } = require("telegraf");
+const cancel = require("../functions/general/cancel.js");
 const location = require("../functions/courier/location");
 const expenses = require("../functions/courier/expenses");
 const leftEggs = require("../functions/courier/leftEggs");
@@ -13,6 +15,12 @@ const awaitingPromptHandler = async (ctx, next) => {
   if (ctx.message && ctx.message.text) {
     const text = ctx.message.text;
 
+    // Check for "Bekor qilish" command and execute it immediately
+    if (text === "Bekor qilish") {
+      await cancel(ctx);
+      return;
+    }
+
     const handleNumericInput = async (
       ctx,
       text,
@@ -22,12 +30,31 @@ const awaitingPromptHandler = async (ctx, next) => {
     ) => {
       if (isNaN(text)) {
         if (parseInt(text, 10) < 0) {
-          await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting");
+          await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting",
+            Markup.keyboard([
+              ["Bekor qilish"]
+            ]).resize().oneTime());
           return;
         }
-        await ctx.reply("Iltimos, qiymatni to’g’ri kiriting:");
+        await ctx.reply("Iltimos, qiymatni to’g’ri kiriting:",
+          Markup.keyboard([
+            ["Bekor qilish"]
+          ]).resize().oneTime());
       } else {
         ctx.match = [`${matchPrefix}:${text}`];
+        await handler(ctx);
+        ctx.session[sessionKey] = false;
+      }
+    };
+
+    const handleSpecificNumericInput = async (ctx, handler, sessionKey) => {
+      const text = ctx.message.text;
+      if (isNaN(text) || parseInt(text, 10) < 0) {
+        await ctx.reply("Iltimos, to’g’ri son kiriting:",
+          Markup.keyboard([
+            ["Bekor qilish"]
+          ]).resize().oneTime());
+      } else {
         await handler(ctx);
         ctx.session[sessionKey] = false;
       }
@@ -89,36 +116,35 @@ const awaitingPromptHandler = async (ctx, next) => {
         );
         break;
       case ctx.session.awaitingEggIntake:
-        await eggIntake.handleEggIntake(ctx);
-        ctx.session.awaitingEggIntake = false;
+        await handleSpecificNumericInput(ctx, eggIntake.handleEggIntake, "awaitingEggIntake");
+        break;
+      case ctx.session.awaitingDistributedEggs:
+        await handleSpecificNumericInput(ctx, selectCourier.acceptDistribution, "awaitingDistributedEggs");
+        break;
+      case ctx.session.awaitingCourierRemainedEggs:
+        await handleSpecificNumericInput(ctx, selectCourier.acceptCourierRemained, "awaitingCourierRemainedEggs");
+        break;
+      case ctx.session.awaitingCourierBrokenEggs:
+        await handleSpecificNumericInput(ctx, selectCourier.acceptCourierBroken, "awaitingCourierBrokenEggs");
+        break;
+      case ctx.session.awaitingWarehouseDailyBroken:
+        await handleSpecificNumericInput(ctx, melange.acceptBroken, "awaitingWarehouseDailyBroken");
+        break;
+      case ctx.session.awaitingWarehouseDailyIncision:
+        await handleSpecificNumericInput(ctx, melange.acceptIncision, "awaitingWarehouseDailyIncision");
+        break;
+      case ctx.session.awaitingWarehouseDailyIntact:
+        await handleSpecificNumericInput(ctx, melange.acceptIntact, "awaitingWarehouseDailyIntact");
+        break;
+      case ctx.session.awaitingWarehouseDailyMelange:
+        await handleSpecificNumericInput(ctx, melange.acceptMelange, "awaitingWarehouseDailyMelange");
+        break;
+      case ctx.session.awaitingWarehouseRemained:
+        await handleSpecificNumericInput(ctx, remained.acceptWarehouseDeficit, "awaitingWarehouseRemained");
         break;
       case ctx.session.awaitingClientName:
       case ctx.session.awaitingClientLocation:
         await location(ctx);
-        break;
-      case ctx.session.awaitingDistributedEggs:
-        await selectCourier.acceptDistribution(ctx);
-        break;
-      case ctx.session.awaitingCourierRemainedEggs:
-        await selectCourier.acceptCourierRemained(ctx);
-        break;
-      case ctx.session.awaitingCourierBrokenEggs:
-        await selectCourier.acceptCourierBroken(ctx);
-        break;
-      case ctx.session.awaitingWarehouseDailyBroken: 
-        await melange.acceptBroken(ctx);
-        break;
-      case ctx.session.awaitingWarehouseDailyIncision: 
-        await melange.acceptIncision(ctx);
-        break;
-      case ctx.session.awaitingWarehouseDailyIntact: 
-        await melange.acceptIntact(ctx);
-        break;
-      case ctx.session.awaitingWarehouseDailyMelange: 
-        await melange.acceptMelange(ctx);
-        break;
-      case ctx.session.awaitingWarehouseRemained: 
-        await remained.acceptWarehouseDeficit(ctx);
         break;
       default:
         await next();

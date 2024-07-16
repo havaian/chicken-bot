@@ -3,11 +3,15 @@ const axios = require("../../axios");
 
 const { logger, readLog } = require("../../utils/logs");
 
+const cancel = require("../general/cancel");
+
 exports.sendBrokenEggs = async (ctx) => {
   ctx.session.awaitingBrokenEggs = true;
   await ctx.reply(
     "Iltimos, singan tuxumlar miqdorini yozib yuboring.",
-    Markup.inlineKeyboard([[Markup.button.callback("Bekor qilish", "cancel")]])
+    Markup.keyboard([
+      ["Bekor qilish"]
+    ]).resize().oneTime()
   );
 };
 
@@ -16,7 +20,10 @@ exports.confirmBrokenEggs = async (ctx) => {
     const amount = parseInt(ctx.message.text, 10);
     if (isNaN(amount) || amount <= 0) {
       await ctx.reply(
-        "Noto’g’ri qiymat. Iltimos, singan tuxumlar miqdorini yozib yuboring."
+        "Noto’g’ri qiymat. Iltimos, singan tuxumlar miqdorini yozib yuboring.",
+        Markup.keyboard([
+            ["Bekor qilish"]
+        ]).resize().oneTime()
       );
       return;
     }
@@ -67,17 +74,7 @@ exports.addBrokenEggs = async (ctx) => {
     // Delete the previous message
     await ctx.deleteMessage();
 
-    await ctx.reply(
-      `Sizning hisobingizga ${amount}ta singan tuxum qo’shildi`,
-      Markup.keyboard([
-        ["Tuxum yetkazildi", "Singan tuxumlar"],
-        ["Chiqim", "Qolgan tuxumlar"],
-        ["Hisobot"]
-      ]).resize()
-    );
-
-    // Clear the session variable
-    delete ctx.session.brokenEggsAmount;
+    cancel(ctx, `Sizning hisobingizga ${amount}ta singan tuxum qo’shildi`);
   } catch (error) {
     logger.info(error);
     await ctx.reply(

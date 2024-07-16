@@ -29,8 +29,7 @@ module.exports = async (ctx) => {
         [
           Markup.button.callback("Ha", "eggs-delivered-yes"),
           Markup.button.callback("Yo’q", "eggs-delivered-no"),
-        ],
-        [Markup.button.callback("Bekor qilish", "cancel")],
+        ]
       ])
     );
 

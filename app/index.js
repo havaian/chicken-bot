@@ -34,14 +34,8 @@ bot.use(async (ctx, next) => {
 });
 
 bot.action("cancel", async (ctx) => {
-  await cancel(ctx);
+  await cancel(ctx, "Bekor qilindi.",true, true);
 });
-
-bot.use(textCommandHandler);
-
-bot.use(awaitingPromptHandler);
-
-bot.use(courierAccepted);
 
 // Command handling
 bot.start(async (ctx) => {
@@ -52,6 +46,12 @@ bot.start(async (ctx) => {
 bot.on("contact", async (ctx) => {
   await contact(ctx);
 });
+
+bot.use(courierAccepted);
+
+bot.use(awaitingPromptHandler);
+
+bot.use(textCommandHandler);
 
 // Handling location message
 bot.on("location", async (ctx) => {
@@ -112,10 +112,10 @@ bot.action(/accept-distribution-yes/, async (ctx) => {
 bot.action(/accept-distribution-no/, async (ctx) => {
   await selectCourier.promptDistribution(ctx);
 });
-bot.action(/courier-accept:(.+):(\d+)/, async (ctx) => {
+bot.action(/courier-accept:(.+):(\d+):(\d+):(\d+)/, async (ctx) => {
   await selectCourier.courierAccept(ctx);
 });
-bot.action("courier-reject", async (ctx) => {
+bot.action(/courier-reject:(.+):(\d+):(\d+):(\d+)/, async (ctx) => {
   await selectCourier.courierReject(ctx);
 });
 
@@ -182,7 +182,10 @@ bot.action("warehouse-dailyDeficit-no", async (ctx) => {
 // Handle voice messages
 bot.on("voice", async (ctx) => {
   if (ctx.session.awaitingCircleVideoCourier || ctx.session.awaitingCircleVideoWarehouse || ctx.session.awaitingCircleVideoWarehouse2) {
-    ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
+    ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
+      Markup.keyboard([
+          ["Bekor qilish"]
+      ]).resize().oneTime());
   }
 });
 

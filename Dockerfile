@@ -35,5 +35,5 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 COPY . ./
 
 # Run start command
-# CMD ["npm", "run", "build"]
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "build"]
+# CMD ["npm", "run", "dev"]

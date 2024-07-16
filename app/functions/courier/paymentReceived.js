@@ -13,6 +13,8 @@ const message = require("../data/message");
 
 const sendSMS = require("../../utils/message/index");
 
+const cancel = require("../general/cancel");
+
 const { logger, readLog } = require("../../utils/logs");
 
 module.exports = async (ctx) => {
@@ -48,7 +50,10 @@ module.exports = async (ctx) => {
 
     case "payment-other":
       ctx.session.awaitingPaymentAmount = true;
-      await ctx.reply("Iltimos, necha pul olganingizni kiriting:");
+      await ctx.reply("Iltimos, necha pul olganingizni kiriting:",
+        Markup.keyboard([
+          ["Bekor qilish"]
+        ]).resize().oneTime());
       break;
 
     default:
@@ -67,7 +72,10 @@ const completeTransaction = async (ctx, paymentAmount) => {
   selectedBuyer.paymentAmount = paymentAmount;
 
   if (paymentAmount < 0) {
-    await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting");
+    await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting",
+      Markup.keyboard([
+        ["Bekor qilish"]
+      ]).resize().oneTime());
     return;
   }
 
@@ -83,24 +91,34 @@ const completeTransaction = async (ctx, paymentAmount) => {
 }
 
 module.exports.confirmTransaction = async (ctx) => {
-  await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
-  ctx.session.awaitingCircleVideoCourier = true;
+  handleCircleVideo(ctx);
+  // await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
+  //   Markup.keyboard([
+  //       ["Bekor qilish"]
+  //   ]).resize().oneTime());
+  // ctx.session.awaitingCircleVideoCourier = true;
 
-  // Delete the previous message
-  await ctx.deleteMessage();
+  // // Delete the previous message
+  // await ctx.deleteMessage();
 };
 
-module.exports.handleCircleVideo = async (ctx) => {
+const handleCircleVideo = async (ctx) => {
   try {
-    if (!ctx.message.video_note || ctx.message.forward_from) {
-      await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
-      return;
-    }
+    // if (!ctx.message.video_note || ctx.message.forward_from) {
+    //   await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
+    //     Markup.keyboard([
+    //         ["Bekor qilish"]
+    //     ]).resize().oneTime());
+    //   return;
+    // }
   
-    if (ctx.message.video_note.duration < 5) {
-      await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.");
-      return;
-    }
+    // if (ctx.message.video_note.duration < 5) {
+    //   await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.",
+    //     Markup.keyboard([
+    //         ["Bekor qilish"]
+    //     ]).resize().oneTime());
+    //   return;
+    // }
   
     const courierPhoneNum = ctx.session.user.phone_num;
   
@@ -119,9 +137,9 @@ module.exports.handleCircleVideo = async (ctx) => {
       return;
     }
     
-    // Forward the video to the group using message ID
-    const messageId = ctx.message.message_id;
-    await ctx.telegram.forwardMessage(groupId, ctx.chat.id, messageId);
+    // // Forward the video to the group using message ID
+    // const messageId = ctx.message.message_id;
+    // await ctx.telegram.forwardMessage(groupId, ctx.chat.id, messageId);
 
     const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
     // Get today's activity for the buyer
@@ -272,18 +290,7 @@ module.exports.handleCircleVideo = async (ctx) => {
       { caption: `Xisobot: ${courier.full_name}` }
     );
 
-    // Show main menu buttons
-    await ctx.reply(
-      "Tanlang:",
-      Markup.keyboard([
-        ["Tuxum yetkazildi", "Singan tuxumlar"],
-        ["Chiqim", "Qolgan tuxumlar"],
-        ["Hisobot"]
-      ]).resize()
-    );
-
-    // Clear session video flag
-    ctx.session.awaitingCircleVideoCourier = false;
+    cancel(ctx, "Tanlang:");
   } catch (error) {
     logger.info(error);
     await ctx.reply(

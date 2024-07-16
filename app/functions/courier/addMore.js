@@ -9,5 +9,8 @@ const { Markup } = require("telegraf");
 
 module.exports = async (ctx) => {
   ctx.session.awaitingClientName = true;
-  await ctx.reply("Do’kon nomini kiriting.");
+  await ctx.reply("Do’kon nomini kiriting.",
+    Markup.keyboard([
+      ["Bekor qilish"]
+    ]).resize().oneTime());
 };

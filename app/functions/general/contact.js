@@ -23,26 +23,26 @@ module.exports = async (ctx) => {
     const user = response.data;
 
     // Check if telegram_chat_id is present, if not, update the user
-      if (user.userType === "courier") {
-        if (!user.telegram_chat_id) {
-          user.telegram_chat_id = userId;
-          await axios.put(`/courier/${user._id}`, user, {
-            headers: {
-              "x-user-telegram-chat-id": ctx.chat.id,
-            },
-          });
-        }
-      } else if (user.userType === "warehouse") {
-        const userTelegramChatId = user.telegram_chat_id.map(String);
-        const userIdStr = String(userId);
-        if (!userTelegramChatId.includes(userIdStr)) {
-          await axios.put(`/warehouse/${user._id}`, { telegram_chat_id: [...user.telegram_chat_id || [], userId.toString() ]}, {
-            headers: {
-              "x-user-telegram-chat-id": ctx.chat.id,
-            },
-          });
-        }
+    if (user.userType === "courier") {
+      if (!user.telegram_chat_id) {
+        user.telegram_chat_id = userId;
+        await axios.put(`/courier/${user._id}`, user, {
+          headers: {
+            "x-user-telegram-chat-id": ctx.chat.id,
+          },
+        });
       }
+    } else if (user.userType === "warehouse") {
+      const userTelegramChatId = user.telegram_chat_id.map(String);
+      const userIdStr = String(userId);
+      if (!userTelegramChatId.includes(userIdStr)) {
+        await axios.put(`/warehouse/${user._id}`, { telegram_chat_id: [...user.telegram_chat_id || [], userId.toString()] }, {
+          headers: {
+            "x-user-telegram-chat-id": ctx.chat.id,
+          },
+        });
+      }
+    }
 
     ctx.session.user = user;
 
@@ -60,7 +60,7 @@ module.exports = async (ctx) => {
     } else if (ctx.session.user.userType === "warehouse") {
       await ctx.reply(
         "Salom!",
-        Markup.keyboard([["Tuxum kirimi", "Tuxum chiqimi"], ["Singan tuxumlar", "Qolgan tuxum"], ["Ombor holati"]])
+        Markup.keyboard([["Tuxum kirimi", "Tuxum chiqimi"], ["Singan tuxum", "Qolgan tuxum"], ["Ombor holati"]])
           .resize()
       );
     }

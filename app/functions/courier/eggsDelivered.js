@@ -37,15 +37,17 @@ module.exports = async (ctx) => {
           [
             Markup.button.callback("Ha", "payment-other"),
             Markup.button.callback("Yo’q", "payment-received-no"),
-          ],
-          [Markup.button.callback("Bekor qilish", "cancel")],
+          ]
         ])
       );
       break;
 
     case "eggs-other":
       ctx.session.awaitingEggsDelivered = true;
-      await ctx.reply("Iltimos, qancha tuxum yetkazganingizni kiriting:");
+      await ctx.reply("Iltimos, qancha tuxum yetkazganingizni kiriting:",
+        Markup.keyboard([
+          ["Bekor qilish"]
+        ]).resize().oneTime());
       break;
 
     default:
@@ -62,7 +64,10 @@ const completeEggsDelivery = async (ctx, eggsAmount) => {
   const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
 
   if (eggsAmount < 0) {
-    await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting");
+    await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting",
+      Markup.keyboard([
+        ["Bekor qilish"]
+      ]).resize().oneTime());
     ctx.match[0] = "eggs-other";
     return;
   }
@@ -94,8 +99,7 @@ const completeEggsDelivery = async (ctx, eggsAmount) => {
       [
         Markup.button.callback("Ha", "payment-other"),
         Markup.button.callback("Yo’q", "payment-received-no"),
-      ],
-      [Markup.button.callback("Bekor qilish", "cancel")],
+      ]
     ])
   );
 }

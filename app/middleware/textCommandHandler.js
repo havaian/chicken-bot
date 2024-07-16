@@ -1,4 +1,3 @@
-const start = require("../functions/general/start");
 const addMore = require("../functions/courier/addMore");
 const selectCourier = require("../functions/warehouse/selectCourier");
 const todayDeliveries = require("../functions/courier/todayDeliveries");
@@ -12,27 +11,30 @@ const melange = require("../functions/warehouse/melange");
 const remained = require("../functions/warehouse/remained");
 
 const commands = {
-  start: start,
-  "Tuxum yetkazildi": addMore,
-  "Tuxum chiqimi": selectCourier.promptCourier,
-  "Hisobot": todayDeliveries,
-  "Bekor qilish": cancel,
-  "Ombor holati": warehouseStatus,
-  "Tuxum kirimi": eggIntake.promptEggImporter,
-  "Singan tuxumlar": brokenEggs.sendBrokenEggs,
-  "Qolgan tuxumlar": leftEggs.sendLeft,
-  "Chiqim": expenses.sendExpenses,
-  "Singan tuxum": melange.promptBroken,
-  "Qolgan tuxum": remained.promptWarehouseRemainedConfirm,
+  "Tuxum yetkazildi": [addMore, "courier"],
+  "Tuxum chiqimi": [selectCourier.promptCourier, "warehouse"],
+  "Hisobot": [todayDeliveries, "courier"],
+  "Bekor qilish": [cancel, "all"],
+  "Ombor holati": [warehouseStatus, "warehouse"],
+  "Tuxum kirimi": [eggIntake.promptEggImporter, "warehouse"],
+  "Singan tuxumlar": [brokenEggs.sendBrokenEggs, "courier"],
+  "Qolgan tuxumlar": [leftEggs.sendLeft, "courier"],
+  "Chiqim": [expenses.sendExpenses, "courier"],
+  "Singan tuxum": [melange.promptBroken, "warehouse"],
+  "Qolgan tuxum": [remained.promptWarehouseRemainedConfirm, "warehouse"],
 };
 
 const textCommandHandler = async (ctx, next) => {
   if (ctx.message && ctx.message.text) {
     const text = ctx.message.text;
-    const commandFunction = commands[text];
+    const command = commands[text];
 
-    if (commandFunction) {
-      await commandFunction(ctx);
+    if (command) {
+      const [commandFunction, allowedUserType] = command;
+
+      if (allowedUserType === "all" || ctx.session.user.userType === allowedUserType) {
+        await commandFunction(ctx);
+      }
     } else {
       await next();
     }
