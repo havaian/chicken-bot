@@ -9,8 +9,9 @@ const path = require("path");
 const fs = require("fs");
 const groups = require("../data/groups");
 const egg_price = require("../data/prices");
+const message = require("../data/message");
 
-const sendSMS = require("../../utils/message");
+const sendSMS = require("../../utils/message/index");
 
 const { logger, readLog } = require("../../utils/logs");
 
@@ -60,8 +61,8 @@ module.exports = async (ctx) => {
   await ctx.deleteMessage();
 };
 
-async function completeTransaction(ctx, paymentAmount) {
-  const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
+const completeTransaction = async (ctx, paymentAmount) => {
+  const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1] || {};
 
   selectedBuyer.paymentAmount = paymentAmount;
 
@@ -83,42 +84,44 @@ async function completeTransaction(ctx, paymentAmount) {
 
 module.exports.confirmTransaction = async (ctx) => {
   await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
-  ctx.session.awaitingCircleVideo = true;
+  ctx.session.awaitingCircleVideoCourier = true;
 
   // Delete the previous message
   await ctx.deleteMessage();
 };
 
 module.exports.handleCircleVideo = async (ctx) => {
-  if (!ctx.message.video_note || ctx.message.forward_from) {
-    await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
-    return;
-  }
-
-  if (ctx.message.video_note.duration < 5) {
-    await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.");
-    return;
-  }
-
-  const courierPhoneNum = ctx.session.user.phone_num;
-
-  // Find the group id by courier"s phone number
-  let groupId = null;
-  for (const [id, numbers] of Object.entries(groups)) {
-    if (numbers.includes(courierPhoneNum)) {
-      groupId = id;
-      break;
-    }
-  }
-
-  if (!groupId) {
-    await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-    return;
-  }
-
   try {
-    // Forward the video to the group
-    await ctx.forwardMessage(groupId);
+    if (!ctx.message.video_note || ctx.message.forward_from) {
+      await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
+      return;
+    }
+  
+    if (ctx.message.video_note.duration < 5) {
+      await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.");
+      return;
+    }
+  
+    const courierPhoneNum = ctx.session.user.phone_num;
+  
+    // Find the group id by courier"s phone number
+    let groupId = null;
+    for (const [id, numbers] of Object.entries(groups)) {
+      if (numbers.includes(courierPhoneNum)) {
+        groupId = id;
+        break;
+      }
+    }
+  
+    if (!groupId) {
+      logger.info("paymentReceived. Warehouse groupId not found:", groupId, !groupId);
+      await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
+      return;
+    }
+    
+    // Forward the video to the group using message ID
+    const messageId = ctx.message.message_id;
+    await ctx.telegram.forwardMessage(groupId, ctx.chat.id, messageId);
 
     const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
     // Get today's activity for the buyer
@@ -185,6 +188,17 @@ module.exports.handleCircleVideo = async (ctx) => {
         },
       }
     );
+
+    const text = await message(
+      deliveryDetailsBuyer.eggs,
+      deliveryDetailsBuyer.price,
+      (selectedBuyer.eggsDelivered || 0) * egg_price,
+      selectedBuyer.paymentAmount,
+      selectedBuyer.paymentAmount - (selectedBuyer.eggsDelivered || 0) * egg_price,
+      updatedBuyerActivity.payment
+    );
+
+    selectedBuyer.phone_num ? sendSMS(selectedBuyer.phone_num, text) : {};
 
     // Create delivered_to object with details
     const deliveryDetailsCourier = {
@@ -263,16 +277,17 @@ module.exports.handleCircleVideo = async (ctx) => {
       "Tanlang:",
       Markup.keyboard([
         ["Tuxum yetkazildi", "Singan tuxumlar"],
-        ["Chiqim", "Hisobot"],
+        ["Chiqim", "Qolgan tuxumlar"],
+        ["Hisobot"]
       ]).resize()
     );
 
     // Clear session video flag
-    ctx.session.awaitingCircleVideo = false;
+    ctx.session.awaitingCircleVideoCourier = false;
   } catch (error) {
     logger.info(error);
     await ctx.reply(
-      "Tranzaktsiyani yakunlashda xatolik yuz berdi. Qayta urunib ko‘ring."
+      "Yetkazishni yakunlashda xatolik yuz berdi. Qayta urunib ko‘ring."
     );
   }
 };

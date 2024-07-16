@@ -1,4 +1,5 @@
 const { Markup } = require("telegraf");
+const axios = require("../../axios");
 
 module.exports = async (ctx) => {
   const action = ctx.match[0];
@@ -57,12 +58,28 @@ module.exports = async (ctx) => {
   await ctx.deleteMessage();
 };
 
-async function completeEggsDelivery(ctx, eggsAmount) {
+const completeEggsDelivery = async (ctx, eggsAmount) => {
   const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
 
   if (eggsAmount < 0) {
     await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting");
     ctx.match[0] = "eggs-other";
+    return;
+  }
+
+  // Get today's activity for the courier
+  const courierActivityResponse = await axios.get(
+    `/courier/activity/today/${ctx.session.user.phone_num}`,
+    {
+      headers: {
+        "x-user-telegram-chat-id": ctx.chat.id,
+      },
+    }
+  );
+  const courierActivity = courierActivityResponse.data;
+
+  if (eggsAmount > courierActivity.current) {
+    ctx.reply("Sizning mashinangizda tuxum soni tarqatishga yetmaydi");
     return;
   }
 

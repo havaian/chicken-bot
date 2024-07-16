@@ -1,7 +1,7 @@
 const axios = require("../axios");
 
 const courierAccepted = async (ctx, next) => {
-  if (ctx.session.user && ctx.session.user.userType === "courier") {
+  if (ctx.session.user && ctx.session.user.userType === "courier" && !ctx.session.courierEggsInCar) {
     const response = await axios.get(`/courier/${ctx.session.user.phone_num}`, {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,
@@ -16,12 +16,13 @@ const courierAccepted = async (ctx, next) => {
     }
 
     if (courier.current <= 0) {
-      ctx.reply("Mashinadagi tuxumlar soni noldan kam. Ombordan tuxum olishingiz kerak.");
+      ctx.reply("Mashinada tuxum yo’q. Ombordan tuxum olishingiz kerak.");
       return;
     }
+  } else {
+    ctx.session.courierEggsInCar = true;
     next();
   }
-  next();
 };
 
 module.exports = courierAccepted;

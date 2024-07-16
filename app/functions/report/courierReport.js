@@ -4,15 +4,16 @@ const ExcelJS = require("exceljs");
 
 const generateCourierHTML = (data, filename) => {
   const {
-    delivered_to,
-    by_morning,
-    current,
-    accepted,
-    broken,
-    expenses,
-    courier_name,
-    car_num,
-    date,
+    delivered_to = [],
+    by_morning = 0,
+    current = 0,
+    current_by_courier = 0,
+    accepted = 0,
+    broken = 0,
+    expenses = 0,
+    courier_name = "",
+    car_num = "",
+    date = new Date(date).toLocaleDateString(),
   } = data;
   const totalDelivered = delivered_to.reduce(
     (acc, delivery) => acc + delivery.eggs,
@@ -30,8 +31,8 @@ const generateCourierHTML = (data, filename) => {
   const summaryHtml = `
     <table style="width:100%">
       <tr>
-        <td colspan="2">Men yetkazib beruvchi F.I.O: ${courier_name || ""}</td>
-        <td colspan="3">Avtomobil davlat raqami: ${car_num || ""}</td>
+        <td colspan="2">Men yetkazib beruvchi F.I.O: ${courier_name}</td>
+        <td colspan="3">Avtomobil davlat raqami: ${car_num}</td>
       </tr>
       <tr>
         <td colspan="2">Sana ${
@@ -39,9 +40,9 @@ const generateCourierHTML = (data, filename) => {
         }</td>
       </tr>
       <tr>
-        <td>Olingan tuxum soni ${accepted || 0}</td>
-        <td>Bor edi ${by_morning || 0}</td>
-        <td>Jami ${(accepted || 0) + (by_morning || 0)}</td>
+        <td>Olingan tuxum soni <b>${accepted}</b></td>
+        <td>Bor edi <b>${by_morning}</b></td>
+        <td>Jami <b>${(accepted) + (by_morning)}</b></td>
         <td>Sanab oldim_____________</td>
       </tr>
     </table>
@@ -77,19 +78,19 @@ const generateCourierHTML = (data, filename) => {
         <td>Umumiy yig‘ilgan pul <b>${totalPayments}</b></td>
       </tr>
       <tr>
-        <td>Qolgan tuxum soni <b>${current || 0}</b></td>
-        <td>Chiqim <b>${expenses || 0}</b></td>
+        <td>Qolgan tuxum soni <b>${current_by_courier}</b></td>
+        <td>Chiqim <b>${expenses}</b></td>
       </tr>
       <tr>
-        <td>Singan tuxum soni <b>${broken || 0}</b></td>
-        <td>Topshirilgan kassa <b>${totalEarnings}</b></td>
+        <td>Singan tuxum soni <b>${broken}</b></td>
+        <td>Topshiriladigan kassa <b>${totalEarnings}</b></td>
       </tr>
     </table>
     <p>______________________________________________________________________________________________</p>
     <p>______________________________________________________________________________________________</p>
     <table style="width:100%">
       <tr>
-        <td>Yetkazib beruvchi ${courier_name || ""}</td>
+        <td>Yetkazib beruvchi ${courier_name}</td>
         <td>Tasdiqlayman_____________</td>
       </tr>
     </table>
@@ -105,14 +106,16 @@ const generateCourierHTML = (data, filename) => {
 
 const generateCourierExcel = async (data, filename) => {
   const {
-    delivered_to,
-    by_morning,
-    current,
-    accepted,
-    broken,
-    expenses,
-    courier_name,
-    date,
+    delivered_to = [],
+    by_morning = 0,
+    current = 0,
+    current_by_courier = 0,
+    accepted = 0,
+    broken = 0,
+    expenses = 0,
+    courier_name = "",
+    car_num = "",
+    date = new Date(date).toLocaleDateString(),
   } = data;
   const totalDelivered = delivered_to.reduce(
     (acc, delivery) => acc + delivery.eggs,
@@ -130,11 +133,12 @@ const generateCourierExcel = async (data, filename) => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Courier Report");
 
-  sheet.addRow(["Men yetkazib beruvchi F.I.O", courier_name || ""]);
-  sheet.addRow(["Sana", date ? new Date(date).toLocaleDateString() : ""]);
-  sheet.addRow(["Olingan tuxum soni", accepted || ""]);
-  sheet.addRow(["Bor edi", by_morning || ""]);
-  sheet.addRow(["Jami", (accepted || 0) + (by_morning || 0)]);
+  sheet.addRow(["Men yetkazib beruvchi F.I.O", courier_name]);
+  sheet.addRow(["Avtomobil davlat raqami:", car_num]);
+  sheet.addRow(["Sana", date]);
+  sheet.addRow(["Olingan tuxum soni", accepted ]);
+  sheet.addRow(["Bor edi", by_morning ]);
+  sheet.addRow(["Jami", (accepted) + (by_morning)]);
   sheet.addRow(["Sanab oldim_____________"]);
 
   sheet.addRow([]);
@@ -153,7 +157,7 @@ const generateCourierExcel = async (data, filename) => {
   sheet.addRow([]);
   sheet.addRow(["Tarqatilgan tuxum soni", totalDelivered]);
   sheet.addRow(["Umumiy yig‘ilgan pul", totalPayments]);
-  sheet.addRow(["Qolgan tuxum soni", current || 0]);
+  sheet.addRow(["Qolgan tuxum soni", current_by_courier || 0]);
   sheet.addRow(["Chiqim", expenses || 0]);
   sheet.addRow(["Singan tuxum soni", broken || 0]);
   sheet.addRow(["Topshirilgan kassa", totalEarnings]);

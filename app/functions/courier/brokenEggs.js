@@ -28,9 +28,6 @@ exports.confirmBrokenEggs = async (ctx) => {
         [Markup.button.callback("Bekor qilish", "cancel")],
       ])
     );
-
-    // Delete the previous message
-    await ctx.deleteMessage();
     ctx.session.awaitingBrokenEggs = false;
   }
 };
@@ -74,7 +71,8 @@ exports.addBrokenEggs = async (ctx) => {
       `Sizning hisobingizga ${amount}ta singan tuxum qo’shildi`,
       Markup.keyboard([
         ["Tuxum yetkazildi", "Singan tuxumlar"],
-        ["Chiqim", "Hisobot"],
+        ["Chiqim", "Qolgan tuxumlar"],
+        ["Hisobot"]
       ]).resize()
     );
 

@@ -1,5 +1,9 @@
 // publisher.js
-const { sendToQueue } = require('./rabbitmq');
+const { connect, sendToQueue } = require('./rabbitmq');
+
+(async () => {
+  await connect();
+})();
 
 const { logger, readLog } = require("../logs");
 

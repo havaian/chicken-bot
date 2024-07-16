@@ -69,7 +69,8 @@ module.exports = async (ctx) => {
       "Tanlang:",
       Markup.keyboard([
         ["Tuxum yetkazildi", "Singan tuxumlar"],
-        ["Chiqim", "Hisobot"],
+        ["Chiqim", "Qolgan tuxumlar"],
+        ["Hisobot"]
       ]).resize()
     );
   } catch (error) {

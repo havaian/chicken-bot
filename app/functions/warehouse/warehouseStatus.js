@@ -52,10 +52,7 @@ module.exports = async (ctx) => {
     // Show main menu buttons
     await ctx.reply(
       "Tanlang:",
-      Markup.keyboard([
-        ["Tuxum kirimi", "Tuxum chiqimi"],
-        ["Ombor holati"],
-      ]).resize()
+      Markup.keyboard([["Tuxum kirimi", "Tuxum chiqimi"], ["Singan tuxumlar", "Qolgan tuxum"], ["Ombor holati"]]).resize()
     );
   } catch (error) {
     logger.info(error);

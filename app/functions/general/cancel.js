@@ -6,14 +6,28 @@ module.exports = async (ctx) => {
   // Reset session
   ctx.session = { user: ctx.session.user };
 
+  ctx.session.awaitingCircleVideoCourier = false;
+  ctx.session.awaitingCircleVideoWarehouse = false;
+  ctx.session.awaitingCircleVideoWarehouse2 = false;
+
   ctx.session.awaitingEggsDelivered = false;
   ctx.session.awaitingPaymentAmount = false;
   ctx.session.awaitingExpenses = false;
   ctx.session.awaitingBrokenEggs = false;
-  ctx.session.awaitingEggIntake = false;
-  ctx.session.awaitingDistributedEggs = false;
   ctx.session.awaitingClientName = false;
   ctx.session.awaitingClientLocation = false;
+
+  ctx.session.awaitingEggIntake = false;
+  ctx.session.awaitingDistributedEggs = false;
+  ctx.session.awaitingCourierRemainedEggs = false;
+  ctx.session.awaitingCourierBrokenEggs = false;
+
+  ctx.session.awaitingWarehouseDailyBroken = false;
+  ctx.session.awaitingWarehouseDailyIncision = false;
+  ctx.session.awaitingWarehouseDailyIntact = false;
+  ctx.session.awaitingWarehouseDailyMelange = false;
+
+  ctx.session.awaitingWarehouseRemained = false;
 
   let replyMessage;
   let keyboardOptions;
@@ -22,16 +36,14 @@ module.exports = async (ctx) => {
     replyMessage = "Bekor qilindi.";
     keyboardOptions = Markup.keyboard([
       ["Tuxum yetkazildi", "Singan tuxumlar"],
-      ["Chiqim", "Hisobot"],
+      ["Chiqim", "Qolgan tuxumlar"],
+      ["Hisobot"]
     ])
       .resize()
       .oneTime();
   } else if (ctx.session.user.userType === "warehouse") {
     replyMessage = "Bekor qilindi.";
-    keyboardOptions = Markup.keyboard([
-      ["Tuxum kirimi", "Tuxum chiqimi"],
-      ["Ombor holati"],
-    ])
+    keyboardOptions = Markup.keyboard([["Tuxum kirimi", "Tuxum chiqimi"], ["Singan tuxum", "Qolgan tuxum"], ["Ombor holati"]])
       .resize()
       .oneTime();
   } else {

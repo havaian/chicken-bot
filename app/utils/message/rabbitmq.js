@@ -30,4 +30,4 @@ process.on('exit', () => {
   }
 });
 
-module.exports = { sendToQueue };
+module.exports = { connect, sendToQueue };

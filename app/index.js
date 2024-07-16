@@ -14,10 +14,11 @@ const addMore = require("./functions/courier/addMore");
 const cancel = require("./functions/general/cancel.js");
 const brokenEggs = require("./functions/courier/brokenEggs");
 const expenses = require("./functions/courier/expenses");
-const todayDeliveries = require("./functions/courier/todayDeliveries");
+const leftEggs = require("./functions/courier/leftEggs");
 const selectCourier = require("./functions/warehouse/selectCourier");
 const eggIntake = require("./functions/warehouse/eggIntake");
-const warehouseStatus = require("./functions/warehouse/warehouseStatus");
+const melange = require("./functions/warehouse/melange");
+const remained = require("./functions/warehouse/remained");
 
 const { logger, readLog } = require("./utils/logs");
 
@@ -40,7 +41,7 @@ bot.use(textCommandHandler);
 
 bot.use(awaitingPromptHandler);
 
-// bot.use(courierAccepted);
+bot.use(courierAccepted);
 
 // Command handling
 bot.start(async (ctx) => {
@@ -56,12 +57,11 @@ bot.on("contact", async (ctx) => {
 bot.on("location", async (ctx) => {
   await location(ctx);
 });
+
 // Handling button presses
 bot.action(/location-buyer:(.+)/, async (ctx) => {
   await location(ctx);
 });
-
-// Handling button presses
 bot.action(/choose-buyer:(.+)/, async (ctx) => {
   await chooseBuyer(ctx);
 });
@@ -92,25 +92,25 @@ bot.action("add-more", async (ctx) => {
 
 // Handling warehouse user actions
 bot.action(/select-courier:(.+)/, async (ctx) => {
-  await selectCourier.courierBroken(ctx);
+  await selectCourier.promptCourierBroken(ctx);
 });
 bot.action(/courier-broken-yes/, async (ctx) => {
   await selectCourier.confirmCourierBroken(ctx);
 });
 bot.action(/courier-broken-no/, async (ctx) => {
-  await selectCourier.confirmCourierBroken(ctx);
+  await selectCourier.promptCourierBroken(ctx);
 });
 bot.action(/courier-remained-yes/, async (ctx) => {
   await selectCourier.confirmCourierRemained(ctx);
 });
 bot.action(/courier-remained-no/, async (ctx) => {
-  await selectCourier.confirmCourierRemained(ctx);
-});
-bot.action(/confirm-distribution:(.+)/, async (ctx) => {
-  await selectCourier.confirmDistribution(ctx);
+  await selectCourier.promptCourierRemained(ctx);
 });
 bot.action(/accept-distribution-yes/, async (ctx) => {
-  await selectCourier.acceptDistribution(ctx);
+  await selectCourier.confirmDistribution(ctx);
+});
+bot.action(/accept-distribution-no/, async (ctx) => {
+  await selectCourier.promptDistribution(ctx);
 });
 bot.action(/courier-accept:(.+):(\d+)/, async (ctx) => {
   await selectCourier.courierAccept(ctx);
@@ -127,21 +127,6 @@ bot.action("cancel", async (ctx) => {
   await eggIntake.cancelEggIntake(ctx);
 });
 
-// Handling broken eggs and expenses
-bot.hears("Chiqim", async (ctx) => {
-  await expenses.sendExpenses(ctx);
-});
-bot.hears("Singan tuxumlar", async (ctx) => {
-  await brokenEggs.sendBrokenEggs(ctx);
-});
-bot.hears("Tuxum kirimi", async (ctx) => {
-  await eggIntake.promptEggImporter(ctx);
-});
-bot.hears("Ombor holati", async (ctx) => {
-  await warehouseStatus(ctx);
-});
-
-// Handling button presses
 bot.action(/choose-importer:(.+):(.+)/, async (ctx) => {
   await eggIntake.promptEggIntake(ctx);
 });
@@ -152,29 +137,65 @@ bot.action(/confirm-broken-eggs:\d+/, async (ctx) => {
 bot.action(/confirm-expenses:\d+/, async (ctx) => {
   await expenses.addExpenses(ctx);
 });
+bot.action(/confirm-left:\d+/, async (ctx) => {
+  await leftEggs.addLeft(ctx);
+});
 
-// Menu button handling
-bot.hears("Tuxum yetkazildi", async (ctx) => {
-  await addMore(ctx);
+// Handle melange actions
+bot.action("warehouse-dailyBroken-yes", async (ctx) => {
+  await melange.confirmBroken(ctx);
 });
-bot.hears("Tuxum chiqimi", async (ctx) => {
-  await selectCourier(ctx);
+bot.action("warehouse-dailyBroken-no", async (ctx) => {
+  await melange.promptBroken(ctx);
 });
-bot.hears("Hisobot", async (ctx) => {
-  await todayDeliveries(ctx);
+bot.action("warehouse-dailyIncision-yes", async (ctx) => {
+  await melange.confirmIncision(ctx);
+});
+bot.action("warehouse-dailyIncision-no", async (ctx) => {
+  await melange.promptIncision(ctx);
+});
+bot.action("warehouse-dailyIntact-yes", async (ctx) => {
+  await melange.confirmIntact(ctx);
+});
+bot.action("warehouse-dailyIntact-no", async (ctx) => {
+  await melange.promptIntact(ctx);
+});
+bot.action("warehouse-dailyMelanj-yes", async (ctx) => {
+  await melange.confirmMelange(ctx);
+});
+bot.action("warehouse-dailyMelanj-no", async (ctx) => {
+  await melange.promptMelange(ctx);
+});
+bot.action("warehouse-remainedConfirm-yes", async (ctx) => {
+  await remained.confirmWarehouseRemained(ctx);
+});
+bot.action("warehouse-remainedConfirm-no", async (ctx) => {
+  await remained.promptWarehouseRemained(ctx);
+});
+bot.action("warehouse-dailyDeficit-yes", async (ctx) => {
+  await remained.sendDeficit(ctx);
+});
+bot.action("warehouse-dailyDeficit-no", async (ctx) => {
+  await remained.promptWarehouseRemained(ctx);
 });
 
 // Handle voice messages
 bot.on("voice", async (ctx) => {
-  if (ctx.session.awaitingCircleVideo) {
+  if (ctx.session.awaitingCircleVideoCourier || ctx.session.awaitingCircleVideoWarehouse || ctx.session.awaitingCircleVideoWarehouse2) {
     ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
   }
 });
 
 // Handle circle video
 bot.on("video_note", async (ctx) => {
-  if (ctx.session.awaitingCircleVideo) {
+  if (ctx.session.awaitingCircleVideoCourier) {
     await paymentReceived.handleCircleVideo(ctx);
+  }
+  if (ctx.session.awaitingCircleVideoWarehouse) {
+    await selectCourier.handleCircleVideo(ctx);
+  }
+  if (ctx.session.awaitingCircleVideoWarehouse2) {
+    await remained.handleCircleVideo(ctx);
   }
 });
 
@@ -195,7 +216,7 @@ app.get("/logs", (req, res) => {
     const result = readLog();
     res.set("Content-Type", "text/plain");
     return res.send(result);
-  } catch(e) {
+  } catch (e) {
     return res.sendStatus(500);
   }
 });
@@ -203,5 +224,6 @@ app.get("/logs", (req, res) => {
 bot.launch();
 logger.info("Bot ✅");
 
-// Pass bot instance to selectCourier
+// Pass bot instance to selectCourier and melange
 selectCourier.setBotInstance(bot);
+melange.setBotInstance(bot);

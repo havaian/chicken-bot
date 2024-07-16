@@ -1,10 +1,13 @@
 const location = require("../functions/courier/location");
 const expenses = require("../functions/courier/expenses");
+const leftEggs = require("../functions/courier/leftEggs");
 const brokenEggs = require("../functions/courier/brokenEggs");
 const eggsDelivered = require("../functions/courier/eggsDelivered");
 const paymentReceived = require("../functions/courier/paymentReceived");
 const eggIntake = require("../functions/warehouse/eggIntake");
 const selectCourier = require("../functions/warehouse/selectCourier");
+const melange = require("../functions/warehouse/melange");
+const remained = require("../functions/warehouse/remained");
 
 const awaitingPromptHandler = async (ctx, next) => {
   if (ctx.message && ctx.message.text) {
@@ -31,6 +34,15 @@ const awaitingPromptHandler = async (ctx, next) => {
     };
 
     switch (true) {
+      case ctx.session.awaitingCircleVideoCourier:
+        await paymentReceived.handleCircleVideo(ctx);
+        break;
+      case ctx.session.awaitingCircleVideoWarehouse:
+        await selectCourier.handleCircleVideo(ctx);
+        break;
+      case ctx.session.awaitingCircleVideoWarehouse2:
+        await remained.handleCircleVideo(ctx);
+        break;
       case ctx.session.awaitingEggsDelivered:
         await handleNumericInput(
           ctx,
@@ -58,6 +70,15 @@ const awaitingPromptHandler = async (ctx, next) => {
           "awaitingExpenses"
         );
         break;
+      case ctx.session.awaitingLeft:
+        await handleNumericInput(
+          ctx,
+          text,
+          "confirm-left",
+          leftEggs.confirmLeft,
+          "awaitingLeft"
+        );
+        break;
       case ctx.session.awaitingBrokenEggs:
         await handleNumericInput(
           ctx,
@@ -76,13 +97,28 @@ const awaitingPromptHandler = async (ctx, next) => {
         await location(ctx);
         break;
       case ctx.session.awaitingDistributedEggs:
-        await selectCourier.confirmDistribution(ctx);
+        await selectCourier.acceptDistribution(ctx);
         break;
       case ctx.session.awaitingCourierRemainedEggs:
         await selectCourier.acceptCourierRemained(ctx);
         break;
       case ctx.session.awaitingCourierBrokenEggs:
         await selectCourier.acceptCourierBroken(ctx);
+        break;
+      case ctx.session.awaitingWarehouseDailyBroken: 
+        await melange.acceptBroken(ctx);
+        break;
+      case ctx.session.awaitingWarehouseDailyIncision: 
+        await melange.acceptIncision(ctx);
+        break;
+      case ctx.session.awaitingWarehouseDailyIntact: 
+        await melange.acceptIntact(ctx);
+        break;
+      case ctx.session.awaitingWarehouseDailyMelange: 
+        await melange.acceptMelange(ctx);
+        break;
+      case ctx.session.awaitingWarehouseRemained: 
+        await remained.acceptWarehouseDeficit(ctx);
         break;
       default:
         await next();

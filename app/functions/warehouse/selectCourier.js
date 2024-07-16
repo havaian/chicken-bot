@@ -1,5 +1,13 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
+const {
+  generateWarehouseHTML,
+  generateWarehouseExcel,
+} = require("../report/warehouseReport");
+const convertHTMLToImage = require("../report/convertHTMLToImage");
+const groups = require("../data/groups");
+const path = require("path");
+const fs = require("fs");
 
 const { logger, readLog } = require("../../utils/logs");
 
@@ -9,7 +17,7 @@ const setBotInstance = (bot) => {
     botInstance = bot;
 };
 
-module.exports = async (ctx) => {
+module.exports.promptCourier = async (ctx) => {
   try {
     ctx.session.selectedCourier = {};
 
@@ -54,21 +62,25 @@ module.exports = async (ctx) => {
   }
 };
 
-module.exports.courierBroken = async (ctx) => {
+module.exports.promptCourierBroken = async (ctx) => {
   try {
-    const courierId = ctx.match[1];
-  
-    const courierResponse = await axios.get(`/courier/${courierId}`, {
-      headers: {
-        "x-user-telegram-chat-id": ctx.chat.id,
-      },
-    });
-    const courier = courierResponse.data;
-  
-    ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num };
-    ctx.session.awaitingCourierBrokenEggs = true;
+    if (!ctx.session.selectedCourier || !ctx.session.selectedCourier._id) {
+      const courierId = ctx.match[1];
+    
+      const courierResponse = await axios.get(`/courier/${courierId}`, {
+        headers: {
+          "x-user-telegram-chat-id": ctx.chat.id,
+        },
+      });
+      const courier = courierResponse.data;
+    
+      ctx.session.selectedCourier = {};
+      ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num };
+      ctx.session.awaitingCourierBrokenEggs = true;
+    }
 
-    await ctx.reply(`${courier.car_num} (${courier.full_name}) mashinadagi singan tuxumlarni kiriting.`);
+    console.log(ctx.session.selectedCourier);
+    await ctx.reply(`${ctx.session.selectedCourier.car_num} (${ctx.session.selectedCourier.full_name}) mashinadagi singan tuxumlarni kiriting.`);
 
     await ctx.deleteMessage();
   } catch (error) {
@@ -144,18 +156,26 @@ module.exports.confirmCourierBroken = async (ctx) => {
       },
     });
 
-    ctx.session.awaitingCourierBrokenEggs = false;
-    ctx.session.awaitingCourierRemainedEggs = true;
-
-    await ctx.reply(`${car_num} (${full_name}) mashinadagi ostatkani kiriting.`);
-
-    await ctx.deleteMessage();
+    this.promptCourierRemained(ctx);
   } catch (error) {
     await ctx.deleteMessage();
     logger.info(error);
     await ctx.reply("Singan tuxumlarni saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
+
+module.exports.promptCourierRemained = async (ctx) => {
+  try {
+    const { full_name, car_num } = ctx.session.selectedCourier;
+    ctx.session.awaitingCourierBrokenEggs = false;
+    ctx.session.awaitingCourierRemainedEggs = true;
+    await ctx.reply(`${car_num} (${full_name}) mashinadagi ostatkani kiriting.`);
+    await ctx.deleteMessage();
+  } catch (error) {
+    logger.info(error);
+    await ctx.reply("Mashinada qolgan tuxumda xatolik yuz berdi. Qayta urunib ko’ring");
+  }
+}
 
 module.exports.acceptCourierRemained = async (ctx) => {
   try {
@@ -220,19 +240,27 @@ module.exports.confirmCourierRemained = async (ctx) => {
         },
       }
     );
-    
-    ctx.session.awaitingCourierRemainedEggs = false;
-    ctx.session.awaitingDistributedEggs = true;
 
-    await ctx.reply(`${car_num} (${full_name}) mashinaga yuklangan tuxumlar sonini kiriting.`);
-    await ctx.deleteMessage();
+    this.promptDistribution(ctx);
   } catch (error) {
     logger.info(error);
     await ctx.reply("Mashinada ostatka tuxumni saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
 
-module.exports.confirmDistribution = async (ctx) => {
+module.exports.promptDistribution = async (ctx) => {
+  try {
+    const { full_name, car_num } = ctx.session.selectedCourier;
+    ctx.session.awaitingCourierRemainedEggs = false;
+    ctx.session.awaitingDistributedEggs = true;
+    await ctx.reply(`${car_num} (${full_name}) mashinaga yuklangan tuxumlar sonini kiriting.`);
+    await ctx.deleteMessage();
+  } catch (error) {
+    await ctx.reply("Mashinaga tuxum yuklashda xatolik yuz berdi. Qayta urunib ko’ring");
+  }
+}
+
+module.exports.acceptDistribution = async (ctx) => {
   try {
     const { _id, car_num, full_name } = ctx.session.selectedCourier;
     
@@ -261,10 +289,12 @@ module.exports.confirmDistribution = async (ctx) => {
   }
 };
 
-module.exports.acceptDistribution = async (ctx) => {
+module.exports.confirmDistribution = async (ctx) => {
   const { _id, full_name, car_num, distribution = 0 } = ctx.session.selectedCourier;
 
   try {
+    await ctx.deleteMessage();
+
     const warehouseActivityResponse = await axios.get(
       "/warehouse/activity/today",
       {
@@ -301,13 +331,70 @@ module.exports.acceptDistribution = async (ctx) => {
       ])
     );
 
-    ctx.reply(`Xabar ${car_num} (${full_name}) mashinaga yetkazildi!`);
-    await ctx.deleteMessage();
+    await ctx.reply(`Xabar ${car_num} (${full_name}) mashinaga yetkazildi!`);
+
+    this.promptCircleVideo(ctx);
   } catch (error) {
     logger.info(error);
     await ctx.reply("Mashinaga xabar yetkazishda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
+
+module.exports.promptCircleVideo = async (ctx) => {
+  try {
+    await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
+    ctx.session.awaitingCircleVideoWarehouse = true;
+  } catch (error) {
+    logger.info(error);
+    await ctx.reply("Dumoloq videoda xatolik yuz berdi. Qayta urunib ko’ring");
+  }
+}
+
+module.exports.handleCircleVideo = async (ctx) => {
+  try {
+    if (!ctx.message.video_note || ctx.message.forward_from) {
+      await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.");
+      return;
+    }
+  
+    if (ctx.message.video_note.duration < 5) {
+      await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.");
+      return;
+    }
+  
+    const warehousePhoneNum = ctx.session.user.phone_num;
+  
+    // Find the group id by courier"s phone number
+    let groupId = null;
+    for (const phone_num of warehousePhoneNum) {
+      for (const [id, numbers] of Object.entries(groups)) {
+        if (numbers.includes(phone_num)) {
+          groupId = id;
+          break;
+        }
+      }
+      if (groupId) {
+        break;
+      }
+    }
+  
+    if (!groupId) {
+      logger.info("selectCourier. Warehouse groupId not found:", groupId, !groupId);
+      await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
+      return;
+    }
+            
+    // Forward the video to the group using message ID
+    const messageId = ctx.message.message_id;
+    await ctx.telegram.forwardMessage(groupId, ctx.chat.id, messageId);
+
+    // Clear session video flag
+    ctx.session.awaitingCircleVideoWarehouse = false;
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Dumaloq video yuborishda xatolik yuz berdi. Qayta urunib ko‘ring.")
+  }
+}
 
 module.exports.courierAccept = async (ctx) => {
   const [action, courierId, amount] = ctx.match;
@@ -385,9 +472,7 @@ module.exports.courierReject = async (ctx) => {
     await ctx.reply("Tuxum xisobga qo’shilishi rad etildi.");
   } catch (error) {
     logger.info(error);
-    await ctx.reply(
-      "Tuxum qo’shishni rad etishda xatolik yuz berdi. Qayta urunib ko’ring"
-    );
+    await ctx.reply("Tuxum qo’shishni rad etishda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
 
