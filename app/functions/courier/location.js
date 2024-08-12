@@ -4,108 +4,73 @@ const chooseBuyer = require("./chooseBuyer");
 
 const { logger, readLog } = require("../../utils/logging");
 
-// module.exports = async (ctx) => {
-//     const { latitude, longitude } = ctx.message.location;
+module.exports.buyerLocation = async (ctx) => {
+  if (ctx.match) {
+    // Delete the previous message
+    await ctx.deleteMessage();
 
-//     try {
-//         const response = await axios.post("/buyer/closest-location", {
-//             lat: latitude,
-//             lng: longitude
-//         }, {
-//             headers: {
-//                 "x-user-telegram-chat-id": ctx.chat.id
-//             }
-//         });
+    ctx.session.match = ctx.match;
+    ctx.session.awaitingClientLocation = true;
 
-//         const buyers = response.data;
-//         if (buyers.length === 0) {
-//             await ctx.reply("Siz yuborgan joylashuv bo’yicha klient topilmadi.");
-//             return;
-//         }
+    await ctx.reply(
+      "Geolokatsiyani yuboring.",
+      Markup.keyboard([
+        [{ text: "Yuborish", request_location: true }],
+        ["Bekor qilish"],
+      ])
+    );
+  }
+}
 
-//         let message = "Ro’yxatdan do’konni tanlang:\n";
-//         const buttons = buyers.map((buyer, index) => {
-//             message += `${index + 1}. ${buyer.full_name}\n`;
-//             return Markup.button.callback(`${index + 1}`, `choose-buyer:${buyer._id}`);
-//         });
+module.exports.chooseBuyer = async (ctx) => {
+  if (
+    ctx.message &&
+    ctx.message.text &&
+    ctx.session.awaitingClientName
+  ) {
+    const searchData = { client_name: ctx.message.text };
+    const response = await axios.post("/buyer/search", searchData, {
+      headers: {
+        "x-user-telegram-chat-id": ctx.chat.id,
+      },
+    });
 
-//         // Create rows of 5 buttons each
-//         const buttonRows = [];
-//         for (let i = 0; i < buttons.length; i += 5) {
-//             buttonRows.push(buttons.slice(i, i + 5));
-//         }
+    const buyers = response.data;
+    if (buyers.length === 0) {
+      await ctx.reply("Siz yuborgan nom bo’yicha do’kon topilmadi.");
+      return;
+    }
 
-//         await ctx.reply(message, Markup.inlineKeyboard([
-//             ...buttonRows,
-//             [Markup.button.callback("Bekor qilish", "cancel")]
-//         ]));
-//     } catch (error) {
-//         logger.info(error);
-//         await ctx.reply("Ushbu do’kon ro’yxatdan topilmadi. Kiritilgan ma’lutni tekshirib, qaytadan urunib ko"ring.");
-//     }
-// };
+    let message = "Ro’yxatdan do’konni tanlang:\n";
+    const buttons = buyers.map((buyer, index) => {
+      message += `${index + 1}. ${buyer.full_name}\n`;
+      return Markup.button.callback(
+        `${index + 1}`,
+        `location-buyer:${buyer._id}`
+      );
+    });
 
-module.exports = async (ctx) => {
+    // Create rows of 5 buttons each
+    const buttonRows = [];
+    for (let i = 0; i < buttons.length; i += 5) {
+      buttonRows.push(buttons.slice(i, i + 5));
+    }
+
+    await ctx.reply(
+      message,
+      Markup.inlineKeyboard([
+        ...buttonRows,
+        [Markup.button.callback("Bekor qilish", "cancel")],
+      ])
+    );
+
+    ctx.session.awaitingClientName = false;
+  }
+}
+
+module.exports.sendBuyersLocation = async (ctx) => {
   try {
-    if (ctx.match) {
-      // Delete the previous message
-      await ctx.deleteMessage();
-
-      ctx.session.match = ctx.match;
-      ctx.session.awaitingClientLocation = true;
-
-      await ctx.reply(
-        "Geolokatsiyani yuboring.",
-        Markup.keyboard([
-          [{ text: "Yuborish", request_location: true }],
-          ["Bekor qilish"],
-        ])
-          .resize()
-          .oneTime()
-      );
-    } else if (
-      ctx.message &&
-      ctx.message.text &&
-      ctx.session.awaitingClientName
-    ) {
-      const searchData = { client_name: ctx.message.text };
-      const response = await axios.post("/buyer/search", searchData, {
-        headers: {
-          "x-user-telegram-chat-id": ctx.chat.id,
-        },
-      });
-
-      const buyers = response.data;
-      if (buyers.length === 0) {
-        await ctx.reply("Siz yuborgan nom bo’yicha do’kon topilmadi.");
-        return;
-      }
-
-      let message = "Ro’yxatdan do’konni tanlang:\n";
-      const buttons = buyers.map((buyer, index) => {
-        message += `${index + 1}. ${buyer.full_name}\n`;
-        return Markup.button.callback(
-          `${index + 1}`,
-          `location-buyer:${buyer._id}`
-        );
-      });
-
-      // Create rows of 5 buttons each
-      const buttonRows = [];
-      for (let i = 0; i < buttons.length; i += 5) {
-        buttonRows.push(buttons.slice(i, i + 5));
-      }
-
-      await ctx.reply(
-        message,
-        Markup.inlineKeyboard([
-          ...buttonRows,
-          [Markup.button.callback("Bekor qilish", "cancel")],
-        ])
-      );
-
-      ctx.session.awaitingClientName = false;
-    } else if (
+    if (
       ctx.message &&
       ctx.message.location &&
       ctx.session.awaitingClientLocation
@@ -117,8 +82,8 @@ module.exports = async (ctx) => {
             [{ text: "Yuborish", request_location: true }],
             ["Bekor qilish"],
           ])
-            .resize()
-            .oneTime()
+            
+            
         );
         ctx.session.awaitingClientLocation = true;
         return;

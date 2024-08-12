@@ -1,80 +1,69 @@
-const { Markup } = require("telegraf");
-const axios = require("../../axios");
+// const { Markup } = require("telegraf");
+// const axios = require("../../axios");
 
-const { logger, readLog } = require("../../utils/logging");
+// const { logger, readLog } = require("../../utils/logging");
 
-const cancel = require("../general/cancel");
+const { sendIncisionEggs } = require("./incision");
+const { sendMelange } = require("./melange");
+
+// const nonZero = require("../general/non-zero");
+// let eggs = "";
+
+// const letters = require("../data/btnEmojis");
+
+// const sessionKey = "awaitingBrokenEggs";
+// const eggsDataKey = "eggsBrokenData";
+
+// const promptBroken = async (ctx, type) => {
+  // eggs = nonZero(ctx.session.currentEggs);
+  // if (!ctx.session.categories || type === 2) {
+  //   ctx.session.categories = Object.keys(eggs);
+  //   ctx.session.currentCategoryIndex = 0;
+  //   ctx.session[eggsDataKey] = {};
+  //   ctx.session[sessionKey] = true;
+  // }
+
+  // if (sessionKey) {
+  //   const category = ctx.session.categories[ctx.session.currentCategoryIndex];
+
+  //   if (ctx.message && ctx.message.text && type != 2) {
+  //     const amount = parseInt(ctx.message.text, 10);
+  //     if (isNaN(amount) || amount < 0) {
+  //       await ctx.reply("Iltimos, to’g’ri son kiriting:");
+  //       return;
+  //     }
+
+  //     if (!ctx.session[eggsDataKey][category]) {
+  //       ctx.session[eggsDataKey][category] = 0;
+  //     }
+  //     ctx.session[eggsDataKey][category] += amount;
+
+  //     ctx.session.currentCategoryIndex++;
+  //   }
+
+  //   if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
+  //     const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
+  //     await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum singan?`);
+  //   } else {
+  //     await confirmBrokenEggs(ctx);
+  //   }
+  // }
+// }
 
 exports.sendBrokenEggs = async (ctx) => {
-  ctx.session.awaitingBrokenEggs = true;
-  await ctx.reply(
-    "Iltimos, singan tuxumlar miqdorini yozib yuboring.",
-    Markup.keyboard([
-      ["Bekor qilish"]
-    ]).resize().oneTime()
-  );
-};
-
-exports.confirmBrokenEggs = async (ctx) => {
-  if (ctx.session.awaitingBrokenEggs) {
-    const amount = parseInt(ctx.message.text, 10);
-    if (isNaN(amount) || amount <= 0) {
-      await ctx.reply(
-        "Noto’g’ri qiymat. Iltimos, singan tuxumlar miqdorini yozib yuboring.",
-        Markup.keyboard([
-            ["Bekor qilish"]
-        ]).resize().oneTime()
-      );
-      return;
-    }
-    ctx.session.brokenEggsAmount = amount;
-    await ctx.reply(
-      `Siz ${amount}ta singan tuxum kiritilganini tasdiqlaysizmi?`,
-      Markup.inlineKeyboard([
-        [Markup.button.callback("Tasdiqlash", `confirm-broken-eggs:${amount}`)],
-        [Markup.button.callback("Bekor qilish", "cancel")],
-      ])
-    );
-    ctx.session.awaitingBrokenEggs = false;
-  }
-};
-
-exports.addBrokenEggs = async (ctx) => {
-  const amount = ctx.session.brokenEggsAmount;
-  const courierPhoneNum = ctx.session.user.phone_num;
-
   try {
-    // Get today's activity for the courier
-    const courierActivityResponse = await axios.get(
-      `/courier/activity/today/${courierPhoneNum}`,
-      {
-        headers: {
-          "x-user-telegram-chat-id": ctx.chat.id,
-        },
-      }
-    );
-    const courierActivity = courierActivityResponse.data;
+    await sendIncisionEggs(ctx);
+    // await sendMelange(ctx);
+//     const type = ((ctx?.match && ctx?.match[0] === "confirm-broken-eggs-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
 
-    // Update courier"s activity with broken eggs
-    const updatedCourierActivity = {
-      ...courierActivity,
-      broken: courierActivity.broken + amount,
-    };
+//     if (type === 2) {
+//       await ctx.reply(`Singan tuxumlar sonini kiriting`,
+//         Markup.keyboard([
+//           ["Bekor qilish"]
+//         ]));
+//     }
 
-    await axios.put(
-      `/courier/activity/${courierActivity._id}`,
-      updatedCourierActivity,
-      {
-        headers: {
-          "x-user-telegram-chat-id": ctx.chat.id,
-        },
-      }
-    );
-
-    // Delete the previous message
-    await ctx.deleteMessage();
-
-    cancel(ctx, `Sizning hisobingizga ${amount}ta singan tuxum qo’shildi`);
+//     promptBroken(ctx, type);
   } catch (error) {
     logger.info(error);
     await ctx.reply(
@@ -82,3 +71,87 @@ exports.addBrokenEggs = async (ctx) => {
     );
   }
 };
+
+// const confirmBrokenEggs = async (ctx) => {
+//   try {
+//     let amountMsg = "";
+
+//     for (let y in Object.keys(ctx.session[eggsDataKey])) {
+//       const x = Object.keys(ctx.session[eggsDataKey])[y];
+//       amountMsg += `${letters[x]}: ${ctx.session[eggsDataKey][x]}\n`
+//     }
+
+//     await ctx.reply(`Singan tuxumlar\n\n${amountMsg}\n\n`);
+//     await ctx.reply(`Singan tuxum kiritilganini tasdiqlaysizmi?`,
+//       Markup.inlineKeyboard([
+//         [Markup.button.callback("Ha", "confirm-broken-eggs-yes"),
+//         Markup.button.callback("Yo’q", "confirm-broken-eggs-no")],
+//       ])
+//     );
+//   } catch (error) {
+//     logger.info(error);
+//     await ctx.reply(
+//       "Singan tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+//     );
+//   }
+// };
+
+// exports.addBrokenEggs = async (ctx) => {
+//   try {
+//     // Get today's activity for the courier
+//     const courierActivityResponse = await axios.get(
+//       `/courier/activity/today/${ctx.session.user.phone_num}`,
+//       {
+//         headers: {
+//           "x-user-telegram-chat-id": ctx.chat.id,
+//         },
+//       }
+//     );
+//     const courierActivity = courierActivityResponse.data;
+
+//     const current = courierActivity.current;
+
+//     for (let y in Object.keys(ctx.session[eggsDataKey])) {
+//       const x = Object.keys(ctx.session[eggsDataKey])[y];
+      
+//       // If current[x] is not defined, set it to 0
+//       if (typeof current[x] === 'undefined') {
+//         current[x] = 0;
+//       }
+
+//       current[x] = current[x] - ctx.session[eggsDataKey][x];
+//     }
+
+//     // Update courier"s activity with broken eggs
+//     const updatedCourierActivity = {
+//       ...courierActivity,
+//       current: courierActivity.current,
+//       broken: ctx.session[eggsDataKey],
+//     };
+
+//     await axios.put(
+//       `/courier/activity/${courierActivity._id}`,
+//       updatedCourierActivity,
+//       {
+//         headers: {
+//           "x-user-telegram-chat-id": ctx.chat.id,
+//         },
+//       }
+//     );
+
+//     // Delete the previous message
+//     await ctx.deleteMessage();
+
+//     ctx.session[eggsDataKey] = {};
+//     ctx.session.categories = null;
+//     ctx.session.currentCategoryIndex = null;
+//     ctx.session.awaitingBrokenEggs = false;
+
+//     await sendIncisionEggs(ctx);
+//   } catch (error) {
+//     logger.info(error);
+//     await ctx.reply(
+//       "Singan tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+//     );
+//   }
+// };

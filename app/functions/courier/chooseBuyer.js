@@ -3,6 +3,8 @@ const { Markup } = require("telegraf");
 
 const { logger, readLog } = require("../../utils/logging");
 
+const eggsDelivered = require("./eggsDelivered");
+
 module.exports = async (ctx) => {
   const buyerId = ctx.match[1];
   ctx.session.selectedBuyerId = buyerId;
@@ -15,23 +17,14 @@ module.exports = async (ctx) => {
     });
     const buyer = response.data;
 
-    ctx.session.buyers = ctx.session.buyers || [];
-    ctx.session.buyers.push({
+    ctx.session.buyer = {
       ...buyer,
       addedAt: new Date(),
       eggsDelivered: 0,
       paymentAmount: 0,
-    });
+    };
 
-    await ctx.reply(
-      "Tuxum yetkazildimi?",
-      Markup.inlineKeyboard([
-        [
-          Markup.button.callback("Ha", "eggs-delivered-yes"),
-          Markup.button.callback("Yo’q", "eggs-delivered-no"),
-        ]
-      ])
-    );
+    eggsDelivered.deliverEggs(ctx);
 
     // // Delete the previous message
     // await ctx.deleteMessage();

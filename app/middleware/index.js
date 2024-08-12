@@ -6,7 +6,6 @@ exports.middleware = async (ctx, next) => {
   // Initialize user session and user data field
   ctx.session = ctx.session || {};
   ctx.session.user = ctx.session.user || {};
-
   // If user data is not present in session, show a button for user to send contact
   if (
     Object.keys(ctx.session.user).length === 0 &&

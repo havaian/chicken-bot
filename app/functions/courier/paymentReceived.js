@@ -18,64 +18,19 @@ const cancel = require("../general/cancel");
 const { logger, readLog } = require("../../utils/logging");
 
 module.exports = async (ctx) => {
-  const action = ctx.match[0];
-  ctx.session.buyers = ctx.session.buyers || [];
-
-  switch (action) {
-    case "payment-received-yes":
-      await ctx.reply(
-        "Nech pul olindi?",
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback("30", "payment-amount:30"),
-            Markup.button.callback("60", "payment-amount:60"),
-          ],
-          [
-            Markup.button.callback("90", "payment-amount:90"),
-            Markup.button.callback("120", "payment-amount:120"),
-          ],
-          [
-            Markup.button.callback("150", "payment-amount:150"),
-            Markup.button.callback("180", "payment-amount:180"),
-          ],
-          [Markup.button.callback("Boshqa", "payment-other")],
-          [Markup.button.callback("Bekor qilish", "cancel")],
-        ])
-      );
-      break;
-
-    case "payment-received-no":
-      await completeTransaction(ctx, 0);
-      break;
-
-    case "payment-other":
-      ctx.session.awaitingPaymentAmount = true;
-      await ctx.reply("Iltimos, necha pul olganingizni kiriting:",
-        Markup.keyboard([
-          ["Bekor qilish"]
-        ]).resize().oneTime());
-      break;
-
-    default:
-      const amount = action.split(":")[1];
-      await completeTransaction(ctx, parseInt(amount, 10));
-      break;
-  }
-
-  // Delete the previous message
   await ctx.deleteMessage();
+  ctx.session.awaitingPaymentAmount = true;
+  await ctx.reply("Iltimos, necha pul olganingizni kiriting:");
 };
 
-const completeTransaction = async (ctx, paymentAmount) => {
-  const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1] || {};
+module.exports.completeTransaction = async (ctx) => {
+  const selectedBuyer = ctx.session.buyer;
 
+  const paymentAmount = ctx.message.text
   selectedBuyer.paymentAmount = paymentAmount;
 
   if (paymentAmount < 0) {
-    await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting",
-      Markup.keyboard([
-        ["Bekor qilish"]
-      ]).resize().oneTime());
+    await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting");
     return;
   }
 
@@ -84,45 +39,26 @@ const completeTransaction = async (ctx, paymentAmount) => {
   await ctx.reply(
     `Tasdiqlaysizmi?`,
     Markup.inlineKeyboard([
-      [Markup.button.callback("Tasdiqlash", "confirm-transaction")],
-      [Markup.button.callback("Bekor qilish", "cancel")],
+      [
+        Markup.button.callback("Tasdiqlash", "confirm-transaction"), 
+        Markup.button.callback("Bekor qilish", "cancel")
+      ],
     ])
   );
-}
+};
 
 module.exports.confirmTransaction = async (ctx) => {
-  handleCircleVideo(ctx);
-  // await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
-  //   Markup.keyboard([
-  //       ["Bekor qilish"]
-  //   ]).resize().oneTime());
-  // ctx.session.awaitingCircleVideoCourier = true;
+  await handleCircleVideo(ctx);
 
-  // // Delete the previous message
-  // await ctx.deleteMessage();
+  // Delete the previous message
+  await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
 };
 
 const handleCircleVideo = async (ctx) => {
   try {
-    // if (!ctx.message.video_note || ctx.message.forward_from) {
-    //   await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
-    //     Markup.keyboard([
-    //         ["Bekor qilish"]
-    //     ]).resize().oneTime());
-    //   return;
-    // }
-  
-    // if (ctx.message.video_note.duration < 5) {
-    //   await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.",
-    //     Markup.keyboard([
-    //         ["Bekor qilish"]
-    //     ]).resize().oneTime());
-    //   return;
-    // }
-  
     const courierPhoneNum = ctx.session.user.phone_num;
-  
-    // Find the group id by courier"s phone number
+
+    // Find the group id by courier's phone number
     let groupId = null;
     for (const [id, numbers] of Object.entries(groups)) {
       if (numbers.includes(courierPhoneNum)) {
@@ -130,18 +66,14 @@ const handleCircleVideo = async (ctx) => {
         break;
       }
     }
-  
+
     if (!groupId) {
-      logger.info("paymentReceived. Warehouse groupId not found:", groupId, !groupId);
+      logger.info("paymentReceived. Courier groupId not found:", groupId, !groupId);
       await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
       return;
     }
-    
-    // // Forward the video to the group using message ID
-    // const messageId = ctx.message.message_id;
-    // await ctx.telegram.forwardMessage(groupId, ctx.chat.id, messageId);
 
-    const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
+    const selectedBuyer = ctx.session.buyer;
     // Get today's activity for the buyer
     const buyerActivityResponse = await axios.get(
       `/buyer/activity/today/${selectedBuyer.phone_num || selectedBuyer._id}`,
@@ -171,6 +103,28 @@ const handleCircleVideo = async (ctx) => {
     });
     const courier = courierResponse.data;
     courierActivity.courier_name = courier.full_name;
+    courierActivity.car_num = courier.car_num;
+
+    let msg = "";
+    let totalPrice = 0;
+
+    const paymentAmount = parseInt(selectedBuyer.paymentAmount, 10);
+
+    const current = courierActivity.current || {};
+
+    for (let x in Object.keys(selectedBuyer.eggsDelivered)) {
+      msg += `${selectedBuyer.eggsDelivered[x].category}: ${selectedBuyer.eggsDelivered[x].amount} (${egg_price[selectedBuyer.eggsDelivered[x].category]} so‘m)\n`;
+      totalPrice += selectedBuyer.eggsDelivered[x].amount * egg_price[selectedBuyer.eggsDelivered[x].category];
+      selectedBuyer.eggsDelivered[x].price = egg_price[selectedBuyer.eggsDelivered[x].category];
+      if (Object.keys(current).length > 0) {
+        if (current[selectedBuyer.eggsDelivered[x].category] - selectedBuyer.eggsDelivered[x].amount < 0) { 
+          ctx.reply("Sizning moshinangizda tuxum yetarli emas"); 
+          return; 
+        } else { 
+          current[selectedBuyer.eggsDelivered[x].category] = current[selectedBuyer.eggsDelivered[x].category] - selectedBuyer.eggsDelivered[x].amount;
+        }
+      }
+    }
 
     // Create delivered_to object with details
     const deliveryDetailsBuyer = {
@@ -180,22 +134,34 @@ const handleCircleVideo = async (ctx) => {
         phone_num: courier.phone_num,
         car_num: courier.car_num,
       },
-      eggs: selectedBuyer.eggsDelivered || 0,
-      payment: selectedBuyer.paymentAmount || 0,
-      price: egg_price,
-      debt: buyerActivity.payment,
-      time: new Date().toLocaleString(), // Add the time of the delivery
+      eggs: selectedBuyer.eggsDelivered || [],
+      payment: paymentAmount || 0,
+      debt: buyerActivity.payment + totalPrice - paymentAmount,
+      time: new Date().toLocaleString(),
     };
 
-    // Update buyer"s activity
+    // Update buyer's activity
     const updatedBuyerActivity = {
       ...buyerActivity,
       accepted: [...buyerActivity.accepted, deliveryDetailsBuyer],
-      payment:
-        buyerActivity.payment -
-        selectedBuyer.paymentAmount +
-        (selectedBuyer.eggsDelivered || 0) * egg_price,
+      debt: buyerActivity.debt + totalPrice - paymentAmount,
     };
+
+    let eggsMsg = "";
+
+    for (let y in Object.keys(selectedBuyer.eggsDelivered)) {
+      const x = Object.keys(selectedBuyer.eggsDelivered)[y];
+      eggsMsg += selectedBuyer.eggsDelivered[x].amount > 0 ? `${selectedBuyer.eggsDelivered[x].category}: ${selectedBuyer.eggsDelivered[x].amount}ta (${egg_price[selectedBuyer.eggsDelivered[x].category]} so'm)\n` : "";
+    }
+
+    const text = await message(
+      eggsMsg,
+      selectedBuyer.paymentAmount,
+      totalPrice - paymentAmount,
+      buyerActivity.debt + totalPrice - paymentAmount
+    );
+
+    selectedBuyer.phone_num ? sendSMS(selectedBuyer.phone_num, text) : {};
 
     await axios.put(
       `/buyer/activity/${buyerActivity._id}`,
@@ -207,34 +173,26 @@ const handleCircleVideo = async (ctx) => {
       }
     );
 
-    const text = await message(
-      deliveryDetailsBuyer.eggs,
-      deliveryDetailsBuyer.price,
-      (selectedBuyer.eggsDelivered || 0) * egg_price,
-      selectedBuyer.paymentAmount,
-      selectedBuyer.paymentAmount - (selectedBuyer.eggsDelivered || 0) * egg_price,
-      updatedBuyerActivity.payment
-    );
-
-    selectedBuyer.phone_num ? sendSMS(selectedBuyer.phone_num, text) : {};
-
     // Create delivered_to object with details
     const deliveryDetailsCourier = {
-      id: selectedBuyer._id,
+      buyer: {
+        _id: selectedBuyer._id,
+        full_name: selectedBuyer.full_name,
+        phone_num: selectedBuyer.phone_num,
+      },
       name: selectedBuyer.full_name,
-      eggs: selectedBuyer.eggsDelivered || 0,
-      payment: selectedBuyer.paymentAmount || 0,
-      price: egg_price,
-      debt: updatedBuyerActivity.payment,
+      eggs: selectedBuyer.eggsDelivered || [],
+      payment: paymentAmount || 0,
+      debt: buyerActivity.debt + totalPrice - paymentAmount,
       time: new Date().toLocaleString(), // Add the time of the delivery
     };
 
-    // Update courier"s activity
+    // Update courier's activity
     const updatedCourierActivity = {
       ...courierActivity,
       delivered_to: [...courierActivity.delivered_to, deliveryDetailsCourier],
-      earnings: courierActivity.earnings + selectedBuyer.paymentAmount,
-      current: courierActivity.current - (selectedBuyer.eggsDelivered || 0), // Subtract eggs delivered from current
+      earnings: courierActivity.earnings + paymentAmount,
+      current: courierActivity.current || {},
     };
 
     await axios.put(
@@ -276,18 +234,19 @@ const handleCircleVideo = async (ctx) => {
 
     // Send image and Excel file to user
     await ctx.replyWithPhoto({ source: imageFilename });
-    await ctx.replyWithDocument({ source: excelFilename });
+    // await ctx.replyWithDocument({ source: excelFilename });
 
+    // // Forward reports to the group
+    // await ctx.telegram.sendDocument(
+    //   groupId,
+    //   { source: excelFilename },
+    //   { caption: `${courier.full_name}. Tuxum yetkazildi. Xisobot:` }
+    // );
     // Forward reports to the group
-    await ctx.telegram.sendDocument(
-      groupId,
-      { source: excelFilename },
-      { caption: `Xisobot: ${courier.full_name}` }
-    );
     await ctx.telegram.sendPhoto(
       groupId,
       { source: imageFilename },
-      { caption: `Xisobot: ${courier.full_name}` }
+      { caption: `${courier.full_name}. Tuxum yetkazildi. Xisobot:` }
     );
 
     cancel(ctx, "Tanlang:");

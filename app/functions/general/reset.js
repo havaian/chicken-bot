@@ -1,6 +1,7 @@
 const resetState = (ctx) => {
-  // Reset session, preserving only the user information
-  ctx.session = { user: ctx.session.user };
+  // Preserve only the user information and reset the rest of the session
+  const { user } = ctx.session;
+  ctx.session = { user };
 };
 
 module.exports = resetState;

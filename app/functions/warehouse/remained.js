@@ -13,6 +13,15 @@ const cancel = require("../general/cancel");
 
 const { logger, readLog } = require("../../utils/logging");
 
+const { categoriesByTextObject } = require("../general/categories");
+
+const letters = require("../data/btnEmojis");
+
+const eggs = {
+    "D1": 960,
+    "D2": 990
+};
+
 let botInstance = null;
 
 const setBotInstance = (bot) => {
@@ -46,7 +55,7 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
                 await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
                     Markup.keyboard([
                         ["Bekor qilish"]
-                    ]).resize().oneTime());
+                    ]));
                 return;
             }
 
@@ -54,7 +63,7 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
                 await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.",
                     Markup.keyboard([
                         ["Bekor qilish"]
-                    ]).resize().oneTime());
+                    ]));
                 return;
             }
 
@@ -84,18 +93,18 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
 
         // Send image and Excel file to user
         await ctx.replyWithPhoto({ source: imageFilename });
-        await ctx.replyWithDocument({ source: excelFilename });
+        // await ctx.replyWithDocument({ source: excelFilename });
 
-        // Forward reports to the group
-        await ctx.telegram.sendDocument(
-            groupId,
-            { source: excelFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
-        );
+        // // Forward reports to the group
+        // await ctx.telegram.sendDocument(
+        //     groupId,
+        //     { source: excelFilename },
+        //     { caption: `${courier.full_name}. Ombor uchun qolgan tuxum kiritildi. Xisobot` }
+        // );
         await ctx.telegram.sendPhoto(
             groupId,
             { source: imageFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
+            { caption: `${courier.full_name}. Ombor uchun qolgan tuxum kiritildi. Xisobot` }
         );
 
         cancel(ctx, "Tanlang:");
@@ -114,7 +123,11 @@ module.exports.promptWarehouseRemainedConfirm = async (ctx) => {
         });
         const warehouseActivity = warehouseActivityResponse.data;
 
-        await ctx.reply(`Omborda ${warehouseActivity.current}ta tuxum qolgan.`,
+        const summaryMessage = Object.entries(warehouseActivity.current)
+            .map(([category, amount]) => `${letters[category]}: ${amount}`)
+            .join("\n");
+
+        await ctx.reply(`Omborda qolgan tuxum bo’yicha ma’lumot:\n\n${summaryMessage}`,
             Markup.inlineKeyboard([
                 [
                     Markup.button.callback("Ha", "warehouse-remainedConfirm-yes"),
@@ -138,7 +151,7 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
 
         const updatedWarehouseActivity = {
             ...warehouseActivity,
-            deficit: 0,
+            deficit: {},
             remained: warehouseActivity.current
         };
 
@@ -147,8 +160,6 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
                 "x-user-telegram-chat-id": ctx.chat.id,
             },
         });
-
-        const warehousePhoneNum = ctx.session.user.phone_num;
 
         // Generate HTML and Excel reports
         const reportDate = new Date().toISOString().split("T")[0];
@@ -166,20 +177,33 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
         const imageFilename = `${reportDir}/warehouse_${reportDate}.jpg`;
         const excelFilename = `${reportDir}/warehouse_${reportDate}.xlsx`;
 
-        generateWarehouseHTML(data, htmlFilename);
-        await generateWarehouseExcel(data, excelFilename);
+        generateWarehouseHTML(updatedWarehouseActivity, htmlFilename);
+        await generateWarehouseExcel(updatedWarehouseActivity, excelFilename);
         await convertHTMLToImage(htmlFilename, imageFilename);
 
         // Send image and Excel file to user
         await ctx.replyWithPhoto({ source: imageFilename });
-        await ctx.replyWithDocument({ source: excelFilename });
+        // await ctx.replyWithDocument({ source: excelFilename });
 
-        // Forward reports to the group
-        await ctx.telegram.sendDocument(
-            groupId,
-            { source: excelFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
-        );
+        let groupId = null;
+        for (const phone_num of ctx.session.user.phone_num) {
+            for (const [id, numbers] of Object.entries(groups)) {
+                if (numbers.includes(phone_num)) {
+                    groupId = id;
+                    break;
+                }
+            }
+            if (groupId) {
+                break;
+            }
+        }
+
+        // // Forward reports to the group
+        // await ctx.telegram.sendDocument(
+        //     groupId,
+        //     { source: excelFilename },
+        //     { caption: `Xisobot: ${ctx.session.user.full_name}` }
+        // );
         await ctx.telegram.sendPhoto(
             groupId,
             { source: imageFilename },
@@ -188,7 +212,7 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
 
         cancel(ctx, "Tanlang:");
         
-        // sendReport(ctx, warehousePhoneNum, updatedWarehouseActivity);
+        // sendReport(ctx, ctx.session.user.phone_num, updatedWarehouseActivity);
         await ctx.deleteMessage();
     } catch (error) {
         logger.info(error);
@@ -198,32 +222,29 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
 
 module.exports.promptWarehouseRemained = async (ctx) => {
     try {
-        await ctx.reply("Ombordagi tuxum sonini kiriting",
-            Markup.keyboard([
-                ["Bekor qilish"]
-            ]).resize().oneTime());
-        ctx.session.awaitingWarehouseRemained = true;
-        await ctx.deleteMessage();
-    } catch (error) {
-        logger.info(error);
-        await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!");
-    }
-}
+        const type = ((ctx?.match && ctx?.match[0] === "warehouse-dailyDeficit-no") || typeof ctx.session["warehouseRemained"] === "undefined") ? 2 : 1;
 
-module.exports.acceptWarehouseDeficit = async (ctx) => {
-    try {
-        const amount = ctx.text;
-        const amountInt = parseInt(amount, 10);
-        ctx.session.warehouseRemained = amountInt;
+        const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyDeficit-no");
 
-        await ctx.reply(`Tasdiqlang`,
-            Markup.inlineKeyboard([
-                [
-                    Markup.button.callback("Ha", "warehouse-dailyDeficit-yes"),
-                    Markup.button.callback("Yo’q", "warehouse-dailyDeficit-no"),
-                ]
-            ]))
-        ctx.session.awaitingWarehouseRemained = false;
+        if (deleteMsg) {
+            await ctx.deleteMessage();
+        }
+
+        const keyboard = Markup.inlineKeyboard([
+            [
+                Markup.button.callback("Ha", "warehouse-dailyDeficit-yes"),
+                Markup.button.callback("Yo’q", "warehouse-dailyDeficit-no"),
+            ]
+        ]);
+
+        if (type === 2) {
+            await ctx.reply("Ombordagi qolgan tuxumlar sonini kiriting",
+                Markup.keyboard([
+                    ["Bekor qilish"]
+                ]));
+        }
+
+        categoriesByTextObject(ctx, "awaitingWarehouseRemained", "qolgan", keyboard, type, "warehouseRemained", eggs);
     } catch (error) {
         logger.info(error);
         await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!");
@@ -239,17 +260,32 @@ module.exports.sendDeficit = async (ctx) => {
         });
         const warehouseActivity = warehouseActivityResponse.data;
 
-        const deficit = warehouseActivity.current - ctx.session.warehouseRemained;
+        const calculateDeficit = (current, remained) => {
+            const deficit = {};
+            for (const category in current) {
+                deficit[category] = (current[category] || 0) - (remained[category] || 0);
+            }
+            return deficit;
+        };
+
+        const deficit = calculateDeficit(warehouseActivity.current, ctx.session.warehouseRemained);
         ctx.session.deficit = deficit;
 
-        await ctx.reply(`Sizda ${deficit}ta tuxum kamomad aniqlandi`);
+        const deficitMessage = Object.entries(deficit)
+            .map(([category, amount]) => `${letters[category]}: ${amount}ta`)
+            .join("\n");
 
-        this.promptCircleVideo(ctx,);
+        await ctx.reply(`Sizda quyidagi tuxum kamomad aniqlandi:\n${deficitMessage}`);
+
+        ctx.session.categories = null;
+        ctx.session.currentCategoryIndex = null;
+        
+        this.promptCircleVideo(ctx);
     } catch (error) {
         logger.info(error);
-        await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!");
+        await ctx.reply("Xatolik yuz berdi! Qayta urunib ko’ring!");
     }
-}
+};
 
 module.exports.promptCircleVideo = async (ctx) => {
     handleCircleVideo(ctx);
@@ -257,7 +293,7 @@ module.exports.promptCircleVideo = async (ctx) => {
     //     await ctx.reply("Iltimos, hisobot uchun dumoloq video yuboring",
     //         Markup.keyboard([
     //             ["Bekor qilish"]
-    //         ]).resize().oneTime());
+    //         ]));
     //     ctx.session.awaitingCircleVideoWarehouse2 = true;
     //     await ctx.deleteMessage();
     // } catch (error) {
@@ -265,7 +301,7 @@ module.exports.promptCircleVideo = async (ctx) => {
     //     await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!",
     //         Markup.keyboard([
     //             ["Bekor qilish"]
-    //         ]).resize().oneTime());
+    //         ]));
     // }
 }
 
@@ -292,7 +328,7 @@ const handleCircleVideo = async (ctx) => {
             },
         });
 
-        const messageId = ctx.message.message_id;
+        // const messageId = ctx.message.message_id;
 
         // Generate HTML and Excel reports
         const reportDate = new Date().toISOString().split("T")[0];
@@ -310,25 +346,41 @@ const handleCircleVideo = async (ctx) => {
         const imageFilename = `${reportDir}/warehouse_${reportDate}.jpg`;
         const excelFilename = `${reportDir}/warehouse_${reportDate}.xlsx`;
 
-        generateWarehouseHTML(data, htmlFilename);
-        await generateWarehouseExcel(data, excelFilename);
+        generateWarehouseHTML(warehouseActivity, htmlFilename);
+        await generateWarehouseExcel(warehouseActivity, excelFilename);
         await convertHTMLToImage(htmlFilename, imageFilename);
 
         // Send image and Excel file to user
         await ctx.replyWithPhoto({ source: imageFilename });
-        await ctx.replyWithDocument({ source: excelFilename });
+        // await ctx.replyWithDocument({ source: excelFilename });
 
-        // Forward reports to the group
-        await ctx.telegram.sendDocument(
-            groupId,
-            { source: excelFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
-        );
+        let groupId = null;
+        for (const phone_num of ctx.session.user.phone_num) {
+            for (const [id, numbers] of Object.entries(groups)) {
+                if (numbers.includes(phone_num)) {
+                    groupId = id;
+                    break;
+                }
+            }
+            if (groupId) {
+                break;
+            }
+        }
+
+        // // Forward reports to the group
+        // await ctx.telegram.sendDocument(
+        //     groupId,
+        //     { source: excelFilename },
+        //     { caption: `Xisobot: ${ctx.session.user.full_name}` }
+        // );
         await ctx.telegram.sendPhoto(
             groupId,
             { source: imageFilename },
             { caption: `Xisobot: ${ctx.session.user.full_name}` }
         );
+
+        ctx.session["warehouseRemained"] = {};
+        ctx.session["deficit"] = 0;
 
         cancel(ctx, "Tanlang:");
 

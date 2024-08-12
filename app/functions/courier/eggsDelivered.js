@@ -1,105 +1,123 @@
 const { Markup } = require("telegraf");
 const axios = require("../../axios");
+const paymentReceived = require("./paymentReceived");
+const nonZero = require("../general/non-zero");
+const letters = require("../data/btnEmojis");
 
-module.exports = async (ctx) => {
-  const action = ctx.match[0];
-  ctx.session.buyers = ctx.session.buyers || [];
+const eggsDataKey = "eggsDeliveredData";
 
-  switch (action) {
-    case "eggs-delivered-yes":
-      await ctx.reply(
-        "Nechta tuxum yetkazildi?",
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback("180", "eggs-amount:180"),
-            Markup.button.callback("360", "eggs-amount:360"),
-          ],
-          [
-            Markup.button.callback("540", "eggs-amount:540"),
-            Markup.button.callback("720", "eggs-amount:720"),
-          ],
-          [
-            Markup.button.callback("1080", "eggs-amount:1080"),
-            Markup.button.callback("1440", "eggs-amount:1440"),
-          ],
-          [Markup.button.callback("Boshqa", "eggs-other")],
-          [Markup.button.callback("Bekor qilish", "cancel")],
-        ])
-      );
-      break;
+let eggs = "";
 
-    case "eggs-delivered-no":
-      await ctx.reply(`Siz 0ta tuxum yetkazilganini tanladingiz.`);
-      await ctx.reply(
-        "Pul olindimi?",
-        Markup.inlineKeyboard([
-          // [Markup.button.callback("Ha", "payment-received-yes"), Markup.button.callback("Yo’q", "payment-received-no")],
-          [
-            Markup.button.callback("Ha", "payment-other"),
-            Markup.button.callback("Yo’q", "payment-received-no"),
-          ]
-        ])
-      );
-      break;
+module.exports.deliverEggs = async (ctx) => {
+  eggs = nonZero(ctx.session.currentEggs);
 
-    case "eggs-other":
-      ctx.session.awaitingEggsDelivered = true;
-      await ctx.reply("Iltimos, qancha tuxum yetkazganingizni kiriting:",
-        Markup.keyboard([
-          ["Bekor qilish"]
-        ]).resize().oneTime());
-      break;
-
-    default:
-      const amount = action.split(":")[1];
-      await completeEggsDelivery(ctx, parseInt(amount, 10));
-      break;
+  if (!ctx.session.categories) {
+    ctx.session.categories = Object.keys(eggs);
+    ctx.session.currentCategoryIndex = 0;
+    ctx.session[eggsDataKey] = [];
   }
 
-  // Delete the previous message
-  await ctx.deleteMessage();
+  const [action, amount, category] = ctx.match[0].split(":");
+
+  if (action === "eggs-amount") {
+    if (ctx.session.currentEggs[category] < amount) {
+        await ctx.reply("Siz kiritgan tuxum soni bor tuxum sonidan katta");
+        return;
+    }
+
+    const existingEntry = ctx.session[eggsDataKey].find(entry => entry.category === category);
+    if (existingEntry) {
+      existingEntry.amount = parseInt(amount, 10);
+    } else {
+      ctx.session[eggsDataKey].push({
+        category: category,
+        amount: parseInt(amount, 10)
+      });
+    }
+    
+    ctx.session.currentCategoryIndex++;
+
+    // Delete the previous message
+    await ctx.deleteMessage();
+  } else if (action === "eggs-other") {
+    const category = ctx.session.categories[ctx.session.currentCategoryIndex];
+    
+    ctx.session.awaitingEggsDelivered = true;
+    await ctx.reply(`Nechta kategoriya ${letters[category]} tuxum yetkazilganingizni kiriting:`);
+
+    // Delete the previous message
+    await ctx.deleteMessage();
+    return;
+  } else if (action === "eggs-prev") {
+    ctx.session.currentCategoryIndex = Math.max(ctx.session.currentCategoryIndex - 1, 0);
+
+    // Delete the previous message
+    await ctx.deleteMessage();
+  } else if (action === "eggs-distributed-no") {
+    // Delete the previous message
+    await ctx.deleteMessage();
+  }
+
+  if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
+    const category = ctx.session.categories[ctx.session.currentCategoryIndex];
+
+    const buttons = [
+      ctx.session.currentCategoryIndex > 0 ? 
+        [
+           
+          Markup.button.callback("⬅️ Oldingisi", `eggs-prev:${category}`),
+          Markup.button.callback("Keyingisi ➡️", `eggs-amount:0:${category}`)] : 
+        [
+          Markup.button.callback("Keyingisi ➡️", `eggs-amount:0:${category}`)
+        ],
+      [
+        Markup.button.callback(`180 ${letters[category]}`, `eggs-amount:180:${category}`),
+        Markup.button.callback(`360 ${letters[category]}`, `eggs-amount:360:${category}`),
+      ],
+      [
+        Markup.button.callback(`540 ${letters[category]}`, `eggs-amount:540:${category}`),
+        Markup.button.callback(`720 ${letters[category]}`, `eggs-amount:720:${category}`),
+      ],
+      [
+        Markup.button.callback(`1080 ${letters[category]}`, `eggs-amount:1080:${category}`),
+        Markup.button.callback(`1440 ${letters[category]}`, `eggs-amount:1440:${category}`),
+      ],
+      [Markup.button.callback("Boshqa", `eggs-other:${category}`)],
+    ];
+
+    await ctx.reply(
+      `Nechta kategoriya ${letters[category]} tuxum yetkazildi?`,
+      Markup.inlineKeyboard(buttons)
+    );
+  } else {
+    await sendSummaryAndCompleteDelivery(ctx);
+  }
 };
 
-const completeEggsDelivery = async (ctx, eggsAmount) => {
-  const selectedBuyer = ctx.session.buyers[ctx.session.buyers.length - 1];
+const sendSummaryAndCompleteDelivery = async (ctx) => {
+  const selectedBuyer = ctx.session.buyer;
 
-  if (eggsAmount < 0) {
-    await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting",
-      Markup.keyboard([
-        ["Bekor qilish"]
-      ]).resize().oneTime());
-    ctx.match[0] = "eggs-other";
-    return;
-  }
+  const summaryMessage = ctx.session[eggsDataKey]
+    .map(({ category, amount }) => `${category}: ${amount}`)
+    .join("\n");
 
-  // Get today's activity for the courier
-  const courierActivityResponse = await axios.get(
-    `/courier/activity/today/${ctx.session.user.phone_num}`,
-    {
-      headers: {
-        "x-user-telegram-chat-id": ctx.chat.id,
-      },
-    }
-  );
-  const courierActivity = courierActivityResponse.data;
-
-  if (eggsAmount > courierActivity.current) {
-    ctx.reply("Sizning mashinangizda tuxum soni tarqatishga yetmaydi");
-    return;
-  }
-
-  await ctx.reply(`Siz ${eggsAmount}ta tuxum yetkazilganini tanladingiz.`);
-  selectedBuyer.eggsDelivered = eggsAmount;
-
-  // Ask if payment was received
-  await ctx.reply(
-    "Pul olindimi?",
-    Markup.inlineKeyboard([
-      // [Markup.button.callback("Ha", "payment-received-yes"), Markup.button.callback("Yo’q", "payment-received-no")],
+  await ctx.reply(`Tuxum yetkazilgan kategoriya bo’yicha umumiy ma’lumot:\n\n${summaryMessage}`)
+  await ctx.reply(`Tasdiqlaysizmi?`,
+    Markup.inlineKeyboard(
       [
-        Markup.button.callback("Ha", "payment-other"),
-        Markup.button.callback("Yo’q", "payment-received-no"),
+        Markup.button.callback("Ha", "eggs-distributed-yes"),
+        Markup.button.callback("Yo’q", "eggs-distributed-no"),
       ]
-    ])
+    )
   );
+
+  selectedBuyer.eggsDelivered = ctx.session[eggsDataKey];
+  
+  ctx.session[eggsDataKey] = undefined;
+  ctx.session.categories = null;
+  ctx.session.currentCategoryIndex = null;
+};
+
+module.exports.confirmEggsDelivered = async (ctx) => {
+  await paymentReceived(ctx);
 }

@@ -10,6 +10,8 @@ const expenses = require("../functions/courier/expenses");
 const melange = require("../functions/warehouse/melange");
 const remained = require("../functions/warehouse/remained");
 
+const reset = require("../functions/general/reset");
+
 const commands = {
   "Tuxum yetkazildi": [addMore, "courier"],
   "Tuxum chiqimi": [selectCourier.promptCourier, "warehouse"],
@@ -17,8 +19,7 @@ const commands = {
   "Bekor qilish": [cancel, "all"],
   "Ombor holati": [warehouseStatus, "warehouse"],
   "Tuxum kirimi": [eggIntake.promptEggImporter, "warehouse"],
-  "Singan tuxumlar": [brokenEggs.sendBrokenEggs, "courier"],
-  "Qolgan tuxumlar": [leftEggs.sendLeft, "courier"],
+  "Kunni yakunlash": [brokenEggs.sendBrokenEggs, "courier"],
   "Chiqim": [expenses.sendExpenses, "courier"],
   "Singan tuxum": [melange.promptBroken, "warehouse"],
   "Qolgan tuxum": [remained.promptWarehouseRemainedConfirm, "warehouse"],

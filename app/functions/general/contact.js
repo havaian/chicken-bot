@@ -50,18 +50,15 @@ module.exports = async (ctx) => {
       await ctx.reply(
         "Salom!",
         Markup.keyboard([
-          ["Tuxum yetkazildi", "Singan tuxumlar"],
-          ["Chiqim", "Qolgan tuxumlar"],
-          ["Hisobot"]
+          ["Tuxum yetkazildi", "Kunni yakunlash"],
+          ["Chiqim", "Hisobot"]
         ])
-          .resize()
-          .oneTime()
       );
     } else if (ctx.session.user.userType === "warehouse") {
       await ctx.reply(
         "Salom!",
         Markup.keyboard([["Tuxum kirimi", "Tuxum chiqimi"], ["Singan tuxum", "Qolgan tuxum"], ["Ombor holati"]])
-          .resize()
+          
       );
     }
   } catch (error) {

@@ -4,23 +4,28 @@ const { middleware } = require("./middleware/index.js");
 const textCommandHandler = require("./middleware/textCommandHandler.js");
 const awaitingPromptHandler = require("./middleware/awaitingPromptHandler.js");
 const courierAccepted = require("./middleware/courierAccepted.js");
+const dayFinished = require("./middleware/dayFinished.js");
 const start = require("./functions/general/start.js");
-const contact = require("./functions/general/contact");
-const location = require("./functions/courier/location");
-const chooseBuyer = require("./functions/courier/chooseBuyer");
-const eggsDelivered = require("./functions/courier/eggsDelivered");
-const paymentReceived = require("./functions/courier/paymentReceived");
-const addMore = require("./functions/courier/addMore");
+const contact = require("./functions/general/contact.js");
+const location = require("./functions/courier/location.js");
+const chooseBuyer = require("./functions/courier/chooseBuyer.js");
+const eggsDelivered = require("./functions/courier/eggsDelivered.js");
+const paymentReceived = require("./functions/courier/paymentReceived.js");
+const addMore = require("./functions/courier/addMore.js");
 const cancel = require("./functions/general/cancel.js");
-const brokenEggs = require("./functions/courier/brokenEggs");
-const expenses = require("./functions/courier/expenses");
-const leftEggs = require("./functions/courier/leftEggs");
-const selectCourier = require("./functions/warehouse/selectCourier");
-const eggIntake = require("./functions/warehouse/eggIntake");
-const melange = require("./functions/warehouse/melange");
-const remained = require("./functions/warehouse/remained");
+const brokenEggs = require("./functions/courier/brokenEggs.js");
+const incisionEggs = require("./functions/courier/incision.js");
+const courierMelange = require("./functions/courier/melange.js");
+const expenses = require("./functions/courier/expenses.js");
+const leftEggs = require("./functions/courier/leftEggs.js");
+const leftMoney = require("./functions/courier/leftMoney.js");
+const finishDay = require("./functions/courier/finishDay.js");
+const selectCourier = require("./functions/warehouse/selectCourier.js");
+const eggIntake = require("./functions/warehouse/eggIntake.js");
+const melange = require("./functions/warehouse/melange.js");
+const remained = require("./functions/warehouse/remained.js");
 
-const { logger, readLog } = require("./utils/logging");
+const { logger, readLog } = require("./utils/logging/index.js");
 
 const bot = new Telegraf(process.env.TG_TOKEN);
 const app = express();
@@ -49,34 +54,45 @@ bot.on("contact", async (ctx) => {
 
 bot.use(courierAccepted);
 
+bot.use(dayFinished);
+
 bot.use(awaitingPromptHandler);
 
 bot.use(textCommandHandler);
 
 // Handling location message
 bot.on("location", async (ctx) => {
-  await location(ctx);
+  await location.sendBuyersLocation(ctx);
 });
 
 // Handling button presses
 bot.action(/location-buyer:(.+)/, async (ctx) => {
-  await location(ctx);
+  await location.buyerLocation(ctx);
 });
 bot.action(/choose-buyer:(.+)/, async (ctx) => {
   await chooseBuyer(ctx);
 });
-bot.action(/eggs-delivered-(yes|no)/, async (ctx) => {
-  await eggsDelivered(ctx);
+// bot.action(/eggs-delivered-(yes|no)/, async (ctx) => {
+//   await eggsDelivered.deliverEggs(ctx);
+// });
+bot.action(/eggs-amount:\d+:(.+)/, async (ctx) => {
+  await eggsDelivered.deliverEggs(ctx);
 });
-bot.action(/eggs-amount:\d+/, async (ctx) => {
-  await eggsDelivered(ctx);
+bot.action(/eggs-other:(.+)/, async (ctx) => {
+  await eggsDelivered.deliverEggs(ctx);
 });
-bot.action(/eggs-other/, async (ctx) => {
-  await eggsDelivered(ctx);
+bot.action(/eggs-prev:(.+)/, async (ctx) => {
+  await eggsDelivered.deliverEggs(ctx);
 });
-bot.action(/payment-received-(yes|no)/, async (ctx) => {
-  await paymentReceived(ctx);
+bot.action(/eggs-distributed-yes/, async (ctx) => {
+  await eggsDelivered.confirmEggsDelivered(ctx);
 });
+bot.action(/eggs-distributed-no/, async (ctx) => {
+  await eggsDelivered.deliverEggs(ctx);
+});
+// bot.action(/payment-received-(yes|no)/, async (ctx) => {
+//   await paymentReceived(ctx);
+// });
 bot.action(/payment-amount:\d+/, async (ctx) => {
   await paymentReceived(ctx);
 });
@@ -106,39 +122,67 @@ bot.action(/courier-remained-yes/, async (ctx) => {
 bot.action(/courier-remained-no/, async (ctx) => {
   await selectCourier.promptCourierRemained(ctx);
 });
+bot.action(/courier-melange-yes/, async (ctx) => {
+  await selectCourier.confirmCourierMelange(ctx);
+});
+bot.action(/courier-melange-no/, async (ctx) => {
+  await selectCourier.promptCourierMelange(ctx);
+});
 bot.action(/accept-distribution-yes/, async (ctx) => {
   await selectCourier.confirmDistribution(ctx);
 });
 bot.action(/accept-distribution-no/, async (ctx) => {
   await selectCourier.promptDistribution(ctx);
 });
-bot.action(/courier-accept:(.+):(\d+):(\d+):(\d+)/, async (ctx) => {
+bot.action(/courier-accept:(.+)/, async (ctx) => {
   await selectCourier.courierAccept(ctx);
 });
-bot.action(/courier-reject:(.+):(\d+):(\d+):(\d+)/, async (ctx) => {
+bot.action(/courier-reject:(.+)/, async (ctx) => {
   await selectCourier.courierReject(ctx);
 });
 
-bot.action("confirm-egg-intake", async (ctx) => {
-  await eggIntake.confirmEggIntake(ctx);
-});
-
-bot.action("cancel", async (ctx) => {
-  await eggIntake.cancelEggIntake(ctx);
-});
-
 bot.action(/choose-importer:(.+):(.+)/, async (ctx) => {
-  await eggIntake.promptEggIntake(ctx);
+  await eggIntake.handleEggImporter(ctx);
+});
+bot.action("confirm-intake-eggs-yes", async (ctx) => {
+  await eggIntake.addIntakeEggs(ctx);
+});
+bot.action("confirm-intake-eggs-no", async (ctx) => {
+  await eggIntake.promptEggImporter(ctx);
 });
 
-bot.action(/confirm-broken-eggs:\d+/, async (ctx) => {
+bot.action(/confirm-broken-eggs-yes/, async (ctx) => {
   await brokenEggs.addBrokenEggs(ctx);
+});
+bot.action(/confirm-broken-eggs-no/, async (ctx) => {
+  await brokenEggs.sendBrokenEggs(ctx);
+});
+bot.action(/confirm-incision-eggs-yes/, async (ctx) => {
+  await incisionEggs.addIncisionEggs(ctx);
+});
+bot.action(/confirm-incision-eggs-no/, async (ctx) => {
+  await incisionEggs.sendIncisionEggs(ctx);
+});
+bot.action(/confirm-melange-eggs-yes/, async (ctx) => {
+  await courierMelange.confirmMelangeEggs(ctx);
+});
+bot.action(/confirm-melange-eggs-no/, async (ctx) => {
+  await courierMelange.sendMelange(ctx);
 });
 bot.action(/confirm-expenses:\d+/, async (ctx) => {
   await expenses.addExpenses(ctx);
 });
-bot.action(/confirm-left:\d+/, async (ctx) => {
+bot.action(/confirm-left-yes/, async (ctx) => {
   await leftEggs.addLeft(ctx);
+});
+bot.action(/confirm-left-no/, async (ctx) => {
+  await leftEggs.sendLeft(ctx);
+});
+bot.action(/confirm-money-left:\d+/, async (ctx) => {
+  await leftMoney.addLeftMoney(ctx);
+});
+bot.action(/confirm-day-finished/, async (ctx) => {
+  await finishDay.confirmDayFinished(ctx);
 });
 
 // Handle melange actions
@@ -185,7 +229,7 @@ bot.on("voice", async (ctx) => {
     ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
       Markup.keyboard([
           ["Bekor qilish"]
-      ]).resize().oneTime());
+      ]));
   }
 });
 

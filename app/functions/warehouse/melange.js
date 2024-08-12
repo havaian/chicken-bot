@@ -13,6 +13,13 @@ const cancel = require("../general/cancel");
 
 const { logger, readLog } = require("../../utils/logging");
 
+const { categoriesByTextObject } = require("../general/categories");
+
+const eggs = {
+    "D1": 960,
+    "D2": 990
+};
+
 let botInstance = null;
 
 const setBotInstance = (bot) => {
@@ -21,45 +28,40 @@ const setBotInstance = (bot) => {
 
 module.exports.promptBroken = async (ctx) => {
     try {
-        const warehouseActivityResponse = await axios.get("/warehouse/activity/today", {
-            headers: {
-                "x-user-telegram-chat-id": ctx.chat.id,
-            },
-        });
-        const warehouseActivity = warehouseActivityResponse.data;
-        
-        ctx.session.awaitingWarehouseDailyBroken = true;
-        await ctx.reply("Ombordagi singan tuxumlar sonini kiriting",
-            Markup.keyboard([
-              ["Bekor qilish"]
-            ]).resize().oneTime());
+        this.promptIncision(ctx);
+        // const type = ((ctx?.match && ctx?.match[0] === "warehouse-dailyBroken-no") || typeof ctx.session["dailyBroken"] === "undefined") ? 2 : 1;
+
+        // const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyBroken-no");
+
+        // if (deleteMsg) {
+        //     await ctx.deleteMessage();
+        // }
+
+        // const keyboard = Markup.inlineKeyboard([
+        //     [
+        //         Markup.button.callback("Ha", "warehouse-dailyBroken-yes"),
+        //         Markup.button.callback("Yo’q", "warehouse-dailyBroken-no"),
+        //     ]
+        // ]);
+
+        // if (type === 2) {
+        //     await ctx.reply("Ombordagi singan tuxumlar sonini kiriting",
+        //         Markup.keyboard([
+        //             ["Bekor qilish"]
+        //         ]));
+        // }
+
+        // categoriesByTextObject(ctx, "awaitingWarehouseDailyBroken", "singan", keyboard, type, "dailyBroken", eggs);
     } catch (error) {
         logger.info(error);
         await ctx.reply("Singan tuxumlar sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
-module.exports.acceptBroken = async (ctx) => {
-    try {
-        const amount = ctx.text;
-        const amountInt = parseInt(amount, 10);
-        ctx.session.dailyBroken = amountInt;
-        await ctx.reply(`${amountInt}ta singan tuxum kiritildi`)
-        await ctx.reply("Tasdiqlaysizmi?",
-            Markup.inlineKeyboard([
-                [
-                    Markup.button.callback("Ha", "warehouse-dailyBroken-yes"),
-                    Markup.button.callback("Yo’q", "warehouse-dailyBroken-no"),
-                ]
-            ]));
-    } catch (error) {
-        logger.info(error);
-        await ctx.reply("Singan tuxum kiritilganini tasdiqlashda xatolik yuz berdi. Qayta uruni ko’ring");
-    }
-}
-
 module.exports.confirmBroken = async (ctx) => {
     try {
+        ctx.session.categories = null;
+        ctx.session.currentCategoryIndex = null;
         this.promptIncision(ctx);
         await ctx.deleteMessage();
     } catch (error) {
@@ -70,39 +72,39 @@ module.exports.confirmBroken = async (ctx) => {
 
 module.exports.promptIncision = async (ctx) => {
     try {
-        ctx.session.awaitingWarehouseDailyBroken = false;
-        ctx.session.awaitingWarehouseDailyIncision = true;
-        await ctx.reply("Nasechka tuxum sonini kiriting",
-            Markup.keyboard([
-              ["Bekor qilish"]
-            ]).resize().oneTime());
+        const type = ((ctx?.match && ctx?.match[0] === "warehouse-dailyIncision-no") || typeof ctx.session["dailyIncision"] === "undefined") ? 2 : 1;
+
+        const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyIncision-no");
+
+        if (deleteMsg) {
+            await ctx.deleteMessage();
+        }
+
+        const keyboard = Markup.inlineKeyboard([
+            [
+                Markup.button.callback("Ha", "warehouse-dailyIncision-yes"),
+                Markup.button.callback("Yo’q", "warehouse-dailyIncision-no"),
+            ]
+        ]);
+
+        if (type === 2) {
+            await ctx.reply("Nasechka tuxum sonini kiriting",
+                Markup.keyboard([
+                    ["Bekor qilish"]
+                ]));
+        }
+
+        categoriesByTextObject(ctx, "awaitingWarehouseDailyIncision", "nasechka", keyboard, type, "dailyIncision", eggs);
     } catch (error) {
         logger.info(error);
         await ctx.reply("Nasechka tuxumlar kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
-module.exports.acceptIncision = async (ctx) => {
-    try {
-        const amount = ctx.text;
-        const amountInt = parseInt(amount, 10);
-        ctx.session.dailyIncision = amountInt;
-        await ctx.reply(`${amountInt}ta nasechka tuxum kiritildi`)
-        await ctx.reply("Tasdiqlaysizmi?",
-            Markup.inlineKeyboard([
-                [
-                    Markup.button.callback("Ha", "warehouse-dailyIncision-yes"),
-                    Markup.button.callback("Yo’q", "warehouse-dailyIncision-no"),
-                ]
-            ]));
-    } catch (error) {
-        logger.info(error);
-        await ctx.reply("Nasechka tuxum kiritilganini tasdiqlashda xatolik yuz berdi. Qayta uruni ko’ring");
-    }
-}
-
 module.exports.confirmIncision = async (ctx) => {
     try {
+        ctx.session.categories = null;
+        ctx.session.currentCategoryIndex = null;
         this.promptIntact(ctx);
         await ctx.deleteMessage();
     } catch (error) {
@@ -113,177 +115,185 @@ module.exports.confirmIncision = async (ctx) => {
 
 module.exports.promptIntact = async (ctx) => {
     try {
-        ctx.session.awaitingWarehouseDailyIncision = false;
-        ctx.session.awaitingWarehouseDailyIntact = true;
-        await ctx.reply("Butun tuxum sonini kiriting",
-            Markup.keyboard([
-              ["Bekor qilish"]
-            ]).resize().oneTime());
+        const type = ((ctx?.match && ctx?.match[0] === "warehouse-dailyIntact-no") || typeof ctx.session["dailyIntact"] === "undefined") ? 2 : 1;
+
+        const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyIntact-no");
+
+        if (deleteMsg) {
+            await ctx.deleteMessage();
+        }
+
+        const keyboard = Markup.inlineKeyboard([
+            [
+                Markup.button.callback("Ha", "warehouse-dailyIntact-yes"),
+                Markup.button.callback("Yo’q", "warehouse-dailyIntact-no"),
+            ]
+        ]);
+
+        if (type === 2) {
+            await ctx.reply("Ombordagi qolgan tuxum sonini kiriting",
+                Markup.keyboard([
+                    ["Bekor qilish"]
+                ]));
+        }
+
+        categoriesByTextObject(ctx, "awaitingWarehouseDailyIntact", "butun", keyboard, type, "dailyIntact", eggs);
     } catch (error) {
         logger.info(error);
         await ctx.reply("Butun tuxum kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
-module.exports.acceptIntact = async (ctx) => {
-    try {
-        const amount = ctx.text;
-        const amountInt = parseInt(amount, 10);
-        ctx.session.dailyIntact = amountInt;
-        await ctx.reply(`${amountInt}ta butun tuxum kiritildi`)
-        await ctx.reply("Tasdiqlaysizmi?",
-            Markup.inlineKeyboard([
-                [
-                    Markup.button.callback("Ha", "warehouse-dailyIntact-yes"),
-                    Markup.button.callback("Yo’q", "warehouse-dailyIntact-no"),
-                ]
-            ]));
-    } catch (error) {
-        logger.info(error);
-        await ctx.reply("Butun tuxum kiritilganini tasdiqlastishda xatolik yuz berdi. Qayta uruni ko’ring");
-    }
-}
+const updateCategorySum = (currentData = {}, newData = {}) => {
+    return Object.entries(newData).reduce((acc, [key, value]) => {
+        const actualKey = key === 'Upakovka' ? 'D1' : key;
+        acc[actualKey] = (acc[actualKey] || 0) + value;
+        return acc;
+    }, { ...currentData });
+};
+
+const exceedsBrokenByCategory = (totalBroken, dailyIntact, dailyIncision) => {
+    return Object.keys(dailyIntact).some(category => {
+        const actualCategory = category === 'Upakovka' ? 'D1' : category;
+        const intact = dailyIntact[category] || 0;
+        const incision = dailyIncision[category] || 0;
+        const broken = totalBroken[actualCategory] || 0;
+        return (intact + incision) > broken;
+    });
+};
 
 module.exports.confirmIntact = async (ctx) => {
     try {
-        const { dailyIntact, dailyBroken, dailyIncision } = ctx.session;
+        // const { dailyIntact, dailyBroken, dailyIncision } = ctx.session;
 
-        const warehouseActivityResponse = await axios.get("/warehouse/activity/today", {
-            headers: {
-                "x-user-telegram-chat-id": ctx.chat.id,
-            },
-        });
-        const warehouseActivity = warehouseActivityResponse.data;
+        // const warehouseActivityResponse = await axios.get("/warehouse/activity/today", {
+        //     headers: {
+        //         "x-user-telegram-chat-id": ctx.chat.id,
+        //     },
+        // });
+        // const warehouseActivity = warehouseActivityResponse.data;
 
-        const totalBroken = warehouseActivity.distributed_to.reduce(
-            (acc, distribution) => acc + distribution.broken || 0,
-            0
-        );
-        
-        if ((totalBroken + dailyBroken) < (dailyIntact + dailyIncision)) {
-            cancel(ctx, `Butun va nasechka tuxumlar soni singan tuxumlar sonidan ko’p bo’lishi mumkin emas`, showKeyboard = false);
-            await ctx.deleteMessage();
-            this.promptBroken(ctx);
-            return;
-        }
+        // const totalBroken = warehouseActivity.distributed_to.reduce((acc, distribution) => {
+        //     return updateCategorySum(acc, distribution.broken);
+        // }, {});
 
+        // const combinedBroken = updateCategorySum(totalBroken, dailyBroken);
+
+        // if (exceedsBrokenByCategory(combinedBroken, dailyIntact, dailyIncision)) {
+        //     await cancel(ctx, "Butun va nasechka tuxumlar soni singan tuxumlar sonidan ko’p bo’lishi mumkin emas", true);
+        //     await ctx.deleteMessage();
+        //     return;
+        // }
+        ctx.session.categories = null;
+        ctx.session.currentCategoryIndex = null;
         this.promptMelange(ctx);
         await ctx.deleteMessage();
     } catch (error) {
         logger.info(error);
         await ctx.reply("Butun tuxumlarni kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
-}
+};
 
 module.exports.promptMelange = async (ctx) => {
     try {
-        ctx.session.awaitingWarehouseDailyIntact = false;
-        ctx.session.awaitingWarehouseDailyMelange = true;
-        await ctx.reply("Melanj nechchi litr chiqqanini kiriting",
-            Markup.keyboard([
-              ["Bekor qilish"]
-            ]).resize().oneTime());
+        const type = ((ctx?.match && ctx?.match[0] === "warehouse-dailyMelanj-no") || typeof ctx.session["dailyMelange"] === "undefined") ? 2 : 1;
+
+        const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyMelanj-no");
+
+        if (deleteMsg) {
+            await ctx.deleteMessage();
+        }
+
+        const keyboard = Markup.inlineKeyboard([
+            [
+                Markup.button.callback("Ha", "warehouse-dailyMelanj-yes"), 
+                Markup.button.callback("Yo’q", "warehouse-dailyMelanj-no")
+            ],
+        ]);
+
+        categoriesByTextObject(ctx, "awaitingWarehouseDailyMelange", "litr melanj", keyboard, type, "dailyMelange", eggs, true);
     } catch (error) {
         logger.info(error);
         await ctx.reply("Melanj kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
-}
-
-module.exports.acceptMelange = async (ctx) => {
-    try {
-        const amount = ctx.text;
-        const amountFloat = parseFloat(amount, 2);
-        ctx.session.dailyMelange = amountFloat;
-        await ctx.reply(`${amountFloat} litr melanj kiritildi`)
-        await ctx.reply("Tasdiqlaysizmi?",
-            Markup.inlineKeyboard([
-                [
-                    Markup.button.callback("Ha", "warehouse-dailyMelanj-yes"),
-                    Markup.button.callback("Yo’q", "warehouse-dailyMelanj-no"),
-                ]
-            ]));
-    } catch (error) {
-        logger.info(error);
-        await ctx.reply("Butun tuxum kiritilganini tasdiqlastishda xatolik yuz berdi. Qayta uruni ko’ring");
-    }
-}
+};
 
 module.exports.confirmMelange = async (ctx) => {
     try {
-        const { dailyIntact, dailyBroken, dailyIncision } = ctx.session;
+        const { dailyIntact, dailyBroken, dailyIncision, dailyMelange } = ctx.session;
 
         const warehouseActivityResponse = await axios.get("/warehouse/activity/today", {
-            headers: {
-                "x-user-telegram-chat-id": ctx.chat.id,
-            },
+            headers: { "x-user-telegram-chat-id": ctx.chat.id },
         });
         const warehouseActivity = warehouseActivityResponse.data;
+        
+        const melange = {};
+        const current = warehouseActivity.current || {};
 
-        const totalBroken = warehouseActivity.distributed_to.reduce(
-            (acc, distribution) => acc + distribution.broken || 0,
-            0
-        );
+        await ctx.deleteMessage();
 
-        const melange = ((totalBroken + dailyBroken) - (dailyIntact + dailyIncision)) / 25;
-
-        if (ctx.session.dailyMelange < melange) {
-            await ctx.reply(`Sizda kamida ${melange} litr melanj chiqishi kerak edi!`,
-                Markup.keyboard([
-                    ["Bekor qilish"]
-                ]).resize().oneTime());
-            await ctx.deleteMessage();
-            this.promptMelange(ctx);
-            return;
-        }
+        for (let y in Object.keys(dailyMelange || {})) {
+            const x = Object.keys(dailyMelange)[y];
+            if (typeof current[x] === "undefined") {
+                current[x] = 0;
+            }
+            const result = ((current[x] - dailyIntact[x] - dailyIncision[x]) / 25) || 0;
+            if (dailyMelange[x] < result) {
+                await ctx.reply(`Sizda ${x} kategoriya bo’yicha kamida ${result} litr melanj chiqishi kerak edi!`,
+                    Markup.keyboard([["Bekor qilish"]]),
+                    Markup.inlineKeyboard([
+                    [Markup.button.callback("Yangidan kiritish", "confirm-left-no")],
+                    [Markup.button.callback("Boshiga qaytish", "cancel")],
+                    ])
+                );
+            }
+            melange[x] = result;
+        };
 
         let updatedWarehouseActivity;
 
-        if (warehouseActivity.intact === undefined || warehouseActivity.intact === null || warehouseActivity.intact === 0) {
-            // Intact is being set for the first time
+        const updatedCurrent = updateCategory(warehouseActivity.current, dailyIntact, 'add', true);
+
+        if (!warehouseActivity.intact || warehouseActivity.intact === 0) {
             updatedWarehouseActivity = {
                 ...warehouseActivity,
-                current: warehouseActivity.current + dailyIntact,
-                remained: warehouseActivity.current + dailyIntact,
+                current: updateCategory(updatedCurrent, dailyIncision, 'subtract', true),
+                remained: dailyIntact,
                 old_current: warehouseActivity.current,
                 intact: dailyIntact,
-                broken: dailyIntact,
-                incision: dailyIntact,
-                melange: melange
+                // broken: dailyBroken,
+                incision: dailyIncision,
+                melange: melange,
+                melange_by_warehouse: dailyMelange,
             };
         } else {
-            // Intact has already been set, use old_current
             updatedWarehouseActivity = {
                 ...warehouseActivity,
-                current: warehouseActivity.old_current + dailyIntact,
-                remained: warehouseActivity.old_current + dailyIntact,
+                current: updateCategory(updatedCurrent, dailyIncision, 'subtract', true),
                 intact: dailyIntact,
                 broken: dailyBroken,
                 incision: dailyIncision,
-                melange: melange
+                melange: melange,
+                melange_by_warehouse: dailyMelange,
             };
         }
 
         await axios.put(`/warehouse/activity/${warehouseActivity._id}`, updatedWarehouseActivity, {
-            headers: {
-                "x-user-telegram-chat-id": ctx.chat.id,
-            },
+            headers: { "x-user-telegram-chat-id": ctx.chat.id },
         });
 
         const warehousePhoneNum = ctx.session.user.phone_num;
-  
-        // Find the group id by courier"s phone number
+
         let groupId = null;
         for (const phone_num of warehousePhoneNum) {
             for (const [id, numbers] of Object.entries(groups)) {
-              if (numbers.includes(phone_num)) {
-                groupId = id;
-                break;
-              }
+                if (numbers.includes(phone_num)) {
+                    groupId = id;
+                    break;
+                }
             }
-            if (groupId) {
-              break;
-            }
-          }
+            if (groupId) break;
+        }
 
         if (!groupId) {
             logger.info("melange. Warehouse groupId not found:", groupId, !groupId);
@@ -291,15 +301,11 @@ module.exports.confirmMelange = async (ctx) => {
             return;
         }
 
-        // Generate HTML and Excel reports
         const reportDate = new Date().toISOString().split("T")[0];
         const reportDir = `reports/warehouse/${reportDate}`;
-        if (!fs.existsSync(reportDir)) {
-            fs.mkdirSync(reportDir, { recursive: true });
-        }
+        if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir, { recursive: true });
 
-        // Delete old reports
-        fs.readdirSync(reportDir).forEach((file) => {
+        fs.readdirSync(reportDir).forEach(file => {
             fs.unlinkSync(path.join(reportDir, file));
         });
 
@@ -311,24 +317,31 @@ module.exports.confirmMelange = async (ctx) => {
         await generateWarehouseExcel(updatedWarehouseActivity, excelFilename);
         await convertHTMLToImage(htmlFilename, imageFilename);
 
-        // Forward reports to the group
-        await ctx.telegram.sendDocument(
-            groupId,
-            { source: excelFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
-        );
-        await ctx.telegram.sendPhoto(
-            groupId,
-            { source: imageFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
-        );
 
-        await ctx.deleteMessage();
+        // Forward reports to the group
+        // await ctx.telegram.sendDocument(groupId, { source: excelFilename }, { caption: `${courier.full_name}. Ombor uchun melanj kiritildi. Xisobot:` });
+        await ctx.telegram.sendPhoto(groupId, { source: imageFilename }, { caption: `${ctx.session.user.full_name}. Ombor uchun melanj kiritildi. Xisobot:` });
+
+        ctx.session["dailyBroken"] = undefined;
+        ctx.session["dailyIntact"] = undefined;
+        ctx.session["dailyIncision"] = undefined;
+        ctx.session["dailyMelange"] = undefined;
         cancel(ctx, "Tanlang:");
     } catch (error) {
         logger.info(error);
         await ctx.reply("Melanj kiritilishni tasdiqlashda xatolik yuz berdi. Qayta uruni ko’ring");
     }
-}
+};
+
+const updateCategory = (currentData = {}, newData = {}, operation = 'add', isWarehouse = false) => {
+    const allKeys = new Set([...Object.keys(currentData), ...Object.keys(newData)]);
+    return Array.from(allKeys).reduce((acc, key) => {
+        const actualKey = isWarehouse && key === 'Upakovka' ? 'D1' : key;
+        acc[actualKey] = operation === 'add'
+            ? (currentData[actualKey] || 0) + (newData[key] || 0)
+            : (currentData[actualKey] || 0) - (newData[key] || 0);
+        return acc;
+    }, {});
+};
 
 module.exports.setBotInstance = setBotInstance;

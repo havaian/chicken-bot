@@ -1,9 +1,12 @@
 const { Markup } = require("telegraf");
-const cancel = require("../functions/general/cancel.js");
+const cancel = require("../functions/general/cancel");
 const location = require("../functions/courier/location");
 const expenses = require("../functions/courier/expenses");
 const leftEggs = require("../functions/courier/leftEggs");
+const leftMoney = require("../functions/courier/leftMoney");
 const brokenEggs = require("../functions/courier/brokenEggs");
+const incision = require("../functions/courier/incision");
+const courierMelange = require("../functions/courier/melange");
 const eggsDelivered = require("../functions/courier/eggsDelivered");
 const paymentReceived = require("../functions/courier/paymentReceived");
 const eggIntake = require("../functions/warehouse/eggIntake");
@@ -26,26 +29,37 @@ const awaitingPromptHandler = async (ctx, next) => {
       text,
       matchPrefix,
       handler,
-      sessionKey
+      sessionKey,
+      specialKey
     ) => {
-      if (isNaN(text)) {
-        if (parseInt(text, 10) < 0) {
-          await ctx.reply("Noldan baland bo’lgan tuxum sonini kiriting",
-            Markup.keyboard([
-              ["Bekor qilish"]
-            ]).resize().oneTime());
-          return;
-        }
-        await ctx.reply("Iltimos, qiymatni to’g’ri kiriting:",
+      if (isNaN(text) || parseInt(text, 10) < 0) {
+        await ctx.reply("Iltimos, to’g’ri son kiriting:",
           Markup.keyboard([
             ["Bekor qilish"]
-          ]).resize().oneTime());
-      } else {
-        ctx.match = [`${matchPrefix}:${text}`];
-        await handler(ctx);
-        ctx.session[sessionKey] = false;
+          ]));
+        return;
       }
+      ctx.match = [`${matchPrefix}:${text}:${specialKey}`];
+      await handler(ctx);
+      ctx.session[sessionKey] = false;
     };
+
+    const falseUnhandleList = [
+      "awaitingCourierBrokenEggs",
+      "awaitingEggsDistributedEggs",
+      "awaitingCourierRemainedEggs",
+      "awaitingCourierMelangeEggs",
+      "awaitingBrokenEggs",
+      "awaitingIncisionEggs",
+      "awaitingMelangeEggs",
+      "awaitingLeft",
+      "awaitingIntakeEggs",
+      "awaitingWarehouseDailyBroken",
+      "awaitingWarehouseDailyIncision",
+      "awaitingWarehouseDailyIntact",
+      "awaitingWarehouseRemained",
+      "awaitingWarehouseDailyMelange"
+    ]
 
     const handleSpecificNumericInput = async (ctx, handler, sessionKey) => {
       const text = ctx.message.text;
@@ -53,9 +67,11 @@ const awaitingPromptHandler = async (ctx, next) => {
         await ctx.reply("Iltimos, to’g’ri son kiriting:",
           Markup.keyboard([
             ["Bekor qilish"]
-          ]).resize().oneTime());
-      } else {
-        await handler(ctx);
+          ]));
+        return;
+      }
+      await handler(ctx);
+      if (!falseUnhandleList.includes(sessionKey)) {
         ctx.session[sessionKey] = false;
       }
     };
@@ -75,18 +91,13 @@ const awaitingPromptHandler = async (ctx, next) => {
           ctx,
           text,
           "eggs-amount",
-          eggsDelivered,
-          "awaitingEggsDelivered"
+          eggsDelivered.deliverEggs,
+          "awaitingEggsDelivered",
+          ctx.session.categories[ctx.session.currentCategoryIndex]
         );
         break;
       case ctx.session.awaitingPaymentAmount:
-        await handleNumericInput(
-          ctx,
-          text,
-          "payment-amount",
-          paymentReceived,
-          "awaitingPaymentAmount"
-        );
+        await handleSpecificNumericInput(ctx, paymentReceived.completeTransaction, "awaitingPaymentAmount");
         break;
       case ctx.session.awaitingExpenses:
         await handleNumericInput(
@@ -97,54 +108,65 @@ const awaitingPromptHandler = async (ctx, next) => {
           "awaitingExpenses"
         );
         break;
-      case ctx.session.awaitingLeft:
+      case ctx.session.awaitingMoney:
         await handleNumericInput(
           ctx,
           text,
-          "confirm-left",
-          leftEggs.confirmLeft,
-          "awaitingLeft"
+          "confirm-left-money",
+          leftMoney.confirmLeftMoney,
+          "awaitingMoney"
         );
         break;
       case ctx.session.awaitingBrokenEggs:
-        await handleNumericInput(
-          ctx,
-          text,
-          "confirm-broken-eggs",
-          brokenEggs.confirmBrokenEggs,
-          "awaitingBrokenEggs"
-        );
+        await handleSpecificNumericInput(ctx, brokenEggs.sendBrokenEggs, "awaitingBrokenEggs");
         break;
-      case ctx.session.awaitingEggIntake:
-        await handleSpecificNumericInput(ctx, eggIntake.handleEggIntake, "awaitingEggIntake");
+      case ctx.session.awaitingIncisionEggs:
+        await handleSpecificNumericInput(ctx, incision.sendIncisionEggs, "awaitingIncisionEggs");
         break;
-      case ctx.session.awaitingDistributedEggs:
-        await handleSpecificNumericInput(ctx, selectCourier.acceptDistribution, "awaitingDistributedEggs");
+      case ctx.session.awaitingIntactEggs:
+        await handleSpecificNumericInput(ctx, intact.sendIntactEggs, "awaitingIntactEggs");
+        break;
+      case ctx.session.awaitingMelangeEggs:
+        await handleSpecificNumericInput(ctx, courierMelange.sendMelange, "awaitingMelangeEggs");
+        break;
+      case ctx.session.awaitingLeft:
+        await handleSpecificNumericInput(ctx, leftEggs.sendLeft, "awaitingLeft");
+        break;
+      case ctx.session.awaitingIntakeEggs:
+        await handleSpecificNumericInput(ctx, eggIntake.sendIntakeEggs, "awaitingIntakeEggs");
+        break;
+      case ctx.session.awaitingEggsDistributedEggs:
+        await handleSpecificNumericInput(ctx, selectCourier.promptDistribution, "awaitingEggsDistributedEggs");
         break;
       case ctx.session.awaitingCourierRemainedEggs:
-        await handleSpecificNumericInput(ctx, selectCourier.acceptCourierRemained, "awaitingCourierRemainedEggs");
+        await handleSpecificNumericInput(ctx, selectCourier.promptCourierRemained, "awaitingCourierRemainedEggs");
+        break;
+      case ctx.session.awaitingCourierMelangeEggs:
+        await handleSpecificNumericInput(ctx, selectCourier.promptCourierMelange, "awaitingCourierMelangeEggs");
         break;
       case ctx.session.awaitingCourierBrokenEggs:
-        await handleSpecificNumericInput(ctx, selectCourier.acceptCourierBroken, "awaitingCourierBrokenEggs");
+        await handleSpecificNumericInput(ctx, selectCourier.promptCourierBroken, "awaitingCourierBrokenEggs");
         break;
       case ctx.session.awaitingWarehouseDailyBroken:
-        await handleSpecificNumericInput(ctx, melange.acceptBroken, "awaitingWarehouseDailyBroken");
+        await handleSpecificNumericInput(ctx, melange.promptBroken, "awaitingWarehouseDailyBroken");
         break;
       case ctx.session.awaitingWarehouseDailyIncision:
-        await handleSpecificNumericInput(ctx, melange.acceptIncision, "awaitingWarehouseDailyIncision");
+        await handleSpecificNumericInput(ctx, melange.promptIncision, "awaitingWarehouseDailyIncision");
         break;
       case ctx.session.awaitingWarehouseDailyIntact:
-        await handleSpecificNumericInput(ctx, melange.acceptIntact, "awaitingWarehouseDailyIntact");
+        await handleSpecificNumericInput(ctx, melange.promptIntact, "awaitingWarehouseDailyIntact");
         break;
       case ctx.session.awaitingWarehouseDailyMelange:
-        await handleSpecificNumericInput(ctx, melange.acceptMelange, "awaitingWarehouseDailyMelange");
+        await handleSpecificNumericInput(ctx, melange.promptMelange, "awaitingWarehouseDailyMelange");
         break;
       case ctx.session.awaitingWarehouseRemained:
-        await handleSpecificNumericInput(ctx, remained.acceptWarehouseDeficit, "awaitingWarehouseRemained");
+        await handleSpecificNumericInput(ctx, remained.promptWarehouseRemained, "awaitingWarehouseRemained");
         break;
       case ctx.session.awaitingClientName:
+        await location.chooseBuyer(ctx);
+        break;
       case ctx.session.awaitingClientLocation:
-        await location(ctx);
+        await location.sendBuyersLocation(ctx);
         break;
       default:
         await next();

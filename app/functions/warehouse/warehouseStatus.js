@@ -47,12 +47,16 @@ module.exports = async (ctx) => {
 
     // Send image and Excel file to user
     await ctx.replyWithPhoto({ source: imageFilename });
-    await ctx.replyWithDocument({ source: excelFilename });
+    // await ctx.replyWithDocument({ source: excelFilename });
 
     // Show main menu buttons
     await ctx.reply(
       "Tanlang:",
-      Markup.keyboard([["Tuxum kirimi", "Tuxum chiqimi"], ["Singan tuxumlar", "Qolgan tuxum"], ["Ombor holati"]]).resize()
+      Markup.keyboard([
+        ["Tuxum kirimi", "Tuxum chiqimi"], 
+        ["Singan tuxum", "Qolgan tuxum"], 
+        ["Ombor holati"]
+      ])
     );
   } catch (error) {
     logger.info(error);

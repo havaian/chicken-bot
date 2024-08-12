@@ -3,86 +3,164 @@ const axios = require("../../axios");
 
 const { logger, readLog } = require("../../utils/logging");
 
-const cancel = require("../general/cancel");
+const { sendMelange } = require("./melange");
+
+const nonZero = require("../general/non-zero");
+let eggs = "";
+
+const letters = require("../data/btnEmojis");
+
+const sessionKey = "awaitingLeft";
+const eggsDataKey = "eggsLeftData";
+
+const promptLeft = async (ctx, type) => {
+  eggs = nonZero(ctx.session.currentEggs);
+
+  if (!ctx.session.categories || type === 2) {
+    ctx.session.categories = Object.keys(eggs);
+    ctx.session.currentCategoryIndex = 0;
+    ctx.session[eggsDataKey] = {};
+    ctx.session[sessionKey] = true;
+  }
+
+  if (sessionKey) {
+    const category = ctx.session.categories[ctx.session.currentCategoryIndex];
+
+    if (ctx.message && ctx.message.text && type != 2) {
+      const amount = parseInt(ctx.message.text, 10);
+      if (isNaN(amount) || amount < 0) {
+        await ctx.reply("Iltimos, to’g’ri son kiriting:");
+        return;
+      }
+
+      if (!ctx.session[eggsDataKey][category]) {
+        ctx.session[eggsDataKey][category] = 0;
+      }
+      ctx.session[eggsDataKey][category] += amount;
+
+      ctx.session.currentCategoryIndex++;
+    }
+
+    if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
+      const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
+      await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum butun qolgan?`);
+    } else {
+      await confirmLeftEggs(ctx);
+    }
+  }
+}
 
 exports.sendLeft = async (ctx) => {
-  ctx.session.awaitingLeft = true;
-  await ctx.reply(
-    "Mashinada nechta tuxum qolganini kiriting",
-    Markup.keyboard([
-      ["Bekor qilish"]
-    ]).resize().oneTime()
-  );
+  try {
+    const type = ((ctx?.match && ctx?.match[0] === "confirm-left-eggs-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
+
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-left-eggs-no";
+
+    if (deleteMsg) {
+      await ctx.deleteMessage();
+    }
+
+    if (type === 2) {
+      await ctx.reply(
+        "Mashinada nechta tuxum butun qolganini kiriting",
+        Markup.keyboard([
+          ["Bekor qilish"]
+        ])
+      );
+    }
+
+    promptLeft(ctx, type);
+  } catch (error) {
+    logger.info(error);
+    await ctx.reply(
+      "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+    );
+  }
 };
 
-exports.confirmLeft = async (ctx) => {
-  if (ctx.session.awaitingLeft) {
-    const amount = parseInt(ctx.message.text, 10);
-    if (isNaN(amount) || amount <= 0) {
-      await ctx.reply(
-        "Noto’g’ri qiymat. Iltimos, chiqim miqdorini yozib yuboring.",
-        Markup.keyboard([
-            ["Bekor qilish"]
-        ]).resize().oneTime()
-      );
-      return;
-    }
-    ctx.session.leftAmount = amount;
+const confirmLeftEggs = async (ctx) => {
+  try {
+    let amountMsg = "";
 
-    await ctx.reply(
-      `Siz ${amount}ta qolgan tuxum kiritmoqchimisiz?`,
+    for (let y in Object.keys(ctx.session[eggsDataKey])) {
+      const x = Object.keys(ctx.session[eggsDataKey])[y];
+      amountMsg += `${letters[x]}: ${ctx.session[eggsDataKey][x]}\n`
+    }
+
+    ctx.session[sessionKey] = false;
+
+    await ctx.reply(`Qolgan butun tuxumlar\n\n${amountMsg}`);
+    await ctx.reply(`Kiritilganini qolgan butun tuxumlar sonini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Tasdiqlash", `confirm-left:${amount}`)],
-        [Markup.button.callback("Bekor qilish", "cancel")],
+        [Markup.button.callback("Ha", "confirm-left-yes"),
+        Markup.button.callback("Yo’q", "confirm-left-no")],
       ])
     );
 
     // Delete the previous message
     await ctx.deleteMessage();
     ctx.session.awaitingLeft = false;
-  }
+  } catch (error) {
+  logger.info(error);
+  await ctx.reply(
+    "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+  );
+}
 };
 
 exports.addLeft = async (ctx) => {
-  const amount = ctx.session.leftAmount;
-  const courierPhoneNum = ctx.session.user.phone_num;
-
   try {
-    // Get today's activity for the courier
-    const courierActivityResponse = await axios.get(
-      `/courier/activity/today/${courierPhoneNum}`,
-      {
-        headers: {
-          "x-user-telegram-chat-id": ctx.chat.id,
-        },
-      }
-    );
-    const courierActivity = courierActivityResponse.data;
-
-    // Update courier"s activity with left
-    const updatedCourierActivity = {
-      ...courierActivity,
-      current_by_courier: ctx.session.leftAmount,
-    };
-
-    await axios.put(
-      `/courier/activity/${courierActivity._id}`,
-      updatedCourierActivity,
-      {
-        headers: {
-          "x-user-telegram-chat-id": ctx.chat.id,
-        },
-      }
-    );
+    const courierActivity = ctx.session.updatedActivity;
+    const current = courierActivity.current || {};
+    const incision = courierActivity.incision || {};
 
     // Delete the previous message
     await ctx.deleteMessage();
 
-    cancel(ctx, `${amount}ta tuxum qoldiq hisobingizga qo’shildi.`);
+    for (let y in Object.keys(ctx.session[eggsDataKey] || {})) {
+        const x = Object.keys(ctx.session[eggsDataKey])[y];
+      
+        // If current[x] is not defined, set it to 0
+        if (typeof current[x] === 'undefined') {
+          current[x] = 0;
+        }
+      
+        // If incision[x] is not defined, set it to 0
+        if (typeof incision[x] === 'undefined') {
+          incision[x] = 0;
+        }
+
+        if (current[x] < ctx.session[eggsDataKey][x]) {
+          await ctx.reply(`Sizda ${x} kategoriya bo’yicha bor tuxum sonidan ko’p qolishi mumkin emas!`,
+            Markup.keyboard([["Bekor qilish"]]),
+            Markup.inlineKeyboard([
+              [Markup.button.callback("Yangidan kiritish", "confirm-left-no")],
+              [Markup.button.callback("Boshiga qaytish", "cancel")],
+            ])
+          );
+
+          ctx.session[eggsDataKey] = undefined;
+          ctx.session.categories = null;
+          ctx.session.currentCategoryIndex = null;
+
+          return;
+        }
+    };
+
+    ctx.session.updatedActivity = {
+      ...ctx.session.updatedActivity,
+      current_by_courier: ctx.session[eggsDataKey],
+    };
+  
+    ctx.session[eggsDataKey] = undefined;
+    ctx.session.categories = null;
+    ctx.session.currentCategoryIndex = null;
+
+    await sendMelange(ctx);
   } catch (error) {
     logger.info(error);
     await ctx.reply(
-      "Qolgan tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
   }
 };
