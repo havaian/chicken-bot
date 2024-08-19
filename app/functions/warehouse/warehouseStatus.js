@@ -22,7 +22,7 @@ module.exports = async (ctx) => {
       }
     );
     const warehouseActivity = warehouseActivityResponse.data;
-
+    
     // Generate HTML report
     const reportDate = new Date().toISOString().split("T")[0];
     const reportDir = `reports/warehouse/${reportDate}`;

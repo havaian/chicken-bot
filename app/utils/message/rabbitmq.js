@@ -11,22 +11,34 @@ const host=process.env.RABBITMQ_HOST;
 const port=process.env.RABBITMQ_PORT;
 
 const connect = async () => {
-  const connection = await amqp.connect(`amqp://${username}:${password}@${host}:${port}/`);
-  channel = await connection.createChannel();
-  await channel.assertQueue('sms_queue', { durable: true });
-  logger.info("RMQ SMS ✅");
+  try {
+    const connection = await amqp.connect(`amqp://${username}:${password}@${host}:${port}/`);
+    channel = await connection.createChannel();
+    await channel.assertQueue('sms_queue', { durable: true });
+    logger.info("RMQ SMS ✅");
+  } catch (error) {
+    logger.info(error);
+  }
 }
 
 const sendToQueue = async (queue, message) => {
-  if (!channel) {
-    await connect();
+  try {
+    if (!channel) {
+      await connect();
+    }
+    channel.sendToQueue(queue, Buffer.from(message), { persistent: true });
+  } catch (error) {
+    logger.info(error);
   }
-  channel.sendToQueue(queue, Buffer.from(message), { persistent: true });
 }
 
 process.on('exit', () => {
-  if (channel) {
-    channel.close();
+  try {
+    if (channel) {
+      channel.close();
+    }
+  } catch (error) {
+    logger.info(error);
   }
 });
 

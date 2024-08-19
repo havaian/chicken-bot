@@ -4,17 +4,17 @@ const { Markup } = require("telegraf");
 const { logger, readLog } = require("../../utils/logging");
 
 module.exports = async (ctx) => {
-  const contact = ctx.message.contact;
-  const userId = ctx.from.id;
-
-  if (contact.user_id !== userId) {
-    await ctx.reply("Tugma yordamida o’zingizni kontaktingizni yuboring");
-    return;
-  }
-
-  const phoneNumber = contact.phone_number;
-
   try {
+    const contact = ctx.message.contact;
+    const userId = ctx.from.id;
+  
+    if (contact.user_id !== userId) {
+      await ctx.reply("Tugma yordamida o’zingizni kontaktingizni yuboring");
+      return;
+    }
+  
+    const phoneNumber = contact.phone_number;
+    
     const response = await axios.get(`/find-by-phone/${phoneNumber}`, {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,

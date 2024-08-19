@@ -5,6 +5,7 @@
 
 const { sendIncisionEggs } = require("./incision");
 const { sendMelange } = require("./melange");
+const { sendDayFinished } = require("./finishDay");
 
 // const nonZero = require("../general/non-zero");
 // let eggs = "";
@@ -54,12 +55,13 @@ exports.sendBrokenEggs = async (ctx) => {
   try {
     await sendIncisionEggs(ctx);
     // await sendMelange(ctx);
+    // await sendDayFinished(ctx);
 //     const type = ((ctx?.match && ctx?.match[0] === "confirm-broken-eggs-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
 
 //     if (type === 2) {
 //       await ctx.reply(`Singan tuxumlar sonini kiriting`,
 //         Markup.keyboard([
-//           ["Bekor qilish"]
+//           ["Bekor qilish ❌"]
 //         ]));
 //     }
 
@@ -84,8 +86,8 @@ exports.sendBrokenEggs = async (ctx) => {
 //     await ctx.reply(`Singan tuxumlar\n\n${amountMsg}\n\n`);
 //     await ctx.reply(`Singan tuxum kiritilganini tasdiqlaysizmi?`,
 //       Markup.inlineKeyboard([
-//         [Markup.button.callback("Ha", "confirm-broken-eggs-yes"),
-//         Markup.button.callback("Yo’q", "confirm-broken-eggs-no")],
+//         [Markup.button.callback("Ha ✅", "confirm-broken-eggs-yes"),
+//         Markup.button.callback("Yo’q ❌", "confirm-broken-eggs-no")],
 //       ])
 //     );
 //   } catch (error) {

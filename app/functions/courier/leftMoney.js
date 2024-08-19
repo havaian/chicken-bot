@@ -10,58 +10,52 @@ const { sendDayFinished } = require("./finishDay");
 const eggsDataKey = "leftMoneyAmount";
 
 exports.sendLeftMoney = async (ctx) => {
-  // Get today's activity for the courier
-  const courierActivityResponse = await axios.get(
-    `/courier/activity/today/${ctx.session.user.phone_num}`,
-    {
-      headers: {
-        "x-user-telegram-chat-id": ctx.chat.id,
-      },
-    }
-  );
-  const courierActivity = courierActivityResponse.data;
-
-  if (courierActivity.money_by_courier > 0) {
-    sendDayFinished(ctx);
-    return;
+  try {
+    ctx.session.awaitingMoney = true;
+    await ctx.reply(
+      "Kassaga necha pul topshirilganini kiriting",
+      Markup.keyboard([
+        ["Bekor qilish ❌"]
+      ])
+    );
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
-
-  ctx.session.awaitingMoney = true;
-  await ctx.reply(
-    "Kassaga necha pul topshirilganini kiriting",
-    Markup.keyboard([
-      ["Bekor qilish"]
-    ])
-  );
 };
 
 exports.confirmLeftMoney = async (ctx) => {
-  if (ctx.session.awaitingMoney) {
-    const amount = parseInt(ctx.message.text, 10);
-    if (isNaN(amount) || amount < 0) {
+  try {
+    if (ctx.session.awaitingMoney) {
+      const amount = parseInt(ctx.message.text, 10);
+      if (isNaN(amount) || amount < 0) {
+        await ctx.reply(
+          "Noto’g’ri qiymat. Iltimos, topshirilgan kassa miqdorini yozib yuboring.",
+          Markup.keyboard([
+              ["Bekor qilish ❌"]
+          ])
+        );
+        return;
+      }
+      ctx.session[eggsDataKey] = amount;
+  
       await ctx.reply(
-        "Noto’g’ri qiymat. Iltimos, topshirilgan kassa miqdorini yozib yuboring.",
-        Markup.keyboard([
-            ["Bekor qilish"]
+        `Siz ${amount} so’m pul kassaga topshirdingizmi?`,
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback("Tasdiqlash ✅ ", `confirm-money-left:${amount}`),
+            Markup.button.callback("Bekor qilish ❌", "cancel")
+          ],
         ])
       );
-      return;
+  
+      // Delete the previous message
+      await ctx.deleteMessage();
+      ctx.session.awaitingMoney = false;
     }
-    ctx.session[eggsDataKey] = amount;
-
-    await ctx.reply(
-      `Siz ${amount} so’m pul kassaga topshirdingizmi?`,
-      Markup.inlineKeyboard([
-        [
-          Markup.button.callback("Tasdiqlash", `confirm-money-left:${amount}`),
-          Markup.button.callback("Bekor qilish", "cancel")
-        ],
-      ])
-    );
-
-    // Delete the previous message
-    await ctx.deleteMessage();
-    ctx.session.awaitingMoney = false;
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 

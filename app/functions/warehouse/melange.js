@@ -39,15 +39,15 @@ module.exports.promptBroken = async (ctx) => {
 
         // const keyboard = Markup.inlineKeyboard([
         //     [
-        //         Markup.button.callback("Ha", "warehouse-dailyBroken-yes"),
-        //         Markup.button.callback("Yo’q", "warehouse-dailyBroken-no"),
+        //         Markup.button.callback("Ha ✅", "warehouse-dailyBroken-yes"),
+        //         Markup.button.callback("Yo’q ❌", "warehouse-dailyBroken-no"),
         //     ]
         // ]);
 
         // if (type === 2) {
         //     await ctx.reply("Ombordagi singan tuxumlar sonini kiriting",
         //         Markup.keyboard([
-        //             ["Bekor qilish"]
+        //             ["Bekor qilish ❌"]
         //         ]));
         // }
 
@@ -82,15 +82,15 @@ module.exports.promptIncision = async (ctx) => {
 
         const keyboard = Markup.inlineKeyboard([
             [
-                Markup.button.callback("Ha", "warehouse-dailyIncision-yes"),
-                Markup.button.callback("Yo’q", "warehouse-dailyIncision-no"),
+                Markup.button.callback("Ha ✅", "warehouse-dailyIncision-yes"),
+                Markup.button.callback("Yo’q ❌", "warehouse-dailyIncision-no"),
             ]
         ]);
 
         if (type === 2) {
             await ctx.reply("Nasechka tuxum sonini kiriting",
                 Markup.keyboard([
-                    ["Bekor qilish"]
+                    ["Bekor qilish ❌"]
                 ]));
         }
 
@@ -125,15 +125,15 @@ module.exports.promptIntact = async (ctx) => {
 
         const keyboard = Markup.inlineKeyboard([
             [
-                Markup.button.callback("Ha", "warehouse-dailyIntact-yes"),
-                Markup.button.callback("Yo’q", "warehouse-dailyIntact-no"),
+                Markup.button.callback("Ha ✅", "warehouse-dailyIntact-yes"),
+                Markup.button.callback("Yo’q ❌", "warehouse-dailyIntact-no"),
             ]
         ]);
 
         if (type === 2) {
             await ctx.reply("Ombordagi qolgan tuxum sonini kiriting",
                 Markup.keyboard([
-                    ["Bekor qilish"]
+                    ["Bekor qilish ❌"]
                 ]));
         }
 
@@ -145,21 +145,31 @@ module.exports.promptIntact = async (ctx) => {
 }
 
 const updateCategorySum = (currentData = {}, newData = {}) => {
-    return Object.entries(newData).reduce((acc, [key, value]) => {
-        const actualKey = key === 'Upakovka' ? 'D1' : key;
-        acc[actualKey] = (acc[actualKey] || 0) + value;
-        return acc;
-    }, { ...currentData });
+    try {
+        return Object.entries(newData).reduce((acc, [key, value]) => {
+            const actualKey = key === 'UP' ? 'D1' : key;
+            acc[actualKey] = (acc[actualKey] || 0) + value;
+            return acc;
+        }, { ...currentData });
+    } catch (error) {
+        logger.info(error);
+        ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
+    }
 };
 
 const exceedsBrokenByCategory = (totalBroken, dailyIntact, dailyIncision) => {
-    return Object.keys(dailyIntact).some(category => {
-        const actualCategory = category === 'Upakovka' ? 'D1' : category;
-        const intact = dailyIntact[category] || 0;
-        const incision = dailyIncision[category] || 0;
-        const broken = totalBroken[actualCategory] || 0;
-        return (intact + incision) > broken;
-    });
+    try {
+        return Object.keys(dailyIntact).some(category => {
+            const actualCategory = category === 'UP' ? 'D1' : category;
+            const intact = dailyIntact[category] || 0;
+            const incision = dailyIncision[category] || 0;
+            const broken = totalBroken[actualCategory] || 0;
+            return (intact + incision) > broken;
+        });
+    } catch (error) {
+        logger.info(error);
+        ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
+    }
 };
 
 module.exports.confirmIntact = async (ctx) => {
@@ -206,10 +216,17 @@ module.exports.promptMelange = async (ctx) => {
 
         const keyboard = Markup.inlineKeyboard([
             [
-                Markup.button.callback("Ha", "warehouse-dailyMelanj-yes"), 
-                Markup.button.callback("Yo’q", "warehouse-dailyMelanj-no")
+                Markup.button.callback("Ha ✅", "warehouse-dailyMelanj-yes"), 
+                Markup.button.callback("Yo’q ❌", "warehouse-dailyMelanj-no")
             ],
         ]);
+
+        // if (!isNaN(ctx.message.text)) {
+        //     if (parseFloat(ctx.message.text) < (1 / 28)) {
+        //         await ctx.reply(`Melanj ${1 / 28} litrdan kam bolishi mumkin emas`);
+        //         return;
+        //     }
+        // }
 
         categoriesByTextObject(ctx, "awaitingWarehouseDailyMelange", "litr melanj", keyboard, type, "dailyMelange", eggs, true);
     } catch (error) {
@@ -240,7 +257,7 @@ module.exports.confirmMelange = async (ctx) => {
             const result = ((current[x] - dailyIntact[x] - dailyIncision[x]) / 25) || 0;
             if (dailyMelange[x] < result) {
                 await ctx.reply(`Sizda ${x} kategoriya bo’yicha kamida ${result} litr melanj chiqishi kerak edi!`,
-                    Markup.keyboard([["Bekor qilish"]]),
+                    Markup.keyboard([["Bekor qilish ❌"]]),
                     Markup.inlineKeyboard([
                     [Markup.button.callback("Yangidan kiritish", "confirm-left-no")],
                     [Markup.button.callback("Boshiga qaytish", "cancel")],
@@ -320,7 +337,7 @@ module.exports.confirmMelange = async (ctx) => {
 
         // Forward reports to the group
         // await ctx.telegram.sendDocument(groupId, { source: excelFilename }, { caption: `${courier.full_name}. Ombor uchun melanj kiritildi. Xisobot:` });
-        await ctx.telegram.sendPhoto(groupId, { source: imageFilename }, { caption: `${ctx.session.user.full_name}. Ombor uchun melanj kiritildi. Xisobot:` });
+        await ctx.telegram.sendPhoto(groupId, { source: imageFilename }, { caption: `${ctx.session.user.full_name}. Ombor. Melanj. Xisobot:` });
 
         ctx.session["dailyBroken"] = undefined;
         ctx.session["dailyIntact"] = undefined;
@@ -334,14 +351,19 @@ module.exports.confirmMelange = async (ctx) => {
 };
 
 const updateCategory = (currentData = {}, newData = {}, operation = 'add', isWarehouse = false) => {
-    const allKeys = new Set([...Object.keys(currentData), ...Object.keys(newData)]);
-    return Array.from(allKeys).reduce((acc, key) => {
-        const actualKey = isWarehouse && key === 'Upakovka' ? 'D1' : key;
-        acc[actualKey] = operation === 'add'
-            ? (currentData[actualKey] || 0) + (newData[key] || 0)
-            : (currentData[actualKey] || 0) - (newData[key] || 0);
-        return acc;
-    }, {});
+    try {
+        const allKeys = new Set([...Object.keys(currentData), ...Object.keys(newData)]);
+        return Array.from(allKeys).reduce((acc, key) => {
+            const actualKey = isWarehouse && key === 'UP' ? 'D1' : key;
+            acc[actualKey] = operation === 'add'
+                ? (currentData[actualKey] || 0) + (newData[key] || 0)
+                : (currentData[actualKey] || 0) - (newData[key] || 0);
+            return acc;
+        }, {});
+    } catch (error) {
+        logger.info(error);
+        ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
+    }
 };
 
 module.exports.setBotInstance = setBotInstance;

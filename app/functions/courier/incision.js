@@ -14,39 +14,44 @@ const sessionKey = "awaitingIncisionEggs";
 const eggsDataKey = "eggsIncisionData";
 
 const promptIncision = async (ctx, type) => {
-  eggs = nonZero(ctx.session.currentEggs);
+  try {
+    eggs = nonZero(ctx.session.currentEggs);
+    
+    if (!ctx.session.categories || type === 2) {
+      ctx.session.categories = Object.keys(eggs);
+      ctx.session.currentCategoryIndex = 0;
+      ctx.session[eggsDataKey] = {};
+      ctx.session[sessionKey] = true;
+    }
   
-  if (!ctx.session.categories || type === 2) {
-    ctx.session.categories = Object.keys(eggs);
-    ctx.session.currentCategoryIndex = 0;
-    ctx.session[eggsDataKey] = {};
-    ctx.session[sessionKey] = true;
-  }
-
-  if (sessionKey) {
-    const category = ctx.session.categories[ctx.session.currentCategoryIndex];
-
-    if (ctx.message && ctx.message.text && type != 2) {
-      const amount = parseInt(ctx.message.text, 10);
-      if (isNaN(amount) || amount < 0) {
-        await ctx.reply("Iltimos, to’g’ri son kiriting:");
-        return;
+    if (sessionKey) {
+      const category = ctx.session.categories[ctx.session.currentCategoryIndex];
+  
+      if (ctx.message && ctx.message.text && type != 2) {
+        const amount = parseInt(ctx.message.text, 10);
+        if (isNaN(amount) || amount < 0) {
+          await ctx.reply("Iltimos, to’g’ri son kiriting:");
+          return;
+        }
+  
+        if (!ctx.session[eggsDataKey][category]) {
+          ctx.session[eggsDataKey][category] = 0;
+        }
+        ctx.session[eggsDataKey][category] += amount;
+  
+        ctx.session.currentCategoryIndex++;
       }
-
-      if (!ctx.session[eggsDataKey][category]) {
-        ctx.session[eggsDataKey][category] = 0;
+  
+      if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
+        const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
+        await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum nasechka?`);
+      } else {
+        await confirmIncisionEggs(ctx);
       }
-      ctx.session[eggsDataKey][category] += amount;
-
-      ctx.session.currentCategoryIndex++;
     }
-
-    if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
-      const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
-      await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum nasechka?`);
-    } else {
-      await confirmIncisionEggs(ctx);
-    }
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 }
 
@@ -63,7 +68,7 @@ exports.sendIncisionEggs = async (ctx) => {
     if (type === 2) {
       await ctx.reply(`Singan tuxumlar sonini kiriting`,
         Markup.keyboard([
-          ["Bekor qilish"]
+          ["Bekor qilish ❌"]
         ]));
     }
 
@@ -90,8 +95,8 @@ const confirmIncisionEggs = async (ctx) => {
     await ctx.reply(`Nasechka tuxumlar\n\n${amountMsg}\n\n`);
     await ctx.reply(`Nasechka tuxum kiritilganini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Ha", "confirm-incision-eggs-yes"),
-        Markup.button.callback("Yo’q", "confirm-incision-eggs-no")],
+        [Markup.button.callback("Ha ✅", "confirm-incision-eggs-yes"),
+        Markup.button.callback("Yo’q ❌", "confirm-incision-eggs-no")],
       ])
     );
   } catch (error) {

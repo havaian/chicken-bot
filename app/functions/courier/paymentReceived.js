@@ -18,40 +18,55 @@ const cancel = require("../general/cancel");
 const { logger, readLog } = require("../../utils/logging");
 
 module.exports = async (ctx) => {
-  await ctx.deleteMessage();
-  ctx.session.awaitingPaymentAmount = true;
-  await ctx.reply("Iltimos, necha pul olganingizni kiriting:");
+  try {
+    await ctx.deleteMessage();
+    ctx.session.awaitingPaymentAmount = true;
+    await ctx.reply("Iltimos, necha pul olganingizni kiriting:");
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
+  }
 };
 
 module.exports.completeTransaction = async (ctx) => {
-  const selectedBuyer = ctx.session.buyer;
-
-  const paymentAmount = ctx.message.text
-  selectedBuyer.paymentAmount = paymentAmount;
-
-  if (paymentAmount < 0) {
-    await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting");
-    return;
+  try {
+    const selectedBuyer = ctx.session.buyer;
+  
+    const paymentAmount = ctx.message.text
+    selectedBuyer.paymentAmount = paymentAmount;
+  
+    if (paymentAmount < 0) {
+      await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting");
+      return;
+    }
+  
+    await ctx.reply(`Siz ${paymentAmount} so’m pul olganingizni kiritdingiz`);
+  
+    await ctx.reply(
+      `Tasdiqlaysizmi?`,
+      Markup.inlineKeyboard([
+        [
+          Markup.button.callback("Tasdiqlash ✅ ", "confirm-transaction"), 
+          Markup.button.callback("Bekor qilish ❌", "cancel")
+        ],
+      ])
+    );
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
-
-  await ctx.reply(`Siz ${paymentAmount} so’m pul olganingizni kiritdingiz`);
-
-  await ctx.reply(
-    `Tasdiqlaysizmi?`,
-    Markup.inlineKeyboard([
-      [
-        Markup.button.callback("Tasdiqlash", "confirm-transaction"), 
-        Markup.button.callback("Bekor qilish", "cancel")
-      ],
-    ])
-  );
 };
 
 module.exports.confirmTransaction = async (ctx) => {
-  await handleCircleVideo(ctx);
-
-  // Delete the previous message
-  await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
+  try {
+    await handleCircleVideo(ctx);
+  
+    // Delete the previous message
+    await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
+  }
 };
 
 const handleCircleVideo = async (ctx) => {
@@ -136,7 +151,7 @@ const handleCircleVideo = async (ctx) => {
       },
       eggs: selectedBuyer.eggsDelivered || [],
       payment: paymentAmount || 0,
-      debt: buyerActivity.payment + totalPrice - paymentAmount,
+      debt: buyerActivity.debt + totalPrice - paymentAmount,
       time: new Date().toLocaleString(),
     };
 
@@ -144,13 +159,17 @@ const handleCircleVideo = async (ctx) => {
     const updatedBuyerActivity = {
       ...buyerActivity,
       accepted: [...buyerActivity.accepted, deliveryDetailsBuyer],
-      debt: buyerActivity.debt + totalPrice - paymentAmount,
+      debt: buyerActivity.debt || 0 + totalPrice || 0 - paymentAmount || 0,
     };
+    
 
     let eggsMsg = "";
 
+    let totalSum = 0;
+
     for (let y in Object.keys(selectedBuyer.eggsDelivered)) {
       const x = Object.keys(selectedBuyer.eggsDelivered)[y];
+      totalSum += selectedBuyer.eggsDelivered[x].amount * egg_price[selectedBuyer.eggsDelivered[x].category];
       eggsMsg += selectedBuyer.eggsDelivered[x].amount > 0 ? `${selectedBuyer.eggsDelivered[x].category}: ${selectedBuyer.eggsDelivered[x].amount}ta (${egg_price[selectedBuyer.eggsDelivered[x].category]} so'm)\n` : "";
     }
 
@@ -158,6 +177,7 @@ const handleCircleVideo = async (ctx) => {
       eggsMsg,
       selectedBuyer.paymentAmount,
       totalPrice - paymentAmount,
+      totalSum,
       buyerActivity.debt + totalPrice - paymentAmount
     );
 
@@ -186,6 +206,7 @@ const handleCircleVideo = async (ctx) => {
       debt: buyerActivity.debt + totalPrice - paymentAmount,
       time: new Date().toLocaleString(), // Add the time of the delivery
     };
+    
 
     // Update courier's activity
     const updatedCourierActivity = {
@@ -194,6 +215,7 @@ const handleCircleVideo = async (ctx) => {
       earnings: courierActivity.earnings + paymentAmount,
       current: courierActivity.current || {},
     };
+    
 
     await axios.put(
       `/courier/activity/${courierActivity._id}`,

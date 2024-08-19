@@ -14,39 +14,44 @@ const sessionKey = "awaitingLeft";
 const eggsDataKey = "eggsLeftData";
 
 const promptLeft = async (ctx, type) => {
-  eggs = nonZero(ctx.session.currentEggs);
-
-  if (!ctx.session.categories || type === 2) {
-    ctx.session.categories = Object.keys(eggs);
-    ctx.session.currentCategoryIndex = 0;
-    ctx.session[eggsDataKey] = {};
-    ctx.session[sessionKey] = true;
-  }
-
-  if (sessionKey) {
-    const category = ctx.session.categories[ctx.session.currentCategoryIndex];
-
-    if (ctx.message && ctx.message.text && type != 2) {
-      const amount = parseInt(ctx.message.text, 10);
-      if (isNaN(amount) || amount < 0) {
-        await ctx.reply("Iltimos, to’g’ri son kiriting:");
-        return;
-      }
-
-      if (!ctx.session[eggsDataKey][category]) {
-        ctx.session[eggsDataKey][category] = 0;
-      }
-      ctx.session[eggsDataKey][category] += amount;
-
-      ctx.session.currentCategoryIndex++;
+  try {
+    eggs = nonZero(ctx.session.currentEggs);
+  
+    if (!ctx.session.categories || type === 2) {
+      ctx.session.categories = Object.keys(eggs);
+      ctx.session.currentCategoryIndex = 0;
+      ctx.session[eggsDataKey] = {};
+      ctx.session[sessionKey] = true;
     }
-
-    if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
-      const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
-      await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum butun qolgan?`);
-    } else {
-      await confirmLeftEggs(ctx);
+  
+    if (sessionKey) {
+      const category = ctx.session.categories[ctx.session.currentCategoryIndex];
+  
+      if (ctx.message && ctx.message.text && type != 2) {
+        const amount = parseInt(ctx.message.text, 10);
+        if (isNaN(amount) || amount < 0) {
+          await ctx.reply("Iltimos, to’g’ri son kiriting:");
+          return;
+        }
+  
+        if (!ctx.session[eggsDataKey][category]) {
+          ctx.session[eggsDataKey][category] = 0;
+        }
+        ctx.session[eggsDataKey][category] += amount;
+  
+        ctx.session.currentCategoryIndex++;
+      }
+  
+      if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
+        const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
+        await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum butun qolgan?`);
+      } else {
+        await confirmLeftEggs(ctx);
+      }
     }
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 }
 
@@ -64,7 +69,7 @@ exports.sendLeft = async (ctx) => {
       await ctx.reply(
         "Mashinada nechta tuxum butun qolganini kiriting",
         Markup.keyboard([
-          ["Bekor qilish"]
+          ["Bekor qilish ❌"]
         ])
       );
     }
@@ -92,8 +97,8 @@ const confirmLeftEggs = async (ctx) => {
     await ctx.reply(`Qolgan butun tuxumlar\n\n${amountMsg}`);
     await ctx.reply(`Kiritilganini qolgan butun tuxumlar sonini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Ha", "confirm-left-yes"),
-        Markup.button.callback("Yo’q", "confirm-left-no")],
+        [Markup.button.callback("Ha ✅", "confirm-left-yes"),
+        Markup.button.callback("Yo’q ❌", "confirm-left-no")],
       ])
     );
 
@@ -132,7 +137,7 @@ exports.addLeft = async (ctx) => {
 
         if (current[x] < ctx.session[eggsDataKey][x]) {
           await ctx.reply(`Sizda ${x} kategoriya bo’yicha bor tuxum sonidan ko’p qolishi mumkin emas!`,
-            Markup.keyboard([["Bekor qilish"]]),
+            Markup.keyboard([["Bekor qilish ❌"]]),
             Markup.inlineKeyboard([
               [Markup.button.callback("Yangidan kiritish", "confirm-left-no")],
               [Markup.button.callback("Boshiga qaytish", "cancel")],

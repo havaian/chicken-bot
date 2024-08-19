@@ -54,18 +54,29 @@ const generateWarehouseHTML = (data, filename) => {
       <tr>
         <td style="text-align: center; vertical-align: middle" colspan="1">${today6amStr}</td>
         <td style="text-align: center; vertical-align: middle" colspan="1" rowspan="2">${Object.entries(by_morning).map(([category, amount]) => `${category}: <b>${amount}</b>`).join("<br>")}</td>
-        <td style="text-align: center; vertical-align: middle" colspan="3" rowspan="${accepted.length > 1 ? accepted.length + 2 : 3}">
+        <td style="text-align: center; vertical-align: middle" colspan="1" rowspan="${accepted.length > 1 ? accepted.length + 2 : 3}">
           Jami:<br>
           ${(() => {
-            // Combine categories from by_morning and accepted
             const combinedCategories = { ...by_morning };
-            for (const item of accepted) {
-              for (const [category, amount] of Object.entries(item.eggsReceived || {})) {
+
+            // Process eggs from accepted array
+            for (const item of accepted) {              
+              for (const [category, amount] of Object.entries(item.eggsReceived || {})) {                
                 combinedCategories[category] = (combinedCategories[category] || 0) + amount;
               }
             }
+            
             // Format combined categories
             return Object.entries(combinedCategories)
+              .map(([category, amount]) => `${category}: <b>${amount}</b>`)
+              .join("<br>");
+          })()}
+        </td>
+        <td style="text-align: center; vertical-align: middle" colspan="1" rowspan="${accepted.length > 1 ? accepted.length + 2 : 3}">
+          Astatka:<br>
+          ${(() => {
+            // Format combined categories
+            return Object.entries(current)
               .map(([category, amount]) => `${category}: <b>${amount}</b>`)
               .join("<br>");
           })()}

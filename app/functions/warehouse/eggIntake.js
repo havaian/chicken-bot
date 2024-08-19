@@ -1,3 +1,4 @@
+const fs = require("fs");
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
 
@@ -15,6 +16,12 @@ const eggsDataKey = "eggsIntakeData";
 
 module.exports.promptEggImporter = async (ctx) => {
   try {
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-intake-eggs-no";
+
+    if (deleteMsg) {
+      await ctx.deleteMessage();
+    }
+
     const response = await axios.get(`/importer/all`, {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,
@@ -43,7 +50,7 @@ module.exports.promptEggImporter = async (ctx) => {
       message,
       Markup.inlineKeyboard([
         ...buttonRows,
-        [Markup.button.callback("Bekor qilish", "cancel")],
+        [Markup.button.callback("Bekor qilish ❌", "cancel")],
       ])
     );
   } catch (error) {
@@ -53,11 +60,16 @@ module.exports.promptEggImporter = async (ctx) => {
 };
 
 module.exports.handleEggImporter = async (ctx) => {
-  const [action, importerId, importerName] = ctx.match[0].split(':');
-  ctx.session.selectedImporter = { importerId, importerName };
-  const intakeTime = new Date().toLocaleString();
-  ctx.session.intakeTime = intakeTime;
-  this.sendIntakeEggs(ctx);
+  try {
+    const [action, importerId, importerName] = ctx.match[0].split(':');
+    ctx.session.selectedImporter = { importerId, importerName };
+    const intakeTime = new Date().toLocaleString();
+    ctx.session.intakeTime = intakeTime;
+    this.sendIntakeEggs(ctx);
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
+  }
 }
 
 module.exports.promptEggIntake = async (ctx, type) => {
@@ -110,7 +122,7 @@ module.exports.sendIntakeEggs = async (ctx) => {
     if (type === 2) {
       await ctx.reply(`Tuxum kirimi sonini kiriting`,
         Markup.keyboard([
-          ["Bekor qilish"]
+          ["Bekor qilish ❌"]
         ]));
     }
 
@@ -137,8 +149,8 @@ const confirmIntakeEggs = async (ctx) => {
     await ctx.reply(`Tuxum kirimi\n\n${amountMsg}\n\n`);
     await ctx.reply(`Tuxum kirimini kiritilganini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Ha", "confirm-intake-eggs-yes")],
-        [Markup.button.callback("Yo’q", "confirm-intake-eggs-no")],
+        [Markup.button.callback("Ha ✅", "confirm-intake-eggs-yes")],
+        [Markup.button.callback("Yo’q ❌", "confirm-intake-eggs-no")],
       ])
     );
   } catch (error) {
@@ -220,6 +232,57 @@ exports.addIntakeEggs = async (ctx) => {
 
     // Delete the previous message
     await ctx.deleteMessage();
+    
+    // Generate HTML report
+    const reportDate = new Date().toISOString().split("T")[0];
+    const reportDir = `reports/warehouse/${reportDate}`;
+    if (!fs.existsSync(reportDir)) {
+      fs.mkdirSync(reportDir, { recursive: true });
+    }
+
+    // Delete old reports
+    fs.readdirSync(reportDir).forEach((file) => {
+      fs.unlinkSync(path.join(reportDir, file));
+    });
+
+    const htmlFilename = `${reportDir}/${updatedWarehouseActivity._id}.html`;
+    const imageFilename = `${reportDir}/${updatedWarehouseActivity._id}.jpg`;
+    const excelFilename = `${reportDir}/${updatedWarehouseActivity._id}.xlsx`;
+
+    generateWarehouseHTML(updatedWarehouseActivity, htmlFilename);
+    await generateWarehouseExcel(updatedWarehouseActivity, excelFilename);
+
+    // Convert HTML report to image
+    await convertHTMLToImage(htmlFilename, imageFilename);
+
+    // Send image and Excel file to user
+    await ctx.replyWithPhoto({ source: imageFilename });
+    // await ctx.replyWithDocument({ source: excelFilename });
+
+        let groupId = null;
+        for (const phone_num of ctx.session.user.phone_num) {
+            for (const [id, numbers] of Object.entries(groups)) {
+                if (numbers.includes(phone_num)) {
+                    groupId = id;
+                    break;
+                }
+            }
+            if (groupId) {
+                break;
+            }
+        }
+
+        // // Forward reports to the group
+        // await ctx.telegram.sendDocument(
+        //     groupId,
+        //     { source: excelFilename },
+        //     { caption: `Xisobot: ${ctx.session.user.full_name}` }
+        // );
+        await ctx.telegram.sendPhoto(
+            groupId,
+            { source: imageFilename },
+            { caption: `Ombor. Tuxum kirimi. Xisobot:` }
+        );
 
     await cancel(ctx, "Tuxum kirimi qabul qilindi");
 

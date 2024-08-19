@@ -59,7 +59,7 @@ module.exports.promptCourier = async (ctx) => {
 
     let message = "Kuryerni tanlang:\n";
     const buttons = couriers.map((courier, index) => {
-      message += `${index + 1}. ${courier.car_num}, ${courier.full_name}\n`;
+      message += `${index + 1}. ${courier.car_num ? courier.car_num + ", " : ""} ${courier.full_name ? courier.full_name : ""}\n`;
       return Markup.button.callback(
         `${index + 1}`,
         `select-courier:${courier._id}`
@@ -75,7 +75,7 @@ module.exports.promptCourier = async (ctx) => {
       message,
       Markup.inlineKeyboard([
         ...buttonRows,
-        [Markup.button.callback("Bekor qilish", "cancel")],
+        [Markup.button.callback("Bekor qilish ❌", "cancel")],
       ])
     );
 
@@ -114,15 +114,15 @@ module.exports.promptCourierBroken = async (ctx) => {
 
     const keyboard = Markup.inlineKeyboard([
       [
-        Markup.button.callback("Ha", "courier-broken-yes"),
-        Markup.button.callback("Yo’q", "courier-broken-no"),
+        Markup.button.callback("Ha ✅", "courier-broken-yes"),
+        Markup.button.callback("Yo’q ❌", "courier-broken-no"),
       ]
     ]);
 
     if (type === 2) {
-      await ctx.reply(`${ctx.session.selectedCourier.car_num} (${ctx.session.selectedCourier.full_name}) mashinadagi nasechka tuxumlarni kiriting`,
+      await ctx.reply(`${ctx.session.selectedCourier.full_name} ${ctx.session.selectedCourier.car_num ? "(" + ctx.session.selectedCourier.car_num + ")" : ""} mashinadagi nasechka tuxumlarni kiriting`,
         Markup.keyboard([
-          ["Bekor qilish"]
+          ["Bekor qilish ❌"]
         ]));
     }
 
@@ -155,17 +155,17 @@ module.exports.promptCourierRemained = async (ctx) => {
 
     const keyboard = Markup.inlineKeyboard([
       [
-        Markup.button.callback("Ha", "courier-remained-yes"),
-        Markup.button.callback("Yo’q", "courier-remained-no"),
+        Markup.button.callback("Ha ✅", "courier-remained-yes"),
+        Markup.button.callback("Yo’q ❌", "courier-remained-no"),
       ]
     ]);
 
     const { full_name, car_num } = ctx.session.selectedCourier;
 
     if (type === 2) {
-      await ctx.reply(`${car_num} (${full_name}) mashinadagi ostatkani kiriting`,
+      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinadagi ostatkani kiriting`,
         Markup.keyboard([
-          ["Bekor qilish"]
+          ["Bekor qilish ❌"]
         ]));
     }
 
@@ -198,17 +198,17 @@ module.exports.promptCourierMelange = async (ctx) => {
 
     const keyboard = Markup.inlineKeyboard([
       [
-        Markup.button.callback("Ha", "courier-melange-yes"),
-        Markup.button.callback("Yo’q", "courier-melange-no"),
+        Markup.button.callback("Ha ✅", "courier-melange-yes"),
+        Markup.button.callback("Yo’q ❌", "courier-melange-no"),
       ]
     ]);
 
     const { full_name, car_num } = ctx.session.selectedCourier;
 
     if (type === 2) {
-      await ctx.reply(`${car_num} (${full_name}) mashinadagi melanjni kiriting`,
+      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinadagi melanjni kiriting`,
         Markup.keyboard([
-          ["Bekor qilish"]
+          ["Bekor qilish ❌"]
         ]));
     }
 
@@ -241,17 +241,17 @@ module.exports.promptDistribution = async (ctx) => {
 
     const keyboard = Markup.inlineKeyboard([
       [
-        Markup.button.callback("Ha", "accept-distribution-yes"),
-        Markup.button.callback("Yo’q", "accept-distribution-no")
+        Markup.button.callback("Ha ✅", "accept-distribution-yes"),
+        Markup.button.callback("Yo’q ❌", "accept-distribution-no")
       ]
     ]);
 
     const { full_name, car_num } = ctx.session.selectedCourier;
 
     if (type === 2) {
-      await ctx.reply(`${car_num} (${full_name}) mashinaga yuklangan tuxumlar sonini kiriting`,
+      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinaga yuklangan tuxumlar sonini kiriting`,
         Markup.keyboard([
-          ["Bekor qilish"]
+          ["Bekor qilish ❌"]
         ]));
     }
 
@@ -273,20 +273,20 @@ module.exports.confirmDistribution = async (ctx) => {
 };
 
 module.exports.promptCircleVideo = async (ctx) => {
-  handleCircleVideo(ctx);
-  // try {
+  try {
+    handleCircleVideo(ctx);
   //   await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
   //     Markup.keyboard([
-  //         ["Bekor qilish"]
+  //         ["Bekor qilish ❌"]
   //     ]));
   //   ctx.session.awaitingCircleVideoWarehouse = true;
-  // } catch (error) {
-  //   logger.info(error);
-  //   await ctx.reply("Dumoloq videoda xatolik yuz berdi. Qayta urunib ko’ring",
-  //     Markup.keyboard([
-  //         ["Bekor qilish"]
-  //     ]));
-  // }
+  } catch (error) {
+    logger.info(error);
+    await ctx.reply("Dumoloq videoda xatolik yuz berdi. Qayta urunib ko’ring",
+      Markup.keyboard([
+          ["Bekor qilish ❌"]
+      ]));
+  }
 };
 
 const handleCircleVideo = async (ctx) => {
@@ -295,7 +295,7 @@ const handleCircleVideo = async (ctx) => {
     // if (!ctx.message.video_note || ctx.message.forward_from) {
     //   await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
     //     Markup.keyboard([
-    //         ["Bekor qilish"]
+    //         ["Bekor qilish ❌"]
     //     ]));
     //   return;
     // }
@@ -317,7 +317,7 @@ const handleCircleVideo = async (ctx) => {
     for (let y in Object.keys(ctx.session.distributedEggsData)) {
       const x = Object.keys(ctx.session.distributedEggsData)[y];
       let z = x;
-      if (x === "Upakovka") {
+      if (x === "UP") {
         z = "D1";
       };
       if (typeof current[z] === "undefined") {
@@ -400,8 +400,8 @@ const handleCircleVideo = async (ctx) => {
     });
     const courier = courierResponse.data;
     
-    const finalMessageGroup = `⚠️ Tasdiqlashni kutilmoqda\n\n${car_num} (${full_name}):\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
-    const finalMessageCourier = `⚠️ Sizning xisobingizga tuxum qo’shildi.\n\n${car_num} (${full_name}):\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `⚠️ Tasdiqlashni kutilmoqda\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
+    const finalMessageCourier = `⚠️ Sizning xisobingizga tuxum qo’shildi.\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
 
     // Send message to courier
     const messageToCourier = await botInstance.telegram.sendMessage(
@@ -413,7 +413,7 @@ const handleCircleVideo = async (ctx) => {
       courier.telegram_chat_id,
       `Tasdiqlang.`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Tasdiqlash", `courier-accept:${_id}`)],
+        [Markup.button.callback("Tasdiqlash ✅ ", `courier-accept:${_id}`)],
         [Markup.button.callback("Rad etish", `courier-reject:${_id}`)],
       ])
     );
@@ -437,18 +437,23 @@ const handleCircleVideo = async (ctx) => {
 };
 
 const updateCategory = (currentData = {}, newData = {}, operation = 'add', isWarehouse = false) => {
-  const result = { ...currentData };
-
-  for (const [key, value] of Object.entries(newData)) {
-    const actualKey = isWarehouse && key === 'Upakovka' ? 'D1' : key;
-    if (operation === 'add') {
-      result[actualKey] = (result[actualKey] || 0) + value;
-    } else {
-      result[actualKey] = (result[actualKey] || 0) - value;
+  try {
+    const result = { ...currentData };
+  
+    for (const [key, value] of Object.entries(newData)) {
+      const actualKey = isWarehouse && key === 'UP' ? 'D1' : key;
+      if (operation === 'add') {
+        result[actualKey] = (result[actualKey] || 0) + value;
+      } else {
+        result[actualKey] = (result[actualKey] || 0) - value;
+      }
     }
+  
+    return result;
+  } catch (error) {
+    logger.info(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
-
-  return result;
 };
 
 module.exports.courierAccept = async (ctx) => {
@@ -482,7 +487,12 @@ module.exports.courierAccept = async (ctx) => {
       accepted: distributedEggsData,
       current: updateCategory(remainedEggsData, distributedEggsData, 'add', false),
       accepted_today: true,
+      day_finished: false
     };
+
+    if (ctx?.session) {
+      ctx.session.day_finished = false;
+    }
 
     await axios.put(`/courier/activity/${courierActivity._id}`, updatedCourierActivity, {
       headers: {
@@ -579,7 +589,7 @@ module.exports.courierAccept = async (ctx) => {
       }
     }
 
-    const finalMessageGroup = `✅ Tasdiqlandi\n\n${car_num} (${full_name}):\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `✅ Tasdiqlandi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
 
     await botInstance.telegram.sendMessage(
       groupId,
@@ -628,7 +638,7 @@ module.exports.courierReject = async (ctx) => {
     const distributedEggsMessage = formatEggData(distributedEggsData, false);
     const melangeEggsMessage = formatEggData(melangeEggsData, true);
 
-    const finalMessageGroup = `❌ Rad etildi\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `❌ Rad etildi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
 
     // Find the group id by courier's phone number
     let groupId = null;

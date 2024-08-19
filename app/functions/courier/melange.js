@@ -14,40 +14,50 @@ const sessionKey = "awaitingMelangeEggs";
 const eggsDataKey = "eggsMelangeData";
 
 const promptMelange = async (ctx, type) => {
-    eggs = nonZero(ctx.session.currentEggs);
-
-    if (
-        !ctx.session.categories || type === 2) {
-        ctx.session.categories = Object.keys(eggs);
-        ctx.session.currentCategoryIndex = 0;
-        ctx.session[eggsDataKey] = {};
-        ctx.session[sessionKey] = true;
-    }
-
-    if (sessionKey) {
-        const category = ctx.session.categories[ctx.session.currentCategoryIndex];
-
-        if (ctx.message && ctx.message.text && type != 2) {
-            const amount = parseFloat(ctx.message.text, 2);
-            if (isNaN(amount) || amount < 0) {
-                await ctx.reply("Iltimos, to’g’ri son kiriting:");
-                return;
-            }
-
-            if (!ctx.session[eggsDataKey][category]) {
-                ctx.session[eggsDataKey][category] = 0;
-            }
-            ctx.session[eggsDataKey][category] += amount;
-
-            ctx.session.currentCategoryIndex++;
+    try {
+        eggs = nonZero(ctx.session.currentEggs);
+    
+        if (
+            !ctx.session.categories || type === 2) {
+            ctx.session.categories = Object.keys(eggs);
+            ctx.session.currentCategoryIndex = 0;
+            ctx.session[eggsDataKey] = {};
+            ctx.session[sessionKey] = true;
         }
-
-        if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
-            const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
-            await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya melanj chiqdi?`);
-        } else {
-            await this.acceptMelange(ctx);
+    
+        if (sessionKey) {
+            const category = ctx.session.categories[ctx.session.currentCategoryIndex];
+    
+            if (ctx.message && ctx.message.text && type != 2) {
+                const amount = parseFloat(ctx.message.text, 2);
+                if (isNaN(amount) || amount < 0) {
+                    await ctx.reply("Iltimos, to’g’ri son kiriting:");
+                    return;
+                }
+    
+                if (amount < (1 / 28)) {
+                    await ctx.reply(`Melanj ${1 / 28} litrdan kam bolishi mumkin emas`);
+                    return;
+                }
+    
+                if (!ctx.session[eggsDataKey][category]) {
+                    ctx.session[eggsDataKey][category] = 0;
+                }
+                ctx.session[eggsDataKey][category] += amount;
+    
+                ctx.session.currentCategoryIndex++;
+            }
+    
+            if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
+                const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
+                await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya melanj chiqdi?`);
+            } else {
+                await this.acceptMelange(ctx);
+            }
         }
+    } catch (error) {
+        logger.info(error);
+        ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
     }
 }
 
@@ -85,8 +95,8 @@ module.exports.acceptMelange = async (ctx) => {
         await ctx.reply("Kiritilgan melanj qiymatini tasdiqlaysizmi?",
             Markup.inlineKeyboard([
                 [
-                    Markup.button.callback("Ha", "confirm-melange-eggs-yes"),
-                    Markup.button.callback("Yo’q", "confirm-melange-eggs-no"),
+                    Markup.button.callback("Ha ✅", "confirm-melange-eggs-yes"),
+                    Markup.button.callback("Yo’q ❌", "confirm-melange-eggs-no"),
                 ]
             ]));
     } catch (error) {
@@ -107,7 +117,7 @@ module.exports.confirmMelangeEggs = async (ctx) => {
                 insicion[x] = 0;
             }
 
-            ctx.session.updatedActivity.current[x] = ctx.session.updatedActivity.current[x] - (ctx.session[eggsDataKey][x] * 25);
+            ctx.session.updatedActivity.current[x] = ctx.session.updatedActivity.current[x] - (ctx.session[eggsDataKey][x] * 28);
         };
 
         ctx.session.updatedActivity = {

@@ -19,12 +19,12 @@ exports.sendDayFinished = async (ctx) => {
       "Kun yakunlanganidan keyin ma’lumot kiritish taqiqlanadi. Tasdiqlaysizmi?",
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("Tasdiqlash", `confirm-day-finished`),
-          Markup.button.callback("Bekor qilish", "cancel")
+          Markup.button.callback("Tasdiqlash ✅ ", `confirm-day-finished`),
+          Markup.button.callback("Bekor qilish ❌", "cancel")
         ],
       ]),
       Markup.keyboard([
-        ["Bekor qilish"]
+        ["Bekor qilish ❌"]
       ])
     );
   } catch (error) {
@@ -56,8 +56,6 @@ exports.confirmDayFinished = async (ctx) => {
       },
     });
     const courier = courierResponse.data;
-    courierActivity.courier_name = courier.full_name;
-    courierActivity.car_num = courier.car_num;
 
     // Update courier"s activity with left
     const updatedCourierActivity = {
@@ -65,7 +63,10 @@ exports.confirmDayFinished = async (ctx) => {
       day_finished: true,
     };
 
-    ctx.session.dayFinished = true;
+    updatedCourierActivity.courier_name = courier.full_name;
+    updatedCourierActivity.car_num = courier.car_num;
+
+    // ctx.session.dayFinished = true;
 
     await axios.put(
       `/courier/activity/${updatedCourierActivity._id}`,

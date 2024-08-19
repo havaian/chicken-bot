@@ -54,7 +54,7 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
             if (!ctx.message.video_note || ctx.message.forward_from) {
                 await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
                     Markup.keyboard([
-                        ["Bekor qilish"]
+                        ["Bekor qilish ❌"]
                     ]));
                 return;
             }
@@ -62,7 +62,7 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
             if (ctx.message.video_note.duration < 5) {
                 await ctx.reply("Hisobot uchun dumaloq video uzunligi 4 soniyadan kam bo‘lmasligi kerak.",
                     Markup.keyboard([
-                        ["Bekor qilish"]
+                        ["Bekor qilish ❌"]
                     ]));
                 return;
             }
@@ -104,7 +104,7 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
         await ctx.telegram.sendPhoto(
             groupId,
             { source: imageFilename },
-            { caption: `${courier.full_name}. Ombor uchun qolgan tuxum kiritildi. Xisobot` }
+            { caption: `Ombor. Ombor tuxum. Xisobot` }
         );
 
         cancel(ctx, "Tanlang:");
@@ -130,8 +130,8 @@ module.exports.promptWarehouseRemainedConfirm = async (ctx) => {
         await ctx.reply(`Omborda qolgan tuxum bo’yicha ma’lumot:\n\n${summaryMessage}`,
             Markup.inlineKeyboard([
                 [
-                    Markup.button.callback("Ha", "warehouse-remainedConfirm-yes"),
-                    Markup.button.callback("Yo’q", "warehouse-remainedConfirm-no"),
+                    Markup.button.callback("Ha ✅", "warehouse-remainedConfirm-yes"),
+                    Markup.button.callback("Yo’q ❌", "warehouse-remainedConfirm-no"),
                 ]
             ]))
     } catch (error) {
@@ -207,7 +207,7 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
         await ctx.telegram.sendPhoto(
             groupId,
             { source: imageFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
+            { caption: `Ombor. Qolgan tuxum. Xisobot:` }
         );
 
         cancel(ctx, "Tanlang:");
@@ -232,15 +232,15 @@ module.exports.promptWarehouseRemained = async (ctx) => {
 
         const keyboard = Markup.inlineKeyboard([
             [
-                Markup.button.callback("Ha", "warehouse-dailyDeficit-yes"),
-                Markup.button.callback("Yo’q", "warehouse-dailyDeficit-no"),
+                Markup.button.callback("Ha ✅", "warehouse-dailyDeficit-yes"),
+                Markup.button.callback("Yo’q ❌", "warehouse-dailyDeficit-no"),
             ]
         ]);
 
         if (type === 2) {
             await ctx.reply("Ombordagi qolgan tuxumlar sonini kiriting",
                 Markup.keyboard([
-                    ["Bekor qilish"]
+                    ["Bekor qilish ❌"]
                 ]));
         }
 
@@ -288,21 +288,21 @@ module.exports.sendDeficit = async (ctx) => {
 };
 
 module.exports.promptCircleVideo = async (ctx) => {
-    handleCircleVideo(ctx);
-    // try {
+    try {
+        handleCircleVideo(ctx);
     //     await ctx.reply("Iltimos, hisobot uchun dumoloq video yuboring",
     //         Markup.keyboard([
-    //             ["Bekor qilish"]
+    //             ["Bekor qilish ❌"]
     //         ]));
     //     ctx.session.awaitingCircleVideoWarehouse2 = true;
     //     await ctx.deleteMessage();
-    // } catch (error) {
-    //     logger.info(error);
-    //     await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!",
-    //         Markup.keyboard([
-    //             ["Bekor qilish"]
-    //         ]));
-    // }
+    } catch (error) {
+        logger.info(error);
+        await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!",
+            Markup.keyboard([
+                ["Bekor qilish ❌"]
+            ]));
+    }
 }
 
 const handleCircleVideo = async (ctx) => {
@@ -376,7 +376,7 @@ const handleCircleVideo = async (ctx) => {
         await ctx.telegram.sendPhoto(
             groupId,
             { source: imageFilename },
-            { caption: `Xisobot: ${ctx.session.user.full_name}` }
+            { caption: `Ombor. Qolgan tuxum. Xisobot:` }
         );
 
         ctx.session["warehouseRemained"] = {};

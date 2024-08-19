@@ -10,13 +10,13 @@ const expenses = require("../functions/courier/expenses");
 const melange = require("../functions/warehouse/melange");
 const remained = require("../functions/warehouse/remained");
 
-const reset = require("../functions/general/reset");
+const { logger, readLog } = require("../utils/logging");
 
 const commands = {
   "Tuxum yetkazildi": [addMore, "courier"],
   "Tuxum chiqimi": [selectCourier.promptCourier, "warehouse"],
   "Hisobot": [todayDeliveries, "courier"],
-  "Bekor qilish": [cancel, "all"],
+  "Bekor qilish ❌": [cancel, "all"],
   "Ombor holati": [warehouseStatus, "warehouse"],
   "Tuxum kirimi": [eggIntake.promptEggImporter, "warehouse"],
   "Kunni yakunlash": [brokenEggs.sendBrokenEggs, "courier"],
@@ -26,21 +26,25 @@ const commands = {
 };
 
 const textCommandHandler = async (ctx, next) => {
-  if (ctx.message && ctx.message.text) {
-    const text = ctx.message.text;
-    const command = commands[text];
-
-    if (command) {
-      const [commandFunction, allowedUserType] = command;
-
-      if (allowedUserType === "all" || ctx.session.user.userType === allowedUserType) {
-        await commandFunction(ctx);
+  try {
+    if (ctx.message && ctx.message.text) {
+      const text = ctx.message.text;
+      const command = commands[text];
+  
+      if (command) {
+        const [commandFunction, allowedUserType] = command;
+  
+        if (allowedUserType === "all" || ctx.session.user.userType === allowedUserType) {
+          await commandFunction(ctx);
+        }
+      } else {
+        await next();
       }
     } else {
       await next();
     }
-  } else {
-    await next();
+  } catch (error) {
+    logger.info(error);
   }
 };
 
