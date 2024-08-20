@@ -49,6 +49,7 @@ module.exports = async (ctx) => {
       addedAt: new Date(),
       eggsDelivered: 0,
       paymentAmount: 0,
+      egg_price: buyerActivity.price
     };
 
     const debtLimit = getDebtLimit();

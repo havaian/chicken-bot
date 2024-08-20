@@ -4,6 +4,8 @@ const paymentReceived = require("./paymentReceived");
 const nonZero = require("../general/non-zero");
 const letters = require("../data/btnEmojis");
 
+const { logger, readLog } = require("../../utils/logging");
+
 const eggsDataKey = "eggsDeliveredData";
 
 let eggs = "";
@@ -47,7 +49,8 @@ module.exports.deliverEggs = async (ctx) => {
       const category = ctx.session.categories[ctx.session.currentCategoryIndex];
       
       ctx.session.awaitingEggsDelivered = true;
-      await ctx.reply(`Nechta kategoriya ${letters[category]} tuxum yetkazilganingizni kiriting:`,
+      await ctx.reply(
+        `Kategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
         Markup.keyboard([
             ["Bekor qilish ❌"]
         ]));
@@ -92,7 +95,7 @@ module.exports.deliverEggs = async (ctx) => {
       ];
   
       await ctx.reply(
-        `Nechta kategoriya ${letters[category]} tuxum yetkazildi?`,
+        `Kategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
         Markup.inlineKeyboard(buttons)
       );
     } else {
@@ -107,29 +110,34 @@ module.exports.deliverEggs = async (ctx) => {
 const sendSummaryAndCompleteDelivery = async (ctx) => {
   try {
     const selectedBuyer = ctx.session.buyer;
-  
-    const summaryMessage = ctx.session[eggsDataKey]
-      .map(({ category, amount }) => `${category}: ${amount}`)
-      .join("\n");
-  
-    await ctx.reply(`Tuxum yetkazilgan kategoriya bo’yicha umumiy ma’lumot:\n\n${summaryMessage}`)
-    await ctx.reply(`Tasdiqlaysizmi?`,
-      Markup.inlineKeyboard(
-        [
+    const eggsData = ctx.session[eggsDataKey];
+
+    if (!eggsData || eggsData.length === 0) {
+      await ctx.reply("Tuxum yetkazilmadi");
+      await this.confirmEggsDelivered(ctx);
+      return;
+    } else {
+      const summaryMessage = eggsData
+        .map(({ category, amount }) => `${category}: ${amount}`)
+        .join("\n");
+
+      await ctx.reply(`Tuxum yetkazilgan kategoriya bo'yicha umumiy ma'lumot:\n\n${summaryMessage}`);
+      await ctx.reply("Tasdiqlaysizmi?",
+        Markup.inlineKeyboard([
           Markup.button.callback("Ha ✅", "eggs-distributed-yes"),
-          Markup.button.callback("Yo’q ❌", "eggs-distributed-no"),
-        ]
-      )
-    );
-  
-    selectedBuyer.eggsDelivered = ctx.session[eggsDataKey];
-    
+          Markup.button.callback("Yo'q ❌", "eggs-distributed-no"),
+        ])
+      );
+    }
+
+    selectedBuyer.eggsDelivered = eggsData || [];
+   
     ctx.session[eggsDataKey] = undefined;
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
   } catch (error) {
     logger.info(error);
-    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko'ring.");
   }
 };
 

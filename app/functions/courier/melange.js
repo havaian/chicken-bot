@@ -35,8 +35,8 @@ const promptMelange = async (ctx, type) => {
                     return;
                 }
     
-                if (amount < (1 / 28)) {
-                    await ctx.reply(`Melanj ${1 / 28} litrdan kam bolishi mumkin emas`);
+                if (amount < 0) {
+                    await ctx.reply(`Melanj 0 litrdan kam bolishi mumkin emas`);
                     return;
                 }
     
@@ -82,28 +82,35 @@ exports.sendMelange = async (ctx) => {
 
 module.exports.acceptMelange = async (ctx) => {
     try {
-        let amountMsg = "";
-    
-        for (let y in Object.keys(ctx.session[eggsDataKey])) {
-          const x = Object.keys(ctx.session[eggsDataKey])[y];
-          amountMsg += `${letters[x]}: ${ctx.session[eggsDataKey][x]} litr\n`
+      const melangeData = ctx.session[eggsDataKey];
+      let amountMsg = "";
+  
+      if (!melangeData || Object.keys(melangeData).length === 0) {
+        amountMsg = "Melanj yo'q";
+        this.confirmMelangeEggs(ctx);
+        return;
+      } else {
+        for (let category in melangeData) {
+          amountMsg += `${letters[category]}: ${melangeData[category]} litr\n`;
         }
-    
-        ctx.session[sessionKey] = false;
-
-        await ctx.reply(`Melanj\n\n${amountMsg}`);
-        await ctx.reply("Kiritilgan melanj qiymatini tasdiqlaysizmi?",
-            Markup.inlineKeyboard([
-                [
-                    Markup.button.callback("Ha ✅", "confirm-melange-eggs-yes"),
-                    Markup.button.callback("Yo’q ❌", "confirm-melange-eggs-no"),
-                ]
-            ]));
+      }
+  
+      ctx.session[sessionKey] = false;
+  
+      await ctx.reply(`Melanj\n\n${amountMsg}`);
+      await ctx.reply("Kiritilgan melanj qiymatini tasdiqlaysizmi?",
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback("Ha ✅", "confirm-melange-eggs-yes"),
+            Markup.button.callback("Yo'q ❌", "confirm-melange-eggs-no"),
+          ]
+        ])
+      );
     } catch (error) {
-        logger.info(error);
-        await ctx.reply("Melanj kiritilganini tasdiqlastishda xatolik yuz berdi. Qayta uruni ko’ring");
+      logger.info(error);
+      await ctx.reply("Melanj kiritilganini tasdiqlastishda xatolik yuz berdi. Qayta uruni ko'ring");
     }
-}
+};
 
 module.exports.confirmMelangeEggs = async (ctx) => {
     try {        

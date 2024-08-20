@@ -8,7 +8,6 @@ const { Markup } = require("telegraf");
 const path = require("path");
 const fs = require("fs");
 const groups = require("../data/groups");
-const egg_price = require("../data/prices");
 const message = require("../data/message");
 
 const sendSMS = require("../../utils/message/index");
@@ -89,6 +88,7 @@ const handleCircleVideo = async (ctx) => {
     }
 
     const selectedBuyer = ctx.session.buyer;
+
     // Get today's activity for the buyer
     const buyerActivityResponse = await axios.get(
       `/buyer/activity/today/${selectedBuyer.phone_num || selectedBuyer._id}`,
@@ -99,6 +99,8 @@ const handleCircleVideo = async (ctx) => {
       }
     );
     const buyerActivity = buyerActivityResponse.data;
+
+    const egg_price = buyerActivity.price;
 
     // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
@@ -151,7 +153,7 @@ const handleCircleVideo = async (ctx) => {
       },
       eggs: selectedBuyer.eggsDelivered || [],
       payment: paymentAmount || 0,
-      debt: buyerActivity.debt + totalPrice - paymentAmount,
+      debt: buyerActivity.debt + (totalPrice || 0) - (paymentAmount || 0),
       time: new Date().toLocaleString(),
     };
 
@@ -159,9 +161,8 @@ const handleCircleVideo = async (ctx) => {
     const updatedBuyerActivity = {
       ...buyerActivity,
       accepted: [...buyerActivity.accepted, deliveryDetailsBuyer],
-      debt: buyerActivity.debt || 0 + totalPrice || 0 - paymentAmount || 0,
+      debt: buyerActivity.debt + (totalPrice || 0) - (paymentAmount || 0),
     };
-    
 
     let eggsMsg = "";
 

@@ -22,7 +22,7 @@ const commands = {
   "Kunni yakunlash": [brokenEggs.sendBrokenEggs, "courier"],
   "Chiqim": [expenses.sendExpenses, "courier"],
   "Singan tuxum": [melange.promptBroken, "warehouse"],
-  "Qolgan tuxum": [remained.promptWarehouseRemainedConfirm, "warehouse"],
+  // "Qolgan tuxum": [remained.promptWarehouseRemainedConfirm, "warehouse"],
 };
 
 const textCommandHandler = async (ctx, next) => {

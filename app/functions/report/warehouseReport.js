@@ -76,7 +76,7 @@ const generateWarehouseHTML = (data, filename) => {
           Astatka:<br>
           ${(() => {
             // Format combined categories
-            return Object.entries(current)
+            return Object.entries(remained)
               .map(([category, amount]) => `${category}: <b>${amount}</b>`)
               .join("<br>");
           })()}
@@ -152,7 +152,7 @@ const generateWarehouseHTML = (data, filename) => {
       </tr>
       <tr>
         <td>Qolgan tuxum soni</td>
-        <td style="text-align: center; vertical-align: middle" colspan="2">${Object.entries(remained).map(([category, amount]) => `${category}: <b>${amount}</b>`).join("<br>")}</td>
+        <td style="text-align: center; vertical-align: middle" colspan="2">${Object.entries(current).map(([category, amount]) => `${category}: <b>${amount}</b>`).join("<br>")}</td>
         <td>Melanj</td>
         <td style="text-align: center; vertical-align: middle">${Object.entries(melange_by_warehouse).map(([category, amount]) => `${category}: <b>${amount || 0} (${amount * 25})</b>`).join("<br>")}</td>
       </tr>

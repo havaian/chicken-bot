@@ -1,4 +1,3 @@
-const fs = require("fs");
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
 
@@ -106,9 +105,6 @@ module.exports.promptEggIntake = async (ctx, type) => {
         await confirmIntakeEggs(ctx);
       }
     }
-
-    // Delete the previous message
-    await ctx.deleteMessage();
   } catch (error) {
     logger.info(error);
     ctx.reply("Olingdan tuxum sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring.");
@@ -232,57 +228,6 @@ exports.addIntakeEggs = async (ctx) => {
 
     // Delete the previous message
     await ctx.deleteMessage();
-    
-    // Generate HTML report
-    const reportDate = new Date().toISOString().split("T")[0];
-    const reportDir = `reports/warehouse/${reportDate}`;
-    if (!fs.existsSync(reportDir)) {
-      fs.mkdirSync(reportDir, { recursive: true });
-    }
-
-    // Delete old reports
-    fs.readdirSync(reportDir).forEach((file) => {
-      fs.unlinkSync(path.join(reportDir, file));
-    });
-
-    const htmlFilename = `${reportDir}/${updatedWarehouseActivity._id}.html`;
-    const imageFilename = `${reportDir}/${updatedWarehouseActivity._id}.jpg`;
-    const excelFilename = `${reportDir}/${updatedWarehouseActivity._id}.xlsx`;
-
-    generateWarehouseHTML(updatedWarehouseActivity, htmlFilename);
-    await generateWarehouseExcel(updatedWarehouseActivity, excelFilename);
-
-    // Convert HTML report to image
-    await convertHTMLToImage(htmlFilename, imageFilename);
-
-    // Send image and Excel file to user
-    await ctx.replyWithPhoto({ source: imageFilename });
-    // await ctx.replyWithDocument({ source: excelFilename });
-
-        let groupId = null;
-        for (const phone_num of ctx.session.user.phone_num) {
-            for (const [id, numbers] of Object.entries(groups)) {
-                if (numbers.includes(phone_num)) {
-                    groupId = id;
-                    break;
-                }
-            }
-            if (groupId) {
-                break;
-            }
-        }
-
-        // // Forward reports to the group
-        // await ctx.telegram.sendDocument(
-        //     groupId,
-        //     { source: excelFilename },
-        //     { caption: `Xisobot: ${ctx.session.user.full_name}` }
-        // );
-        await ctx.telegram.sendPhoto(
-            groupId,
-            { source: imageFilename },
-            { caption: `Ombor. Tuxum kirimi. Xisobot:` }
-        );
 
     await cancel(ctx, "Tuxum kirimi qabul qilindi");
 

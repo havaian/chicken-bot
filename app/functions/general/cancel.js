@@ -20,7 +20,8 @@ module.exports = async (ctx, message = "Bekor qilindi.", showKeyboard = true, de
       } else if (ctx.session.user.userType === "warehouse") {
         keyboardOptions = Markup.keyboard([
           ["Tuxum kirimi", "Tuxum chiqimi"],
-          ["Singan tuxum", "Qolgan tuxum"],
+          ["Singan tuxum"],
+          // ["Singan tuxum", "Qolgan tuxum"],
           ["Ombor holati"]
         ])
           

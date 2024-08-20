@@ -85,11 +85,18 @@ exports.sendLeft = async (ctx) => {
 
 const confirmLeftEggs = async (ctx) => {
   try {
+    const leftEggs = ctx.session[eggsDataKey];
     let amountMsg = "";
 
-    for (let y in Object.keys(ctx.session[eggsDataKey])) {
-      const x = Object.keys(ctx.session[eggsDataKey])[y];
-      amountMsg += `${letters[x]}: ${ctx.session[eggsDataKey][x]}\n`
+    if (!leftEggs || Object.keys(leftEggs).length === 0) {
+      amountMsg = "Qolgan butun tuxumlar yo'q";
+      await ctx.reply(`Qolgan butun tuxumlar\n\n${amountMsg}`);
+      this.addLeft(ctx);
+      return;
+    } else {
+      for (let category in leftEggs) {
+        amountMsg += `${letters[category]}: ${leftEggs[category]}\n`;
+      }
     }
 
     ctx.session[sessionKey] = false;
@@ -98,19 +105,17 @@ const confirmLeftEggs = async (ctx) => {
     await ctx.reply(`Kiritilganini qolgan butun tuxumlar sonini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
         [Markup.button.callback("Ha ✅", "confirm-left-yes"),
-        Markup.button.callback("Yo’q ❌", "confirm-left-no")],
+        Markup.button.callback("Yo'q ❌", "confirm-left-no")],
       ])
     );
 
-    // Delete the previous message
-    await ctx.deleteMessage();
     ctx.session.awaitingLeft = false;
   } catch (error) {
-  logger.info(error);
-  await ctx.reply(
-    "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
-  );
-}
+    logger.info(error);
+    await ctx.reply(
+      "Qolgan butun tuxum qo'shishda xatolik yuz berdi. Qayta urunib ko'ring"
+    );
+  }
 };
 
 exports.addLeft = async (ctx) => {

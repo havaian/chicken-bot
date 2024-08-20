@@ -57,7 +57,12 @@ module.exports = async (ctx) => {
     } else if (ctx.session.user.userType === "warehouse") {
       await ctx.reply(
         "Salom!",
-        Markup.keyboard([["Tuxum kirimi", "Tuxum chiqimi"], ["Singan tuxum", "Qolgan tuxum"], ["Ombor holati"]])
+        Markup.keyboard([
+          ["Tuxum kirimi", "Tuxum chiqimi"], 
+          ["Singan tuxum"], 
+          // ["Singan tuxum", "Qolgan tuxum"], 
+          ["Ombor holati"]
+        ])
           
       );
     }

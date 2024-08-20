@@ -83,11 +83,18 @@ exports.sendIncisionEggs = async (ctx) => {
 
 const confirmIncisionEggs = async (ctx) => {
   try {
+    const incisionEggs = ctx.session[eggsDataKey];
     let amountMsg = "";
 
-    for (let y in Object.keys(ctx.session[eggsDataKey])) {
-      const x = Object.keys(ctx.session[eggsDataKey])[y];
-      amountMsg += `${letters[x]}: ${ctx.session[eggsDataKey][x]}\n`
+    if (!incisionEggs || Object.keys(incisionEggs).length === 0) {
+      amountMsg = "Nasechka tuxumlar yo'q";
+      await ctx.reply(`Nasechka tuxumlar\n\n${amountMsg}\n\n`);
+      this.addIncisionEggs(ctx);
+      return;
+    } else {
+      for (let category in incisionEggs) {
+        amountMsg += `${letters[category]}: ${incisionEggs[category]}\n`;
+      }
     }
 
     ctx.session.awaitingIncisionEggs = false;
@@ -96,13 +103,13 @@ const confirmIncisionEggs = async (ctx) => {
     await ctx.reply(`Nasechka tuxum kiritilganini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
         [Markup.button.callback("Ha ✅", "confirm-incision-eggs-yes"),
-        Markup.button.callback("Yo’q ❌", "confirm-incision-eggs-no")],
+        Markup.button.callback("Yo'q ❌", "confirm-incision-eggs-no")],
       ])
     );
   } catch (error) {
     logger.info(error);
     await ctx.reply(
-      "Nasechka tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Nasechka tuxumlar qo'shishda xatolik yuz berdi. Qayta urunib ko'ring"
     );
   }
 };
