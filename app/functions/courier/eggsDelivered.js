@@ -30,7 +30,7 @@ module.exports.deliverEggs = async (ctx) => {
       ctx.session[sessionKey] = false;
 
       if (ctx.session.currentEggs[category] < amount) {
-          await ctx.reply("Siz kiritgan tuxum soni bor tuxum sonidan katta",
+          await ctx.reply("Siz kiritgan tuxum soni mashinada bor tuxum sonidan katta",
             Markup.keyboard([
                 ["Bekor qilish ❌"]
             ]));
@@ -55,7 +55,7 @@ module.exports.deliverEggs = async (ctx) => {
       
       ctx.session[sessionKey] = true;
       await ctx.reply(
-        `Mijoz: ${ctx.session.buyer.full_name}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
+        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
         Markup.keyboard([
             ["Bekor qilish ❌"]
         ]));
@@ -100,7 +100,7 @@ module.exports.deliverEggs = async (ctx) => {
       ];
   
       await ctx.reply(
-        `Mijoz: ${ctx.session.buyer.full_name}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
+        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
         Markup.inlineKeyboard(buttons)
       );
     } else {

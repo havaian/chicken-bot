@@ -33,7 +33,7 @@ module.exports = async (ctx) => {
     await ctx.reply("Do’kon nomini kiriting.",
       Markup.keyboard([
         ["Bekor qilish ❌"]
-      ]))
+      ]));
   } catch (error) {
     logger.info(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");

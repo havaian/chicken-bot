@@ -144,12 +144,8 @@ exports.addLeft = async (ctx) => {
         }
 
         if (current[x] < ctx.session[eggsDataKey][x]) {
-          await ctx.reply(`Sizda ${x} kategoriya bo’yicha bor tuxum sonidan ko’p qolishi mumkin emas!`,
-            Markup.keyboard([["Bekor qilish ❌"]]),
-            Markup.inlineKeyboard([
-              [Markup.button.callback("Yangidan kiritish", "confirm-left-no")],
-              [Markup.button.callback("Boshiga qaytish", "cancel")],
-            ])
+          await ctx.reply(`Sizda ${letters[x]} kategoriya bo’yicha ${current[x]}ta dan ko’p qolishi mumkin emas!`,
+            Markup.keyboard([["Bekor qilish ❌"]])
           );
 
           ctx.session[eggsDataKey] = undefined;

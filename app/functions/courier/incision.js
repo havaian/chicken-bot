@@ -145,8 +145,8 @@ exports.addIncisionEggs = async (ctx) => {
 
       current[x] = current[x] - ctx.session[eggsDataKey][x];
 
-      if (current[x] - ctx.session[eggsDataKey][x] < 0) {
-        ctx.reply("Sizning mashinangizdagi tuxum soni yetarli emas!");
+      if (current[x] < ctx.session[eggsDataKey][x]) {
+        ctx.reply(`Sizning mashinangizdagi ${letters[x]} qolgan tuxum soni ${current[x]}!`);
   
         ctx.session[eggsDataKey] = undefined;
         ctx.session.categories = null;

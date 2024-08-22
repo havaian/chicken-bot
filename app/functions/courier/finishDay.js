@@ -47,7 +47,10 @@ exports.confirmDayFinished = async (ctx) => {
       day_finished: true,
     };
 
-    const full_name = `${courier.full_name} ${courier.car_num ? "(" + courier.car_num + "" : ""}`;
+    const full_name = `${courier.full_name} ${courier.car_num ? "(" + courier.car_num + ")" : ""}`;
+
+    updatedCourierActivity.courier_name = courier.full_name;
+    updatedCourierActivity.car_num = courier.car_num;
 
     // ctx.session.dayFinished = true;
     ctx.session.accepted = false;

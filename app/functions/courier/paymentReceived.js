@@ -13,7 +13,7 @@ const report = require("./report");
 
 module.exports = async (ctx) => {
   try {
-    await ctx.deleteMessage();
+    // await ctx.deleteMessage();
     ctx.session.awaitingPaymentAmount = true;
     await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nNecha pul olganingizni kiriting:`);
   } catch (error) {
@@ -33,6 +33,8 @@ module.exports.completeTransaction = async (ctx) => {
       await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting");
       return;
     }
+
+    ctx.session.awaitingPaymentAmount = false;
   
     await ctx.reply(`Siz ${paymentAmount} so’m pul olganingizni kiritdingiz`);
   
@@ -105,8 +107,6 @@ const handleCircleVideo = async (ctx) => {
       },
     });
     const courier = courierResponse.data;
-
-    const full_name = `${courier.full_name} ${courier.car_num ? "(" + courier.car_num + "" : ""}`;
 
     const paymentAmount = parseInt(selectedBuyer.paymentAmount, 10);
 
@@ -212,6 +212,11 @@ const handleCircleVideo = async (ctx) => {
         },
       }
     );
+
+    const full_name = `${courier.full_name} ${courier.car_num ? "(" + courier.car_num + ")" : ""}`;
+
+    updatedCourierActivity.courier_name = courier.full_name;
+    updatedCourierActivity.car_num = courier.car_num;
         
     await report(updatedCourierActivity, ctx, groupId, phone_num, full_name, "Tuxum yetkazildi", forward = true);
 

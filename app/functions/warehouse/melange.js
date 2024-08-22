@@ -13,6 +13,8 @@ const eggs = {
     "D2": 990
 };
 
+const letters = require("../data/btnEmojis");
+
 let botInstance = null;
 
 const report = require("./report");
@@ -251,12 +253,8 @@ module.exports.confirmMelange = async (ctx) => {
             }
             const result = ((current[x] - dailyIntact[x] - dailyIncision[x]) / 25) || 0;
             if (dailyMelange[x] < result) {
-                await ctx.reply(`Sizda ${x} kategoriya bo’yicha kamida ${result} litr melanj chiqishi kerak edi!`,
-                    Markup.keyboard([["Bekor qilish ❌"]]),
-                    Markup.inlineKeyboard([
-                    [Markup.button.callback("Yangidan kiritish", "confirm-left-no")],
-                    [Markup.button.callback("Boshiga qaytish", "cancel")],
-                    ])
+                await ctx.reply(`Sizda ${letters[x]} kategoriya bo’yicha kamida ${result} litr melanj chiqishi kerak edi!`,
+                    Markup.keyboard([["Bekor qilish ❌"]])
                 );
             }
             melange[x] = result;

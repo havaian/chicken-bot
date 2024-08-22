@@ -105,23 +105,44 @@ const generateCourierHTML = (data, filename) => {
         ${limitedDeliveredTo
           .map((delivery, rowIndex) => {
             let deliveryHtml = "";
-            const paymentHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${delivery.eggs && delivery.eggs.length > 0 ? delivery.eggs.length : 1}">${delivery.payment || 0}</td>`;
-            const debtHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${delivery.eggs && delivery.eggs.length > 0 ? delivery.eggs.length : 1}">${delivery.debt || 0}</td>`;
+            const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
+            const hasDelivery = deliveredEggs.length > 0;
+            const hasPayment = delivery.payment > 0;
             
-            delivery.eggs.forEach((egg, index) => {
-              const deliveryIndex = ++deliveredToIndex;
-              deliveryHtml += `
-                <tr>
-                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
-                  <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category || 'N/A'}: ${egg.amount || 0}</td>
-                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.price || 0}</td>
-                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${(egg.price || 0) * (egg.amount || 0)}</td>
-                  ${index === 0 ? paymentHtml : ''}
-                  ${index === 0 ? debtHtml : ''}
-                </tr>`;
-            });
+            if (hasDelivery || hasPayment) {
+              const rowspan = Math.max(deliveredEggs.length, 1);
+              const paymentHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${delivery.payment || 0}</td>`;
+              const debtHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${delivery.debt}</td>`;
               
+              if (hasDelivery) {
+                deliveredEggs.forEach((egg, index) => {
+                  const deliveryIndex = ++deliveredToIndex;
+                  deliveryHtml += `
+                    <tr>
+                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
+                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                      <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${egg.amount}</td>
+                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.price}</td>
+                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.price * egg.amount}</td>
+                      ${index === 0 ? paymentHtml : ''}
+                      ${index === 0 ? debtHtml : ''}
+                    </tr>`;
+                });
+              } else {
+                const deliveryIndex = ++deliveredToIndex;
+                deliveryHtml += `
+                  <tr>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                    <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
+                    ${paymentHtml}
+                    ${debtHtml}
+                  </tr>`;
+              }
+            }
+            
             totalPayments += parseInt(delivery.payment || 0, 10);
             return deliveryHtml;
           })

@@ -52,6 +52,7 @@ module.exports = async (ctx) => {
   try {
     const buyerId = ctx.match[1];
     ctx.session.selectedBuyerId = buyerId;
+    
     const response = await axios.get(`/buyer/${buyerId}`, {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,

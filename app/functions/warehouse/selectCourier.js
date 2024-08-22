@@ -62,8 +62,8 @@ module.exports.promptCourier = async (ctx) => {
     });
 
     const buttonRows = [];
-    for (let i = 0; i < buttons.length; i += 5) {
-      buttonRows.push(buttons.slice(i, i + 5));
+    for (let i = 0; i < buttons.length; i += 3) {
+      buttonRows.push(buttons.slice(i, i + 3));
     }
 
     await ctx.reply(
@@ -83,6 +83,15 @@ module.exports.promptCourier = async (ctx) => {
 
 module.exports.promptCourierBroken = async (ctx) => {
   try {
+    const warehouseResponse = await axios.get(`/warehouse/activity/today`, {
+      headers: {
+        "x-user-telegram-chat-id": ctx.chat.id,
+      },
+    });
+    const warehouse = warehouseResponse.data;
+
+    ctx.session.currentEggs = warehouse.current;
+
     if (!ctx.session.selectedCourier || !ctx.session.selectedCourier._id) {
       const courierId = ctx.match[1];
 

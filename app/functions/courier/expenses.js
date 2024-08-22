@@ -69,17 +69,6 @@ exports.addExpenses = async (ctx) => {
 
   try {
     // Get today's activity for the courier
-    const courierResponse = await axios.get(
-      `/courier/${ctx.session.user.phone_num}`,
-      {
-        headers: {
-          "x-user-telegram-chat-id": ctx.chat.id,
-        },
-      }
-    );
-    const courier = courierResponse.data;
-
-    // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
       `/courier/activity/today/${ctx.session.user.phone_num}`,
       {
@@ -108,6 +97,8 @@ exports.addExpenses = async (ctx) => {
 
     // Delete the previous message
     await ctx.deleteMessage();
+
+    ctx.session.awaitingExpenses = false;
 
     cancel(ctx, `${amount} so’m chiqim hisobingizga qo’shildi.`);
   } catch (error) {
