@@ -45,7 +45,7 @@ exports.confirmExpenses = async (ctx) => {
       }
       ctx.session.expenseAmount = amount;
       await ctx.reply(
-        `Siz ${amount} so’m chiqim kiritmoqchimisiz?`,
+        `Siz ${amount} chiqim kiritmoqchimisiz?`,
         Markup.inlineKeyboard([
           [
             Markup.button.callback("Tasdiqlash ✅ ", `confirm-expenses:${amount}`), 

@@ -142,6 +142,7 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
       summaryMessage += `\n\nJami summa: ${totalSum.toLocaleString()}`;
       summaryMessage += `\nAvvalgi qarz: ${ctx.session.buyer.debt.toLocaleString()}`;
       summaryMessage += `\nYangi qarz: ${newDebt.toLocaleString()}`;
+      // summaryMessage += `\n\n${ctx.session.buyer.debt_limit > newDebt ? "❇️" : "❗️❗️❗️"} Qarz chegarasi: ${ctx.session.buyer.debt_limit.toLocaleString()}`;
 
       await ctx.reply(`Tuxum yetkazilgan kategoriya bo'yicha umumiy ma'lumot:\n\nMijoz: ${ctx.session.buyer.full_name}\n\n${summaryMessage}`);
       await ctx.reply("Tasdiqlaysizmi?",

@@ -126,7 +126,7 @@ const handleCircleVideo = async (ctx) => {
 
       totalPrice += amount * egg_price[category];
       
-      eggsMsg += amount > 0 ? `${category}: ${amount}ta (${egg_price[category]} so'm)\n` : "";
+      eggsMsg += amount > 0 ? `${category}: ${amount}ta (${egg_price[category]})\n` : "";
 
       if (Object.keys(current).length > 0) {
         if (current[category] - amount < 0) { 

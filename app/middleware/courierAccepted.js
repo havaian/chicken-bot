@@ -24,17 +24,8 @@ const courierAccepted = async (ctx, next) => {
             return;
           }
   
-          const current = courierActivity.current;
-  
-          if (Object.keys(current).length === 0 || typeof current === "undefined") {
-            ctx.reply("Mashinada tuxum yo’q. Ombordan tuxum olishingiz kerak.");
-            return;
-          }
-  
           ctx.session.courierEggsInCar = true;
           // ctx.session.dayFinished = courierActivity.day_finished;
-          ctx.session.currentEggs = current;
-  
           return next();
         } else {
           ctx.session.courierEggsInCar = true;

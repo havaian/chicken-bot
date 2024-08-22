@@ -68,6 +68,8 @@ module.exports = async (ctx) => {
     const buyerActivity = buyerActivityResponse.data;
     const buyerDebt = buyerActivity.debt;
 
+    const debtLimit = getDebtLimit();
+
     const prices = getPrices();
 
     ctx.session.buyer = {
@@ -76,10 +78,9 @@ module.exports = async (ctx) => {
       eggsDelivered: 0,
       paymentAmount: 0,
       egg_price: buyerActivity.price || prices,
-      debt: buyerDebt
+      debt: buyerDebt,
+      debt_limit: buyer.debt_limit || debtLimit
     };
-
-    const debtLimit = getDebtLimit();
     if (debtLimit === null) {
       cancel(ctx, "Qarzdorlik chegarasini o'qishda xatolik yuz berdi", true);
       return;
