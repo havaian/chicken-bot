@@ -1,13 +1,6 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
-const {
-    generateWarehouseHTML,
-    generateWarehouseExcel,
-} = require("../report/warehouseReport");
-const convertHTMLToImage = require("../report/convertHTMLToImage");
 const groups = require("../data/groups");
-const path = require("path");
-const fs = require("fs");
 
 const cancel = require("../general/cancel");
 
@@ -21,6 +14,8 @@ const eggs = {
 };
 
 let botInstance = null;
+
+const report = require("./report");
 
 const setBotInstance = (bot) => {
     botInstance = bot;
@@ -301,43 +296,14 @@ module.exports.confirmMelange = async (ctx) => {
 
         const warehousePhoneNum = ctx.session.user.phone_num;
 
-        let groupId = null;
-        for (const phone_num of warehousePhoneNum) {
-            for (const [id, numbers] of Object.entries(groups)) {
-                if (numbers.includes(phone_num)) {
-                    groupId = id;
-                    break;
-                }
-            }
-            if (groupId) break;
-        }
+        let groupId = groups;
 
         if (!groupId) {
             logger.info("melange. Warehouse groupId not found:", groupId, !groupId);
             await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-            return;
         }
 
-        const reportDate = new Date().toISOString().split("T")[0];
-        const reportDir = `reports/warehouse/${reportDate}`;
-        if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir, { recursive: true });
-
-        fs.readdirSync(reportDir).forEach(file => {
-            fs.unlinkSync(path.join(reportDir, file));
-        });
-
-        const htmlFilename = `${reportDir}/warehouse_${reportDate}.html`;
-        const imageFilename = `${reportDir}/warehouse_${reportDate}.jpg`;
-        const excelFilename = `${reportDir}/warehouse_${reportDate}.xlsx`;
-
-        generateWarehouseHTML(updatedWarehouseActivity, htmlFilename);
-        await generateWarehouseExcel(updatedWarehouseActivity, excelFilename);
-        await convertHTMLToImage(htmlFilename, imageFilename);
-
-
-        // Forward reports to the group
-        // await ctx.telegram.sendDocument(groupId, { source: excelFilename }, { caption: `${courier.full_name}. Ombor uchun melanj kiritildi. Xisobot:` });
-        await ctx.telegram.sendPhoto(groupId, { source: imageFilename }, { caption: `${ctx.session.user.full_name}. Ombor. Melanj. Xisobot:` });
+        await report(updatedWarehouseActivity, ctx, groupId, "Melanj", true);
 
         ctx.session["dailyBroken"] = undefined;
         ctx.session["dailyIntact"] = undefined;

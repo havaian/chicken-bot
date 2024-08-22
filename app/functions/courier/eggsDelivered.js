@@ -6,6 +6,7 @@ const letters = require("../data/btnEmojis");
 
 const { logger, readLog } = require("../../utils/logging");
 
+const sessionKey = "awaitingEggsDelivered";
 const eggsDataKey = "eggsDeliveredData";
 
 let eggs = "";
@@ -23,11 +24,18 @@ module.exports.deliverEggs = async (ctx) => {
     const [action, amount, category] = ctx.match[0].split(":");
   
     if (action === "eggs-amount") {
+      // Delete the previous message
+      ctx.session[sessionKey] ? {} : await ctx.deleteMessage();
+
+      ctx.session[sessionKey] = false;
+
       if (ctx.session.currentEggs[category] < amount) {
           await ctx.reply("Siz kiritgan tuxum soni bor tuxum sonidan katta",
             Markup.keyboard([
                 ["Bekor qilish ❌"]
             ]));
+
+          ctx.session[sessionKey] = true;
           return;
       }
   
@@ -42,15 +50,12 @@ module.exports.deliverEggs = async (ctx) => {
       }
       
       ctx.session.currentCategoryIndex++;
-  
-      // Delete the previous message
-      await ctx.deleteMessage();
     } else if (action === "eggs-other") {
       const category = ctx.session.categories[ctx.session.currentCategoryIndex];
       
-      ctx.session.awaitingEggsDelivered = true;
+      ctx.session[sessionKey] = true;
       await ctx.reply(
-        `Kategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
+        `Mijoz: ${ctx.session.buyer.full_name}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
         Markup.keyboard([
             ["Bekor qilish ❌"]
         ]));
@@ -95,7 +100,7 @@ module.exports.deliverEggs = async (ctx) => {
       ];
   
       await ctx.reply(
-        `Kategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
+        `Mijoz: ${ctx.session.buyer.full_name}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
         Markup.inlineKeyboard(buttons)
       );
     } else {
@@ -112,16 +117,33 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
     const selectedBuyer = ctx.session.buyer;
     const eggsData = ctx.session[eggsDataKey];
 
+    ctx.session[sessionKey] = false;
+
     if (!eggsData || eggsData.length === 0) {
       await ctx.reply("Tuxum yetkazilmadi");
       await this.confirmEggsDelivered(ctx);
       return;
     } else {
-      const summaryMessage = eggsData
-        .map(({ category, amount }) => `${category}: ${amount}`)
+      let categorySums = {};
+      let totalSum = 0;
+
+      let summaryMessage = eggsData
+        .map(({ category, amount }) => {
+          const price = ctx.session.buyer.egg_price[category];
+          const sum = price * amount;
+          categorySums[category] = sum;
+          totalSum += sum;
+          return `${category}: ${amount.toLocaleString()} (${price.toLocaleString()}). Summa: ${sum.toLocaleString()}`;
+        })
         .join("\n");
 
-      await ctx.reply(`Tuxum yetkazilgan kategoriya bo'yicha umumiy ma'lumot:\n\n${summaryMessage}`);
+      const newDebt = ctx.session.buyer.debt + totalSum;
+
+      summaryMessage += `\n\nJami summa: ${totalSum.toLocaleString()}`;
+      summaryMessage += `\nAvvalgi qarz: ${ctx.session.buyer.debt.toLocaleString()}`;
+      summaryMessage += `\nYangi qarz: ${newDebt.toLocaleString()}`;
+
+      await ctx.reply(`Tuxum yetkazilgan kategoriya bo'yicha umumiy ma'lumot:\n\nMijoz: ${ctx.session.buyer.full_name}\n\n${summaryMessage}`);
       await ctx.reply("Tasdiqlaysizmi?",
         Markup.inlineKeyboard([
           Markup.button.callback("Ha ✅", "eggs-distributed-yes"),

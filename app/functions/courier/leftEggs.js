@@ -89,8 +89,8 @@ const confirmLeftEggs = async (ctx) => {
     let amountMsg = "";
 
     if (!leftEggs || Object.keys(leftEggs).length === 0) {
-      amountMsg = "Qolgan butun tuxumlar yo'q";
-      await ctx.reply(`Qolgan butun tuxumlar\n\n${amountMsg}`);
+      amountMsg = "yo'q";
+      await ctx.reply(`Qolgan butun tuxumlar: ${amountMsg}`);
       this.addLeft(ctx);
       return;
     } else {
@@ -124,8 +124,11 @@ exports.addLeft = async (ctx) => {
     const current = courierActivity.current || {};
     const incision = courierActivity.incision || {};
 
-    // Delete the previous message
-    await ctx.deleteMessage();
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-left-yes";
+
+    if (deleteMsg) {
+      await ctx.deleteMessage();
+    }
 
     for (let y in Object.keys(ctx.session[eggsDataKey] || {})) {
         const x = Object.keys(ctx.session[eggsDataKey])[y];

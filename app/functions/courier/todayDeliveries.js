@@ -1,21 +1,16 @@
 const axios = require("../../axios");
-const {
-  generateCourierHTML,
-  generateCourierExcel,
-} = require("../report/courierReport");
-const convertHTMLToImage = require("../report/convertHTMLToImage");
 const { Markup } = require("telegraf");
-const path = require("path");
-const fs = require("fs");
 
 const { logger, readLog } = require("../../utils/logging");
 
+const report = require("./report");
+
 module.exports = async (ctx) => {
-  const courierPhoneNum = ctx.session.user.phone_num;
+  const phone_num = ctx.session.user.phone_num;
   try {
     // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
-      `/courier/activity/today/${courierPhoneNum}`,
+      `/courier/activity/today/${phone_num}`,
       {
         headers: {
           "x-user-telegram-chat-id": ctx.chat.id,
@@ -24,45 +19,16 @@ module.exports = async (ctx) => {
     );
     const courierActivity = courierActivityResponse.data;
 
-    const courierResponse = await axios.get(`/courier/${courierPhoneNum}`, {
+    const courierResponse = await axios.get(`/courier/${phone_num}`, {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,
       },
     });
     const courier = courierResponse.data;
-    courierActivity.courier_name = courier.full_name;
-    courierActivity.car_num = courier.car_num;
 
-    // File paths
-    const reportDate = new Date().toISOString().split("T")[0];
-    const reportDir = path.join(
-      "reports",
-      `courier/${reportDate}`,
-      courierPhoneNum
-    );
-    if (!fs.existsSync(reportDir)) {
-      fs.mkdirSync(reportDir, { recursive: true });
-    }
-
-    // Delete old reports
-    fs.readdirSync(reportDir).forEach((file) => {
-      fs.unlinkSync(path.join(reportDir, file));
-    });
-
-    const htmlFilename = path.join(reportDir, `${courierActivity._id}.html`);
-    const imageFilename = path.join(reportDir, `${courierActivity._id}.jpg`);
-    const excelFilename = path.join(reportDir, `${courierActivity._id}.xlsx`);
-
-    // Generate HTML and Excel reports
-    generateCourierHTML(courierActivity, htmlFilename);
-    await generateCourierExcel(courierActivity, excelFilename);
-
-    // Convert HTML report to image
-    await convertHTMLToImage(htmlFilename, imageFilename);
-
-    // Send image and Excel file to user
-    await ctx.replyWithPhoto({ source: imageFilename });
-    // await ctx.replyWithDocument({ source: excelFilename });
+    const full_name = `${courier.full_name} ${courier.car_num ? "(" + courier.car_num + "" : ""}`;
+        
+    await report(courierActivity, ctx,"", phone_num, full_name, "Hisobot", forward = false);
 
     // Show main menu buttons
     await ctx.reply(

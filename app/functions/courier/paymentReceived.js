@@ -1,12 +1,5 @@
 const axios = require("../../axios");
-const {
-  generateCourierHTML,
-  generateCourierExcel,
-} = require("../report/courierReport");
-const convertHTMLToImage = require("../report/convertHTMLToImage");
 const { Markup } = require("telegraf");
-const path = require("path");
-const fs = require("fs");
 const groups = require("../data/groups");
 const message = require("../data/message");
 
@@ -16,11 +9,13 @@ const cancel = require("../general/cancel");
 
 const { logger, readLog } = require("../../utils/logging");
 
+const report = require("./report");
+
 module.exports = async (ctx) => {
   try {
     await ctx.deleteMessage();
     ctx.session.awaitingPaymentAmount = true;
-    await ctx.reply("Iltimos, necha pul olganingizni kiriting:");
+    await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nNecha pul olganingizni kiriting:`);
   } catch (error) {
     logger.info(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
@@ -45,8 +40,8 @@ module.exports.completeTransaction = async (ctx) => {
       `Tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("Tasdiqlash ✅ ", "confirm-transaction"), 
-          Markup.button.callback("Bekor qilish ❌", "cancel")
+          Markup.button.callback("Ha ✅ ", "confirm-transaction"), 
+          Markup.button.callback("Yo’q ❌", "confirm-transaction-no")
         ],
       ])
     );
@@ -70,21 +65,14 @@ module.exports.confirmTransaction = async (ctx) => {
 
 const handleCircleVideo = async (ctx) => {
   try {
-    const courierPhoneNum = ctx.session.user.phone_num;
+    const phone_num = ctx.session.user.phone_num;
 
     // Find the group id by courier's phone number
-    let groupId = null;
-    for (const [id, numbers] of Object.entries(groups)) {
-      if (numbers.includes(courierPhoneNum)) {
-        groupId = id;
-        break;
-      }
-    }
+    let groupId = groups;
 
     if (!groupId) {
       logger.info("paymentReceived. Courier groupId not found:", groupId, !groupId);
       await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-      return;
     }
 
     const selectedBuyer = ctx.session.buyer;
@@ -100,11 +88,9 @@ const handleCircleVideo = async (ctx) => {
     );
     const buyerActivity = buyerActivityResponse.data;
 
-    const egg_price = buyerActivity.price;
-
     // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
-      `/courier/activity/today/${courierPhoneNum}`,
+      `/courier/activity/today/${phone_num}`,
       {
         headers: {
           "x-user-telegram-chat-id": ctx.chat.id,
@@ -113,32 +99,41 @@ const handleCircleVideo = async (ctx) => {
     );
     const courierActivity = courierActivityResponse.data;
 
-    const courierResponse = await axios.get(`/courier/${courierPhoneNum}`, {
+    const courierResponse = await axios.get(`/courier/${phone_num}`, {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,
       },
     });
     const courier = courierResponse.data;
-    courierActivity.courier_name = courier.full_name;
-    courierActivity.car_num = courier.car_num;
 
-    let msg = "";
-    let totalPrice = 0;
+    const full_name = `${courier.full_name} ${courier.car_num ? "(" + courier.car_num + "" : ""}`;
 
     const paymentAmount = parseInt(selectedBuyer.paymentAmount, 10);
 
+    let totalPrice = 0;
+    let eggsMsg = "";
+
     const current = courierActivity.current || {};
 
-    for (let x in Object.keys(selectedBuyer.eggsDelivered)) {
-      msg += `${selectedBuyer.eggsDelivered[x].category}: ${selectedBuyer.eggsDelivered[x].amount} (${egg_price[selectedBuyer.eggsDelivered[x].category]} so‘m)\n`;
-      totalPrice += selectedBuyer.eggsDelivered[x].amount * egg_price[selectedBuyer.eggsDelivered[x].category];
+    const egg_price = selectedBuyer.egg_price;
+
+    for (let x in selectedBuyer.eggsDelivered) {   
+      const amount = selectedBuyer.eggsDelivered[x].amount;
+      const category = selectedBuyer.eggsDelivered[x].category;
+
+      // Necessary to have the price of eggs in the report
       selectedBuyer.eggsDelivered[x].price = egg_price[selectedBuyer.eggsDelivered[x].category];
+
+      totalPrice += amount * egg_price[category];
+      
+      eggsMsg += amount > 0 ? `${category}: ${amount}ta (${egg_price[category]} so'm)\n` : "";
+
       if (Object.keys(current).length > 0) {
-        if (current[selectedBuyer.eggsDelivered[x].category] - selectedBuyer.eggsDelivered[x].amount < 0) { 
+        if (current[category] - amount < 0) { 
           ctx.reply("Sizning moshinangizda tuxum yetarli emas"); 
           return; 
         } else { 
-          current[selectedBuyer.eggsDelivered[x].category] = current[selectedBuyer.eggsDelivered[x].category] - selectedBuyer.eggsDelivered[x].amount;
+          current[category] = current[category] - amount;
         }
       }
     }
@@ -164,21 +159,11 @@ const handleCircleVideo = async (ctx) => {
       debt: buyerActivity.debt + (totalPrice || 0) - (paymentAmount || 0),
     };
 
-    let eggsMsg = "";
-
-    let totalSum = 0;
-
-    for (let y in Object.keys(selectedBuyer.eggsDelivered)) {
-      const x = Object.keys(selectedBuyer.eggsDelivered)[y];
-      totalSum += selectedBuyer.eggsDelivered[x].amount * egg_price[selectedBuyer.eggsDelivered[x].category];
-      eggsMsg += selectedBuyer.eggsDelivered[x].amount > 0 ? `${selectedBuyer.eggsDelivered[x].category}: ${selectedBuyer.eggsDelivered[x].amount}ta (${egg_price[selectedBuyer.eggsDelivered[x].category]} so'm)\n` : "";
-    }
-
     const text = await message(
       eggsMsg,
       selectedBuyer.paymentAmount,
       totalPrice - paymentAmount,
-      totalSum,
+      totalPrice,
       buyerActivity.debt + totalPrice - paymentAmount
     );
 
@@ -227,50 +212,8 @@ const handleCircleVideo = async (ctx) => {
         },
       }
     );
-
-    // File paths
-    const reportDate = new Date().toISOString().split("T")[0];
-    const reportDir = path.join(
-      "reports",
-      `courier/${reportDate}`,
-      courierPhoneNum
-    );
-    if (!fs.existsSync(reportDir)) {
-      fs.mkdirSync(reportDir, { recursive: true });
-    }
-
-    // Delete old reports
-    fs.readdirSync(reportDir).forEach((file) => {
-      fs.unlinkSync(path.join(reportDir, file));
-    });
-
-    const htmlFilename = path.join(reportDir, `${courierActivity._id}.html`);
-    const imageFilename = path.join(reportDir, `${courierActivity._id}.jpg`);
-    const excelFilename = path.join(reportDir, `${courierActivity._id}.xlsx`);
-
-    // Generate HTML and Excel reports
-    generateCourierHTML(updatedCourierActivity, htmlFilename);
-    await generateCourierExcel(updatedCourierActivity, excelFilename);
-
-    // Convert HTML report to image
-    await convertHTMLToImage(htmlFilename, imageFilename);
-
-    // Send image and Excel file to user
-    await ctx.replyWithPhoto({ source: imageFilename });
-    // await ctx.replyWithDocument({ source: excelFilename });
-
-    // // Forward reports to the group
-    // await ctx.telegram.sendDocument(
-    //   groupId,
-    //   { source: excelFilename },
-    //   { caption: `${courier.full_name}. Tuxum yetkazildi. Xisobot:` }
-    // );
-    // Forward reports to the group
-    await ctx.telegram.sendPhoto(
-      groupId,
-      { source: imageFilename },
-      { caption: `${courier.full_name}. Tuxum yetkazildi. Xisobot:` }
-    );
+        
+    await report(updatedCourierActivity, ctx, groupId, phone_num, full_name, "Tuxum yetkazildi", forward = true);
 
     cancel(ctx, "Tanlang:");
   } catch (error) {

@@ -80,9 +80,15 @@ module.exports.categoriesByTextObject = async (ctx, sessionKey, message, keyboar
             const category = ctx.session.categories[ctx.session.currentCategoryIndex];
     
             if (ctx.message && ctx.message.text && type != 2) {
-                const amount = parseInt(ctx.message.text, 10);
+                let amount;
+                if (ctx.message.text.includes('.')) {
+                    amount = parseFloat(ctx.message.text, 3);
+                } else {
+                    amount = parseInt(ctx.message.text, 10);
+                }
+
                 if (isNaN(amount) || amount < 0) {
-                    await ctx.reply("Iltimos, to’g’ri son kiriting:");
+                    await ctx.reply("Iltimos, to'g'ri son kiriting:");
                     return;
                 }
 

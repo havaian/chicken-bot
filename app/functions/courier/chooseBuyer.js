@@ -4,9 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { logger, readLog } = require("../../utils/logging");
-
 const eggsDelivered = require("./eggsDelivered");
-
 const cancel = require("../general/cancel");
 
 // Function to read the debt limit
@@ -26,6 +24,30 @@ const getDebtLimit = () => {
   }
 };
 
+const getPrices = () => {
+  try {
+    const pricesPath = path.join(__dirname, '../data/prices.js');
+    const data = fs.readFileSync(pricesPath, 'utf8');
+    
+    // Use regex to extract the object from the file content
+    const match = data.match(/module\.exports\s*=\s*({[\s\S]*});/);
+    if (match && match[1]) {
+      // Use eval to parse the object (be cautious with this approach)
+      const prices = eval('(' + match[1] + ')');
+      
+      if (typeof prices === 'object' && Object.keys(prices).length > 0) {
+        return prices;
+      }
+    }
+    
+    logger.info('Failed to extract valid prices from file');
+    return null;
+  } catch (error) {
+    logger.info('Error reading prices file:', error);
+    return null;
+  }
+};
+
 module.exports = async (ctx) => {
   try {
     const buyerId = ctx.match[1];
@@ -37,19 +59,24 @@ module.exports = async (ctx) => {
     });
     const buyer = response.data;
 
-    const activityResponse = await axios.get(`/buyer/activity/today/${buyerId}`, {
+    const buyerActivityResponse = await axios.get(`/buyer/activity/today/${buyerId}`, {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,
       },
     });
-    const buyerActivity = activityResponse.data;
+
+    const buyerActivity = buyerActivityResponse.data;
+    const buyerDebt = buyerActivity.debt;
+
+    const prices = getPrices();
 
     ctx.session.buyer = {
       ...buyer,
       addedAt: new Date(),
       eggsDelivered: 0,
       paymentAmount: 0,
-      egg_price: buyerActivity.price
+      egg_price: buyerActivity.price || prices,
+      debt: buyerDebt
     };
 
     const debtLimit = getDebtLimit();
@@ -58,7 +85,7 @@ module.exports = async (ctx) => {
       return;
     }
     
-    if (buyerActivity.debt > (buyer.debt_limit || debtLimit)) {
+    if (buyerDebt > (buyer.debt_limit || debtLimit)) {
       cancel(ctx, "Ushbu mijozning qarzi ruxsat berilgan chegaradan oshgan", true);
       return;
     }
@@ -69,8 +96,6 @@ module.exports = async (ctx) => {
     ]));
     eggsDelivered.deliverEggs(ctx);
 
-    // // Delete the previous message
-    // await ctx.deleteMessage();
   } catch (error) {
     logger.info(error);
     await ctx.reply("Klient tanlashda xatolik yuz berdi. Qayta urunib ko'ring");

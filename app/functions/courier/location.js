@@ -14,7 +14,7 @@ module.exports.buyerLocation = async (ctx) => {
       ctx.session.awaitingClientLocation = true;
       
 
-      if (ctx.chat.id == "1661951561") {
+      if (ctx.chat.id == "1661951561" || ctx.chat.id == "1672509888") {
         ctx.reply("Siz uchun geolokatsiya kiritilish so’ralmaydi")
         ctx.session.awaitingClientLocation = false;
         chooseBuyer(ctx);

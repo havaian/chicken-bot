@@ -3,6 +3,8 @@ const { Markup } = require("telegraf");
 
 const cancel = require("../general/cancel");
 
+const groups = require("../data/groups");
+
 const { logger, readLog } = require("../../utils/logging");
 const eggs = { 
   "D1": 960,
@@ -12,6 +14,8 @@ const letters = require("../data/btnEmojis");
 
 const sessionKey = "awaitingIntakeEggs";
 const eggsDataKey = "eggsIntakeData";
+
+const report = require("./report");
 
 module.exports.promptEggImporter = async (ctx) => {
   try {
@@ -65,6 +69,7 @@ module.exports.handleEggImporter = async (ctx) => {
     const intakeTime = new Date().toLocaleString();
     ctx.session.intakeTime = intakeTime;
     this.sendIntakeEggs(ctx);
+    await ctx.deleteMessage();
   } catch (error) {
     logger.info(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
@@ -228,6 +233,10 @@ exports.addIntakeEggs = async (ctx) => {
 
     // Delete the previous message
     await ctx.deleteMessage();
+    
+    let groupId = groups;
+    
+    await report(updatedWarehouseActivity, ctx, groupId, "Tuxum kirimi", true);
 
     await cancel(ctx, "Tuxum kirimi qabul qilindi");
 

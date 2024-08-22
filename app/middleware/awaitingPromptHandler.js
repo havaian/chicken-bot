@@ -27,6 +27,24 @@ const awaitingPromptHandler = async (ctx, next) => {
         return;
       }
   
+      const falseUnhandleList = [
+        "awaitingCourierBrokenEggs",
+        "awaitingEggsDistributedEggs",
+        "awaitingCourierRemainedEggs",
+        "awaitingCourierMelangeEggs",
+        "awaitingBrokenEggs",
+        "awaitingIncisionEggs",
+        "awaitingMelangeEggs",
+        "awaitingLeft",
+        "awaitingIntakeEggs",
+        "awaitingWarehouseDailyBroken",
+        "awaitingWarehouseDailyIncision",
+        "awaitingWarehouseDailyIntact",
+        "awaitingWarehouseRemained",
+        "awaitingWarehouseDailyMelange",
+        "awaitingEggsDelivered"
+      ]
+  
       const handleNumericInput = async (
         ctx,
         text,
@@ -44,25 +62,10 @@ const awaitingPromptHandler = async (ctx, next) => {
         }
         ctx.match = [`${matchPrefix}:${text}:${specialKey}`];
         await handler(ctx);
-        ctx.session[sessionKey] = false;
+        if (sessionKey != "awaitingEggsDelivered") {
+          ctx.session[sessionKey] = true;
+        }
       };
-  
-      const falseUnhandleList = [
-        "awaitingCourierBrokenEggs",
-        "awaitingEggsDistributedEggs",
-        "awaitingCourierRemainedEggs",
-        "awaitingCourierMelangeEggs",
-        "awaitingBrokenEggs",
-        "awaitingIncisionEggs",
-        "awaitingMelangeEggs",
-        "awaitingLeft",
-        "awaitingIntakeEggs",
-        "awaitingWarehouseDailyBroken",
-        "awaitingWarehouseDailyIncision",
-        "awaitingWarehouseDailyIntact",
-        "awaitingWarehouseRemained",
-        "awaitingWarehouseDailyMelange"
-      ]
   
       const handleSpecificNumericInput = async (ctx, handler, sessionKey) => {
         const text = ctx.message.text;
@@ -112,13 +115,7 @@ const awaitingPromptHandler = async (ctx, next) => {
           );
           break;
         case ctx.session.awaitingMoney:
-          await handleNumericInput(
-            ctx,
-            text,
-            "confirm-left-money",
-            leftMoney.confirmLeftMoney,
-            "awaitingMoney"
-          );
+          await handleSpecificNumericInput(ctx, leftMoney.confirmLeftMoney, "awaitingMoney");
           break;
         case ctx.session.awaitingBrokenEggs:
           await handleSpecificNumericInput(ctx, brokenEggs.sendBrokenEggs, "awaitingBrokenEggs");
@@ -145,7 +142,7 @@ const awaitingPromptHandler = async (ctx, next) => {
           await handleSpecificNumericInput(ctx, selectCourier.promptCourierRemained, "awaitingCourierRemainedEggs");
           break;
         case ctx.session.awaitingCourierMelangeEggs:
-          await handleSpecificNumericInput(ctx, selectCourier.promptCourierMelange, "awaitingCourierMelangeEggs");
+          await handleSpecificNumericInput(ctx, selectCourier.promptCourierMelange,  "awaitingCourierMelangeEggs");
           break;
         case ctx.session.awaitingCourierBrokenEggs:
           await handleSpecificNumericInput(ctx, selectCourier.promptCourierBroken, "awaitingCourierBrokenEggs");

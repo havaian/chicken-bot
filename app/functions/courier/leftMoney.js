@@ -18,6 +18,13 @@ exports.sendLeftMoney = async (ctx) => {
         ["Bekor qilish ❌"]
       ])
     );
+
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-money-left-no";
+
+    if (deleteMsg) {
+      await ctx.deleteMessage();
+    }
+
   } catch (error) {
     logger.info(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
@@ -43,14 +50,12 @@ exports.confirmLeftMoney = async (ctx) => {
         `Siz ${amount} so’m pul kassaga topshirdingizmi?`,
         Markup.inlineKeyboard([
           [
-            Markup.button.callback("Tasdiqlash ✅ ", `confirm-money-left:${amount}`),
-            Markup.button.callback("Bekor qilish ❌", "cancel")
+            Markup.button.callback("Ha ✅ ", `confirm-money-left-yes`),
+            Markup.button.callback("Yo’q ❌", "confirm-money-left-no")
           ],
         ])
       );
-  
-      // Delete the previous message
-      await ctx.deleteMessage();
+      
       ctx.session.awaitingMoney = false;
     }
   } catch (error) {
@@ -66,8 +71,11 @@ exports.addLeftMoney = async (ctx) => {
       money_by_courier: ctx.session[eggsDataKey],
     };
 
-    // Delete the previous message
-    await ctx.deleteMessage();
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-money-left-yes";
+
+    if (deleteMsg) {
+      await ctx.deleteMessage();
+    }
   
     ctx.session[eggsDataKey] = undefined;
     ctx.session.categories = null;

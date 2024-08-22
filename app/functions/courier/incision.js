@@ -66,7 +66,7 @@ exports.sendIncisionEggs = async (ctx) => {
     }
 
     if (type === 2) {
-      await ctx.reply(`Singan tuxumlar sonini kiriting`,
+      await ctx.reply(`Nasechka tuxumlar sonini kiriting`,
         Markup.keyboard([
           ["Bekor qilish ❌"]
         ]));
@@ -87,8 +87,8 @@ const confirmIncisionEggs = async (ctx) => {
     let amountMsg = "";
 
     if (!incisionEggs || Object.keys(incisionEggs).length === 0) {
-      amountMsg = "Nasechka tuxumlar yo'q";
-      await ctx.reply(`Nasechka tuxumlar\n\n${amountMsg}\n\n`);
+      amountMsg = "yo'q";
+      await ctx.reply(`Nasechka tuxumlar: ${amountMsg}\n\n`);
       this.addIncisionEggs(ctx);
       return;
     } else {
@@ -97,7 +97,7 @@ const confirmIncisionEggs = async (ctx) => {
       }
     }
 
-    ctx.session.awaitingIncisionEggs = false;
+    ctx.session[sessionKey] = false;
 
     await ctx.reply(`Nasechka tuxumlar\n\n${amountMsg}\n\n`);
     await ctx.reply(`Nasechka tuxum kiritilganini tasdiqlaysizmi?`,
@@ -129,8 +129,11 @@ exports.addIncisionEggs = async (ctx) => {
 
     const current = courierActivity.current || {};
 
-    // Delete the previous message
-    await ctx.deleteMessage();
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-incision-eggs-yes";
+
+    if (deleteMsg) {
+      await ctx.deleteMessage();
+    }
 
     for (let y in Object.keys(ctx.session[eggsDataKey])) {
       const x = Object.keys(ctx.session[eggsDataKey])[y];

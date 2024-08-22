@@ -1,13 +1,8 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
-// const {
-//   generateWarehouseHTML,
-//   generateWarehouseExcel,
-// } = require("../report/warehouseReport");
-// const convertHTMLToImage = require("../report/convertHTMLToImage");
 const groups = require("../data/groups");
-// const path = require("path");
-// const fs = require("fs");
+
+const report = require("./report");
 
 const cancel = require("../general/cancel");
 
@@ -332,23 +327,11 @@ const handleCircleVideo = async (ctx) => {
     const warehousePhoneNum = ctx.session.user.phone_num;
 
     // Find the group id by courier's phone number
-    let groupId = null;
-    for (const phone_num of warehousePhoneNum) {
-      for (const [id, numbers] of Object.entries(groups)) {
-        if (numbers.includes(phone_num)) {
-          groupId = id;
-          break;
-        }
-      }
-      if (groupId) {
-        break;
-      }
-    }
+    let groupId = groups;
 
     if (!groupId) {
       logger.info("selectCourier. Warehouse groupId not found:", groupId, !groupId);
       await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-      return;
     }
 
     // Retrieve selected courier information from session
@@ -432,7 +415,7 @@ const handleCircleVideo = async (ctx) => {
     cancel(ctx, "Xabar kuryerga jo’natildi.");
   } catch (error) {
     logger.info(error);
-    ctx.reply("Dumaloq video yuborishda xatolik yuz berdi. Qayta urunib ko‘ring.")
+    ctx.reply("Kuryerga xabar jo’natishda xatolik yuz berdi .")
   }
 };
 
@@ -508,33 +491,18 @@ module.exports.courierAccept = async (ctx) => {
     const warehouseActivity = warehouseActivityResponse.data;
 
     // Find and update the element in the distributed_to array
-    let updated = false;
-    const updatedDistributedTo = warehouseActivity.distributed_to.map((dist) => {
-      if (dist._id === courierId) {
-        updated = true;
-        return {
-          ...dist,
-          eggs: distributedEggsData,
-          incision: brokenEggsData,
-          remained: remainedEggsData,
-          melange: melangeEggsData
-        };
-      }
-      return dist;
-    });
+    const updatedDistributedTo = warehouseActivity.distributed_to;
 
     // If no existing entry was updated, create a new one
-    if (!updated) {
-      updatedDistributedTo.push({
-        _id: courierId,
-        courier_name: full_name,
-        eggs: distributedEggsData,
-        incision: brokenEggsData,
-        remained: remainedEggsData,
-        melange: melangeEggsData,
-        time: new Date().toLocaleString(),
-      });
-    }
+    updatedDistributedTo.push({
+      _id: courierId,
+      courier_name: full_name,
+      eggs: distributedEggsData,
+      incision: brokenEggsData,
+      remained: remainedEggsData,
+      melange: melangeEggsData,
+      time: new Date().toLocaleString(),
+    });
 
     // Usage for warehouse
     const updatedWarehouseActivity = {
@@ -581,13 +549,7 @@ module.exports.courierAccept = async (ctx) => {
     await ctx.reply(`✅ Tuxumlar xisobingizga muvaffaqiyatli qo’shildi va saqlandi.\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`);
 
     // Find the group id by courier's phone number
-    let groupId = null;
-    for (const [id, numbers] of Object.entries(groups)) {
-      if (numbers.includes(phone_num)) {
-        groupId = id;
-        break;
-      }
-    }
+    let groupId = groups;
 
     const finalMessageGroup = `✅ Tasdiqlandi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
 
@@ -641,13 +603,7 @@ module.exports.courierReject = async (ctx) => {
     const finalMessageGroup = `❌ Rad etildi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
 
     // Find the group id by courier's phone number
-    let groupId = null;
-    for (const [id, numbers] of Object.entries(groups)) {
-      if (numbers.includes(phone_num)) {
-        groupId = id;
-        break;
-      }
-    }
+    let groupId = groups;
 
     // Delete Redis key
     await redis.del(`eggsData:${courierId}`);

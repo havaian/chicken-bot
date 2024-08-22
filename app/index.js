@@ -102,6 +102,9 @@ bot.action(/payment-other/, async (ctx) => {
 bot.action("confirm-transaction", async (ctx) => {
   await paymentReceived.confirmTransaction(ctx);
 });
+bot.action("confirm-transaction-no", async (ctx) => {
+  await paymentReceived(ctx);
+});
 bot.action("add-more", async (ctx) => {
   await addMore(ctx);
 });
@@ -178,8 +181,11 @@ bot.action(/confirm-left-yes/, async (ctx) => {
 bot.action(/confirm-left-no/, async (ctx) => {
   await leftEggs.sendLeft(ctx);
 });
-bot.action(/confirm-money-left:\d+/, async (ctx) => {
+bot.action(/confirm-money-left-yes/, async (ctx) => {
   await leftMoney.addLeftMoney(ctx);
+});
+bot.action(/confirm-money-left-no/, async (ctx) => {
+  await leftMoney.sendLeftMoney(ctx);
 });
 bot.action(/confirm-day-finished/, async (ctx) => {
   await finishDay.confirmDayFinished(ctx);

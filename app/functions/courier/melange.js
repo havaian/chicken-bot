@@ -86,7 +86,7 @@ module.exports.acceptMelange = async (ctx) => {
       let amountMsg = "";
   
       if (!melangeData || Object.keys(melangeData).length === 0) {
-        amountMsg = "Melanj yo'q";
+        amountMsg = "Yo'q";
         this.confirmMelangeEggs(ctx);
         return;
       } else {
@@ -132,8 +132,11 @@ module.exports.confirmMelangeEggs = async (ctx) => {
           melange_by_courier: ctx.session[eggsDataKey],
         };
 
-        // Delete the previous message
-        await ctx.deleteMessage();
+        const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-melange-eggs-yes";
+    
+        if (deleteMsg) {
+          await ctx.deleteMessage();
+        }
 
         ctx.session[eggsDataKey] = undefined;
 
