@@ -6,7 +6,6 @@ const { logger, readLog } = require("../../utils/logging");
 const { sendMelange } = require("./melange");
 
 const nonZero = require("../general/non-zero");
-let eggs = "";
 
 const letters = require("../data/btnEmojis");
 
@@ -15,8 +14,8 @@ const eggsDataKey = "eggsLeftData";
 
 const promptLeft = async (ctx, type) => {
   try {
-    eggs = nonZero(ctx.session.currentEggs);
-  
+    const eggs = nonZero(ctx.session.currentEggs);
+
     if (!ctx.session.categories || type === 2) {
       ctx.session.categories = Object.keys(eggs);
       ctx.session.currentCategoryIndex = 0;
@@ -33,6 +32,11 @@ const promptLeft = async (ctx, type) => {
           await ctx.reply("Iltimos, to’g’ri son kiriting:");
           return;
         }
+
+        // if (amount > eggs[category]) {
+        //   await ctx.reply(`Sizning mashinangizda ${eggs[category]}ta ${letters[category]} kategoriya tuxum qolgan!`);
+        //   return;
+        // }
   
         if (!ctx.session[eggsDataKey][category]) {
           ctx.session[eggsDataKey][category] = 0;
@@ -130,31 +134,31 @@ exports.addLeft = async (ctx) => {
       await ctx.deleteMessage();
     }
 
-    for (let y in Object.keys(ctx.session[eggsDataKey] || {})) {
-        const x = Object.keys(ctx.session[eggsDataKey])[y];
+    // for (let y in Object.keys(ctx.session[eggsDataKey] || {})) {
+    //     const x = Object.keys(ctx.session[eggsDataKey])[y];
       
-        // If current[x] is not defined, set it to 0
-        if (typeof current[x] === 'undefined') {
-          current[x] = 0;
-        }
+    //     // If current[x] is not defined, set it to 0
+    //     if (typeof current[x] === 'undefined') {
+    //       current[x] = 0;
+    //     }
       
-        // If incision[x] is not defined, set it to 0
-        if (typeof incision[x] === 'undefined') {
-          incision[x] = 0;
-        }
+    //     // If incision[x] is not defined, set it to 0
+    //     if (typeof incision[x] === 'undefined') {
+    //       incision[x] = 0;
+    //     }
 
-        if (current[x] < ctx.session[eggsDataKey][x]) {
-          await ctx.reply(`Sizda ${letters[x]} kategoriya bo’yicha ${current[x]}ta dan ko’p qolishi mumkin emas!`,
-            Markup.keyboard([["Bekor qilish ❌"]])
-          );
+    //     if (current[x] < ctx.session[eggsDataKey][x]) {
+    //       await ctx.reply(`Sizda ${letters[x]} kategoriya bo’yicha ${current[x]}ta dan ko’p qolishi mumkin emas!`,
+    //         Markup.keyboard([["Bekor qilish ❌"]])
+    //       );
 
-          ctx.session[eggsDataKey] = undefined;
-          ctx.session.categories = null;
-          ctx.session.currentCategoryIndex = null;
+    //       ctx.session[eggsDataKey] = undefined;
+    //       ctx.session.categories = null;
+    //       ctx.session.currentCategoryIndex = null;
 
-          return;
-        }
-    };
+    //       return;
+    //     }
+    // };
 
     ctx.session.updatedActivity = {
       ...ctx.session.updatedActivity,

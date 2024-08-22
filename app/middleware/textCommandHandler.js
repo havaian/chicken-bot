@@ -34,7 +34,7 @@ const textCommandHandler = async (ctx, next) => {
       if (command) {
         const [commandFunction, allowedUserType] = command;
   
-        if (allowedUserType === "all" || ctx.session.user.userType === allowedUserType) {
+        if (allowedUserType === "all" || ctx.session.user.userType === allowedUserType) {          
           await commandFunction(ctx);
         }
       } else {

@@ -6,7 +6,6 @@ const { logger, readLog } = require("../../utils/logging");
 const { sendLeft } = require("./leftEggs");
 
 const nonZero = require("../general/non-zero");
-let eggs = "";
 
 const letters = require("../data/btnEmojis");
 
@@ -15,7 +14,7 @@ const eggsDataKey = "eggsIncisionData";
 
 const promptIncision = async (ctx, type) => {
   try {
-    eggs = nonZero(ctx.session.currentEggs);
+    const eggs = nonZero(ctx.session.currentEggs);     
     
     if (!ctx.session.categories || type === 2) {
       ctx.session.categories = Object.keys(eggs);
@@ -33,6 +32,11 @@ const promptIncision = async (ctx, type) => {
           await ctx.reply("Iltimos, to’g’ri son kiriting:");
           return;
         }
+
+        // if (amount > eggs[category]) {
+        //   await ctx.reply(`Sizning mashinangizda ${eggs[category]}ta ${letters[category]} kategoriya tuxum qolgan!`);
+        //   return;
+        // }
   
         if (!ctx.session[eggsDataKey][category]) {
           ctx.session[eggsDataKey][category] = 0;
@@ -141,19 +145,20 @@ exports.addIncisionEggs = async (ctx) => {
       // If current[x] is not defined, set it to 0
       if (typeof current[x] === 'undefined') {
         current[x] = 0;
-      }
+      }     
+
+      // if (current[x] < ctx.session[eggsDataKey][x]) {
+      //   ctx.reply(`Sizning mashinangizdagi ${letters[x]} qolgan tuxum soni ${ctx.session.currentEggs[x]}!`);
+  
+      //   ctx.session[eggsDataKey] = undefined;
+      //   ctx.session.categories = null;
+      //   ctx.session.currentCategoryIndex = null;
+
+      //   return;
+      // }
 
       current[x] = current[x] - ctx.session[eggsDataKey][x];
-
-      if (current[x] < ctx.session[eggsDataKey][x]) {
-        ctx.reply(`Sizning mashinangizdagi ${letters[x]} qolgan tuxum soni ${current[x]}!`);
-  
-        ctx.session[eggsDataKey] = undefined;
-        ctx.session.categories = null;
-        ctx.session.currentCategoryIndex = null;
-
-        return;
-      }
+      // ctx.session.currentEggs[x] = ctx.session.currentEggs[x] - ctx.session[eggsDataKey][x];
     }
 
     ctx.session.updatedActivity = {

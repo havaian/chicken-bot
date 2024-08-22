@@ -1,5 +1,5 @@
 // const { Markup } = require("telegraf");
-// const axios = require("../../axios");
+const axios = require("../../axios");
 
 // const { logger, readLog } = require("../../utils/logging");
 
@@ -53,6 +53,19 @@ const { sendDayFinished } = require("./finishDay");
 
 exports.sendBrokenEggs = async (ctx) => {
   try {
+    // Get today's activity for the courier
+    const courierActivityResponse = await axios.get(
+      `/courier/activity/today/${ctx.session.user.phone_num}`,
+      {
+        headers: {
+          "x-user-telegram-chat-id": ctx.chat.id,
+        },
+      }
+    );
+    const courierActivity = courierActivityResponse.data;
+
+    ctx.session.currentEggs = courierActivity.current || {};
+
     await sendIncisionEggs(ctx);
     // await sendMelange(ctx);
     // await sendDayFinished(ctx);
