@@ -217,8 +217,14 @@ const handleCircleVideo = async (ctx) => {
 
     updatedCourierActivity.courier_name = courier.full_name;
     updatedCourierActivity.car_num = courier.car_num;
-        
-    await report(updatedCourierActivity, ctx, groupId, phone_num, full_name, "Tuxum yetkazildi", forward = true);
+    
+    try {
+      await report(updatedCourierActivity, ctx, groupId, phone_num, full_name, "Tuxum yetkazildi", forward = true);
+    } catch (reportError) {
+      logger.info("Error in report function:", reportError);
+      // Optionally, you can send a message to the user or perform any other error handling
+      // await ctx.reply("Hisobotni yuborishda xatolik yuz berdi, lekin ma'lumotlar saqlandi.");
+    }
 
     cancel(ctx, "Tanlang:");
   } catch (error) {
