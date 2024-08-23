@@ -102,8 +102,8 @@ const generateWarehouseHTML = (data, filename) => {
         <td>Nomi</td>
         <td>Yuklandi</td>
         <td>Astatka</td>
-        <!--<td>Nasechka</td>-->
-        <!--<td>Melanj</td>-->
+        <td>Nasechka</td>
+        <td>Melanj</td>
         <td>Imzo</td>
       </tr>
       ${distributed_to
@@ -123,7 +123,6 @@ const generateWarehouseHTML = (data, filename) => {
               .map(([category, amount]) => `${category}: <b>${amount}</b>`)
               .join("<br>") || "➖"}
           </td>
-          <!--
           <td style="text-align: left; vertical-align: middle">
             ${Object.entries(distribution.incision || {})
               .filter(([_, amount]) => amount > 0)
@@ -136,7 +135,6 @@ const generateWarehouseHTML = (data, filename) => {
               .map(([category, amount]) => `${category}: <b>${amount}</b>`)
               .join("<br>") || "➖"}
           </td>
-          -->
           <td style="text-align: left; vertical-align: middle"></td>
         </tr>
       `
