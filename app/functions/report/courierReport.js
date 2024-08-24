@@ -52,7 +52,7 @@ const generateCourierHTML = (data, filename) => {
       second: '2-digit'
     });
 
-    const reportDate = moment(date).tz('Asia/Karachi').format('YYYY/MM/DD HH:mm:ss');
+    const reportDate = moment(date).tz('Asia/Karachi').format('YYYY/MM/DD, HH:mm:ss');
   
     // Prepare prices from eggs_prices
     const eggPrices = eggs_prices; // Assuming eggs_prices is an object {category: price}
@@ -92,8 +92,10 @@ const generateCourierHTML = (data, filename) => {
           <td colspan="2">Men yetkazib beruvchi: ${courier_name}</td>
           <td colspan="3">Avtomobil davlat raqami: ${car_num}</td>
         </tr>
-        <tr height="50px" style="width:100%">
+        <tr height="30px" style="width:100%">
           <td>Sana: ${today6amStr}</td>
+        </tr>
+        <tr height="30px" style="width:100%">
           <td>Hisobot sanasi: ${reportDate}</td>
         </tr>
         <tr>
