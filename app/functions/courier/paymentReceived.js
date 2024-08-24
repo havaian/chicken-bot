@@ -193,7 +193,6 @@ const handleCircleVideo = async (ctx) => {
       time: new Date().toLocaleString(), // Add the time of the delivery
     };
     
-
     // Update courier's activity
     const updatedCourierActivity = {
       ...courierActivity,

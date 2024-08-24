@@ -140,7 +140,7 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
       const newDebt = ctx.session.buyer.debt + totalSum;
 
       summaryMessage += `\n\nJami summa: ${totalSum.toLocaleString()}`;
-      summaryMessage += `\nAvvalgi qarz: ${ctx.session.buyer.debt.toLocaleString()}`;
+      summaryMessage += `\n\nAvvalgi qarz: ${ctx.session.buyer.debt.toLocaleString()}`;
       summaryMessage += `\nYangi qarz: ${newDebt.toLocaleString()}`;
       // summaryMessage += `\n\n${ctx.session.buyer.debt_limit > newDebt ? "❇️" : "❗️❗️❗️"} Qarz chegarasi: ${ctx.session.buyer.debt_limit.toLocaleString()}`;
 
@@ -166,6 +166,9 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
 
 module.exports.confirmEggsDelivered = async (ctx) => {
   try {
+    if (ctx.match[0] === "eggs-distributed-yes") {
+      ctx.deleteMessage();
+    }
     await paymentReceived(ctx);
   } catch (error) {
     logger.info(error);
