@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const ExcelJS = require("exceljs");
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const eggs_prices = require("../data/prices");
 
@@ -52,15 +52,7 @@ const generateCourierHTML = (data, filename) => {
       second: '2-digit'
     });
 
-    const reportDate = date.toLocaleString('uz-UZ', {
-      hour12: false,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    const reportDate = moment(date).tz('Asia/Karachi').format('YYYY/MM/DD HH:mm:ss');
   
     // Prepare prices from eggs_prices
     const eggPrices = eggs_prices; // Assuming eggs_prices is an object {category: price}
