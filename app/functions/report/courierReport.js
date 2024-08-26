@@ -37,8 +37,9 @@ const generateCourierHTML = (data, filename) => {
     let totalDeliveredByCategory = {};
     let totalPayments = 0;
   
-    // Limit to 40 entries
-    const limitedDeliveredTo = delivered_to.slice(0, 40);
+    // // Limit to 40 entries
+    // const limitedDeliveredTo = delivered_to.slice(0, 40);
+    const limitedDeliveredTo = delivered_to;
   
     // Get today's date at 6 a.m.
     const today6am = new Date();
@@ -52,7 +53,7 @@ const generateCourierHTML = (data, filename) => {
       second: '2-digit'
     });
 
-    const reportDate = moment(date).tz('Asia/Karachi').format('YYYY/MM/DD, HH:mm:ss');
+    const reportDate = moment(date).tz('Asia/Karachi').format('DD/MM/YYYY');
   
     // Prepare prices from eggs_prices
     const eggPrices = eggs_prices; // Assuming eggs_prices is an object {category: price}
@@ -94,8 +95,6 @@ const generateCourierHTML = (data, filename) => {
         </tr>
         <tr height="30px" style="width:100%">
           <td>Sana: ${today6amStr}</td>
-        </tr>
-        <tr height="30px" style="width:100%">
           <td>Hisobot sanasi: ${reportDate}</td>
         </tr>
         <tr>
