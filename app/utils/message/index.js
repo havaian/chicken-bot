@@ -18,7 +18,7 @@ const sendSMS = async (phone_number, text) => {
     await sendToQueue(queue, message);
     logger.info("✅ SMS: ", message);
   } catch (error) {
-    logger.info('❌ SMS:', error);
+    logger.error('❌ SMS:', error);
   }
 };
 

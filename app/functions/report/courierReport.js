@@ -66,26 +66,42 @@ const generateCourierHTML = (data, filename) => {
         totalDeliveredByCategory[egg.category] = totalDeliveredByCategory[egg.category] || 0;     
         totalDeliveredByCategory[egg.category] += egg.amount;
       });
-    });    
-  
+    });
+    
+    // Prepare the rows in the final HTML with alternating colors
+    const totalAccepted = accepted.reduce((acc, entry) => {
+      Object.entries(entry.eggs).forEach(([category, amount]) => {
+        acc[category] = (acc[category] || 0) + amount;
+      });
+      return acc;
+    }, {});
+
+    const calculateShortage = (category) => {
+      const initial = by_morning[category] || 0;
+      const acceptedAmount = totalAccepted[category] || 0;
+      const remaining = current_by_courier[category] || 0;
+      const delivered = totalDeliveredByCategory[category] || 0;
+      const brokenAmount = incision[category] || 0;
+      const melangeAmount = (melange_by_courier[category] || 0) * 28;
+    
+      const shortage = (initial + acceptedAmount) - (remaining + delivered + brokenAmount + melangeAmount);
+      return shortage;
+    };
+
     const rows = [
       ["1", "Tarqatilgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(totalDeliveredByCategory[category] || 0)), "", "Umumiy yig'ilgan pul:", formatNumber(totalPayments)],
       ["2", "Qolgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(current_by_courier[category] || 0)), "", "Chiqim:", formatNumber(expenses)],
       ["3", "Nasechka tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", formatNumber(earnings - expenses)],
       ["4", "Tuxum kamomad", ...Object.keys(eggPrices).map(category => {
-        const amount = (day_finished ? (by_morning[category] + accepted[category] ?? 0) - 
-                        ((current_by_courier[category] ?? 0) + 
-                         (melange_by_courier[category] ?? 0) * 28 + 
-                         (incision[category] ?? 0) + 
-                         (totalDeliveredByCategory[category] ?? 0)) : 0);
-        return formatNumber(amount);
+        const shortage = calculateShortage(category);
+        return formatNumber(shortage);
       }), "", "Kassa topshirildi:", formatNumber(money_by_courier)],
       ["5", "Melanj", ...Object.keys(eggPrices).map(category => {
         const amount = melange_by_courier[category] || 0;
         return `${formatNumber(amount)} (${formatNumber(amount * 28)})`;
       }), "", "Kassa kamomad:", formatNumber((earnings - expenses) - money_by_courier)]
     ];
-    
+
     // Prepare the rows in the final HTML with alternating colors
     const summaryHtml = 
       `<table style="width:100%">
@@ -98,9 +114,9 @@ const generateCourierHTML = (data, filename) => {
           <td>Hisobot sanasi: ${reportDate}</td>
         </tr>
         <tr>
-          <td>Olingan tuxum soni:</br>${Object.entries(accepted).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join(",</br>")}</td>
+          <td>Olingan tuxum soni:</br>${Object.entries(totalAccepted).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join(",</br>")}</td>
           <td>Bor edi:</br>${Object.entries(by_morning).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join(",</br>")}</td>
-          <td>Jami:</br>${Object.entries(accepted).map(([category, amount]) => `${category}: <b>${formatNumber((amount ?? 0) + (by_morning[category] ?? 0))}</b>`).join(",</br>")}</td>
+          <td>Jami:</br>${Object.entries(totalAccepted).map(([category, amount]) => `${category}: <b>${formatNumber((amount ?? 0) + (by_morning[category] ?? 0))}</b>`).join(",</br>")}</td>
           <td>Sanab oldim_____________</td>
         </tr>
       </table>
@@ -131,15 +147,15 @@ const generateCourierHTML = (data, filename) => {
                 deliveredEggs.forEach((egg, index) => {
                   const deliveryIndex = ++deliveredToIndex;
                   deliveryHtml += `
-                    <tr>
-                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
-                      <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${formatNumber(egg.amount)}</td>
-                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price)}</td>
-                      <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price * egg.amount)}</td>
-                      ${index === 0 ? paymentHtml : ''}
-                      ${index === 0 ? debtHtml : ''}
-                    </tr>`;
+                  <tr>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                    <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${formatNumber(egg.amount)}</td>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price)}</td>
+                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price * egg.amount)}</td>
+                    ${index === 0 ? paymentHtml : ''}
+                    ${index === 0 ? debtHtml : ''}
+                  </tr>`;
                 });
               } else {
                 const deliveryIndex = ++deliveredToIndex;
@@ -194,7 +210,7 @@ const generateCourierHTML = (data, filename) => {
   
     fs.writeFileSync(filename, summaryHtml);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 };
 
@@ -222,12 +238,20 @@ const generateCourierExcel = async (data, filename) => {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Courier Report");
   
+    // Calculate total accepted eggs
+    const totalAccepted = accepted.reduce((acc, entry) => {
+      Object.entries(entry.eggs).forEach(([category, amount]) => {
+        acc[category] = (acc[category] || 0) + amount;
+      });
+      return acc;
+    }, {});
+
     sheet.addRow(["Men yetkazib beruvchi F.I.O", courier_name]);
     sheet.addRow(["Avtomobil davlat raqami:", car_num]);
     sheet.addRow(["Sana", date]);
-    sheet.addRow(["Olingan tuxum soni", Object.entries(accepted).map(([category, amount]) => `${category}: ${amount}`).join(", ")]);
+    sheet.addRow(["Olingan tuxum soni", Object.entries(totalAccepted).map(([category, amount]) => `${category}: ${amount}`).join(", ")]);
     sheet.addRow(["Bor edi", Object.entries(by_morning).map(([category, amount]) => `${category}: ${amount}`).join(", ")]);
-    sheet.addRow(["Jami", Object.entries(accepted).reduce((sum, [category, amount]) => sum + amount, 0) + Object.entries(by_morning).reduce((sum, [category, amount]) => sum + amount, 0)]);
+    sheet.addRow(["Jami", Object.entries(totalAccepted).reduce((sum, [category, amount]) => sum + amount, 0) + Object.entries(by_morning).reduce((sum, [category, amount]) => sum + amount, 0)]);
     sheet.addRow(["Sanab oldim_____________"]);
   
     sheet.addRow([]);
@@ -262,7 +286,7 @@ const generateCourierExcel = async (data, filename) => {
   
     await workbook.xlsx.writeFile(filename);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 };
 
@@ -270,3 +294,4 @@ module.exports = {
   generateCourierHTML,
   generateCourierExcel,
 };
+

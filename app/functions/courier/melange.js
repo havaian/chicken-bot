@@ -73,7 +73,7 @@ exports.sendMelange = async (ctx) => {
 
     promptMelange(ctx, type);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );

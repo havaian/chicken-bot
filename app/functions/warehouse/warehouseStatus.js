@@ -31,7 +31,7 @@ module.exports = async (ctx) => {
       ])
     );
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Ombor holatini olishda xatolik yuz berdi. Qayta urunib ko’ring."
     );

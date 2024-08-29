@@ -23,7 +23,7 @@ exports.sendExpenses = async (ctx) => {
       ])
     );
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Chiqim qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
@@ -57,7 +57,7 @@ exports.confirmExpenses = async (ctx) => {
       ctx.session.awaitingExpenses = false;
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Chiqim qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
@@ -102,7 +102,7 @@ exports.addExpenses = async (ctx) => {
 
     cancel(ctx, `${amount} so’m chiqim hisobingizga qo’shildi.`);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Chiqim qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );

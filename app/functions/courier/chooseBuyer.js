@@ -19,7 +19,7 @@ const getDebtLimit = () => {
     logger.info('Failed to extract debt limit from file');
     return null;
   } catch (error) {
-    logger.info('Error reading debt limit file:', error);
+    logger.error('Error reading debt limit file:', error);
     return null;
   }
 };
@@ -43,7 +43,7 @@ const getPrices = () => {
     logger.info('Failed to extract valid prices from file');
     return null;
   } catch (error) {
-    logger.info('Error reading prices file:', error);
+    logger.error('Error reading prices file:', error);
     return null;
   }
 };
@@ -99,7 +99,7 @@ module.exports = async (ctx) => {
     eggsDelivered.deliverEggs(ctx);
 
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Klient tanlashda xatolik yuz berdi. Qayta urunib ko'ring");
   }
 };

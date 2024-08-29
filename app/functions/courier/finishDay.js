@@ -23,7 +23,7 @@ exports.sendDayFinished = async (ctx) => {
       ])
     );
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Ish kunni yakunlashda xatolik yuz berdi. Qayta urunib ko’ring"
     );
@@ -83,7 +83,7 @@ exports.confirmDayFinished = async (ctx) => {
 
     cancel(ctx, `Ish kunini yakunladingiz.`);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Ish kunni yakunlashda xatolik yuz berdi. Qayta urunib ko’ring"
     );

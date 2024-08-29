@@ -54,7 +54,7 @@ const promptIncision = async (ctx, type) => {
       }
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 }
@@ -78,7 +78,7 @@ exports.sendIncisionEggs = async (ctx) => {
 
     promptIncision(ctx, type);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Nasechka tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
@@ -111,7 +111,7 @@ const confirmIncisionEggs = async (ctx) => {
       ])
     );
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Nasechka tuxumlar qo'shishda xatolik yuz berdi. Qayta urunib ko'ring"
     );
@@ -173,7 +173,7 @@ exports.addIncisionEggs = async (ctx) => {
 
     await sendLeft(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Nasechka tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );

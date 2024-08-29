@@ -17,7 +17,7 @@ const connect = async () => {
     await channel.assertQueue('sms_queue', { durable: true });
     logger.info("RMQ SMS ✅");
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 }
 
@@ -28,7 +28,7 @@ const sendToQueue = async (queue, message) => {
     }
     channel.sendToQueue(queue, Buffer.from(message), { persistent: true });
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 }
 
@@ -38,7 +38,7 @@ process.on('exit', () => {
       channel.close();
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 });
 

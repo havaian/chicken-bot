@@ -17,7 +17,7 @@ module.exports = async (ctx) => {
     ctx.session.awaitingPaymentAmount = true;
     await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nNecha pul olganingizni kiriting:`);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -48,7 +48,7 @@ module.exports.completeTransaction = async (ctx) => {
       ])
     );
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -60,7 +60,7 @@ module.exports.confirmTransaction = async (ctx) => {
     // Delete the previous message
     await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -79,6 +79,8 @@ const handleCircleVideo = async (ctx) => {
 
     const selectedBuyer = ctx.session.buyer;
 
+    console.log(selectedBuyer.debt);
+
     // Get today's activity for the buyer
     const buyerActivityResponse = await axios.get(
       `/buyer/activity/today/${selectedBuyer.phone_num || selectedBuyer._id}`,
@@ -89,6 +91,8 @@ const handleCircleVideo = async (ctx) => {
       }
     );
     const buyerActivity = buyerActivityResponse.data;
+
+    console.log(buyerActivity.debt);
 
     // Get today's activity for the courier
     const courierActivityResponse = await axios.get(
@@ -152,12 +156,20 @@ const handleCircleVideo = async (ctx) => {
       time: new Date().toLocaleString(),
     };
 
+    console.log(totalPrice);
+    console.log(paymentAmount);
+    console.log(deliveryDetailsBuyer.debt);
+
     // Update buyer's activity
     const updatedBuyerActivity = {
       ...buyerActivity,
       accepted: [...buyerActivity.accepted, deliveryDetailsBuyer],
       debt: buyerActivity.debt + (totalPrice || 0) - (paymentAmount || 0),
     };
+
+    console.log(totalPrice);
+    console.log(paymentAmount);
+    console.log(updatedBuyerActivity.debt);
 
     const text = await message(
       eggsMsg,
@@ -192,15 +204,18 @@ const handleCircleVideo = async (ctx) => {
       debt: buyerActivity.debt + totalPrice - paymentAmount,
       time: new Date().toLocaleString(), // Add the time of the delivery
     };
-    
+
+    console.log(totalPrice);
+    console.log(paymentAmount);
+    console.log(deliveryDetailsCourier.debt);
+
     // Update courier's activity
     const updatedCourierActivity = {
       ...courierActivity,
       delivered_to: [...courierActivity.delivered_to, deliveryDetailsCourier],
       earnings: courierActivity.earnings + paymentAmount,
       current: courierActivity.current || {},
-    };
-    
+    };    
 
     await axios.put(
       `/courier/activity/${courierActivity._id}`,
@@ -227,7 +242,7 @@ const handleCircleVideo = async (ctx) => {
 
     cancel(ctx, "Tanlang:");
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Yetkazishni yakunlashda xatolik yuz berdi. Qayta urunib ko‘ring."
     );

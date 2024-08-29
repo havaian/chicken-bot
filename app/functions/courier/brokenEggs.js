@@ -80,7 +80,7 @@ exports.sendBrokenEggs = async (ctx) => {
 
 //     promptBroken(ctx, type);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Singan tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );

@@ -57,7 +57,7 @@ module.exports.promptEggImporter = async (ctx) => {
       ])
     );
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Tuxum fabrikasini ko’rsatishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -71,7 +71,7 @@ module.exports.handleEggImporter = async (ctx) => {
     this.sendIntakeEggs(ctx);
     await ctx.deleteMessage();
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 }
@@ -111,7 +111,7 @@ module.exports.promptEggIntake = async (ctx, type) => {
       }
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Olingdan tuxum sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -129,7 +129,7 @@ module.exports.sendIntakeEggs = async (ctx) => {
 
     this.promptEggIntake(ctx, type);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Tuxum kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
@@ -155,7 +155,7 @@ const confirmIntakeEggs = async (ctx) => {
       ])
     );
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Tuxum kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
@@ -242,7 +242,7 @@ exports.addIntakeEggs = async (ctx) => {
 
     ctx.session[eggsDataKey] = {};
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Tuxum kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );

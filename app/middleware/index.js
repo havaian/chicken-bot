@@ -25,7 +25,7 @@ exports.middleware = async (ctx, next) => {
       next();
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };

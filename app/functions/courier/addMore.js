@@ -35,7 +35,7 @@ module.exports = async (ctx) => {
         ["Bekor qilish ❌"]
       ]));
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };

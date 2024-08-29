@@ -26,7 +26,7 @@ exports.sendLeftMoney = async (ctx) => {
     }
 
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -59,7 +59,7 @@ exports.confirmLeftMoney = async (ctx) => {
       ctx.session.awaitingMoney = false;
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -83,7 +83,7 @@ exports.addLeftMoney = async (ctx) => {
 
     await sendDayFinished(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Kassaga topshirilgan pul qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );

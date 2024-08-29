@@ -29,7 +29,7 @@ module.exports.buyerLocation = async (ctx) => {
       );
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 }
 
@@ -79,7 +79,7 @@ module.exports.chooseBuyer = async (ctx) => {
       ctx.session.awaitingClientName = false;
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Ushbu nomli mijoz topilmadi. Yana bir marotaba urunib ko'ring");
   }
 }
@@ -139,7 +139,7 @@ module.exports.sendBuyersLocation = async (ctx) => {
       chooseBuyer(ctx);
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Ushbu do’kon ro’yxatdan topilmadi. Kiritilgan ma’lutni tekshirib, qaytadan urunib ko’ring.",
       Markup.inlineKeyboard([

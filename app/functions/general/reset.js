@@ -6,7 +6,7 @@ const resetState = (ctx) => {
     const { user } = ctx.session;
     ctx.session = { user };
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };

@@ -76,7 +76,7 @@ module.exports.promptCourier = async (ctx) => {
 
     await ctx.deleteMessage();
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Mashinalar topilmadi. Qayta urunib ko’ring");
   }
 };
@@ -101,6 +101,8 @@ module.exports.promptCourierBroken = async (ctx) => {
         },
       });
       const courier = courierResponse.data;
+
+      console.log(courier._id)
 
       ctx.session.selectedCourier = {};
       ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num };
@@ -132,7 +134,7 @@ module.exports.promptCourierBroken = async (ctx) => {
 
     categoriesByTextObject(ctx, "awaitingCourierBrokenEggs", "nasechka", keyboard, type, "brokenEggsData");
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Nasechka tuxumlarni kiritishda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
@@ -142,7 +144,7 @@ module.exports.confirmCourierBroken = async (ctx) => {
     await ctx.deleteMessage();
     this.promptCourierRemained(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Singan tuxumlarni saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
@@ -175,7 +177,7 @@ module.exports.promptCourierRemained = async (ctx) => {
 
     categoriesByTextObject(ctx, "awaitingCourierRemainedEggs", "ostatka", keyboard, type, "remainedEggsData");
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Mashinada qolgan tuxumda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
@@ -185,7 +187,7 @@ module.exports.confirmCourierRemained = async (ctx) => {
     await ctx.deleteMessage();
     this.promptCourierMelange(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Mashinada ostatka tuxumni saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
@@ -218,7 +220,7 @@ module.exports.promptCourierMelange = async (ctx) => {
 
     categoriesByTextObject(ctx, "awaitingCourierMelangeEggs", "melanj", keyboard, type, "melangeEggsData", egg_prices, true);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Kuryer melanj kiritishda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
@@ -228,7 +230,7 @@ module.exports.confirmCourierMelange = async (ctx) => {
     await ctx.deleteMessage();
     this.promptDistribution(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Kuryer melanj saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
@@ -262,7 +264,7 @@ module.exports.promptDistribution = async (ctx) => {
     // categoriesByButtonsObject(ctx, "awaitingEggsDistributedEggs", actionKey1, actionKey2, "yuklangan", "yuklanganini", keyboard, type, "distributedEggsData")
     categoriesByTextObject(ctx, "awaitingEggsDistributedEggs", "yuklangan", keyboard, type, "distributedEggsData", egg_prices, false, true);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 };
 
@@ -271,7 +273,7 @@ module.exports.confirmDistribution = async (ctx) => {
     await ctx.deleteMessage();
     this.promptCircleVideo(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Mashinaga xabar yetkazishda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
@@ -285,7 +287,7 @@ module.exports.promptCircleVideo = async (ctx) => {
   //     ]));
   //   ctx.session.awaitingCircleVideoWarehouse = true;
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Dumoloq videoda xatolik yuz berdi. Qayta urunib ko’ring",
       Markup.keyboard([
           ["Bekor qilish ❌"]
@@ -351,21 +353,22 @@ const handleCircleVideo = async (ctx) => {
     const distributedEggsData = ctx.session.distributedEggsData;
     const melangeEggsData = ctx.session.melangeEggsData;
 
+    // Save the data to Redis as one object
+    const eggsData = {
+      brokenEggsData,
+      melangeEggsData,
+      remainedEggsData,
+      distributedEggsData,
+      loadingTime: new Date().toISOString()
+    };
+    await redis.set(`eggsData:${_id}`, JSON.stringify(eggsData));
+
     ctx.session.brokenEggsData = undefined;
     ctx.session.remainedEggsData = undefined;
     ctx.session.distributedEggsData = undefined;
     ctx.session.melangeEggsData = undefined;
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
-
-    // Save the data to Redis as one object
-    const eggsData = {
-      brokenEggsData,
-      melangeEggsData,
-      remainedEggsData,
-      distributedEggsData
-    };
-    await redis.set(`eggsData:${_id}`, JSON.stringify(eggsData));
 
     const formatEggData = (data, melange) => {
       if (melange) {
@@ -423,28 +426,8 @@ const handleCircleVideo = async (ctx) => {
 
     cancel(ctx, "Xabar kuryerga jo’natildi.");
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Kuryerga xabar jo’natishda xatolik yuz berdi .")
-  }
-};
-
-const updateCategory = (currentData = {}, newData = {}, operation = 'add', isWarehouse = false) => {
-  try {
-    const result = { ...currentData };
-  
-    for (const [key, value] of Object.entries(newData)) {
-      const actualKey = isWarehouse && key === 'UP' ? 'D1' : key;
-      if (operation === 'add') {
-        result[actualKey] = (result[actualKey] || 0) + value;
-      } else {
-        result[actualKey] = (result[actualKey] || 0) - value;
-      }
-    }
-  
-    return result;
-  } catch (error) {
-    logger.info(error);
-    ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
@@ -470,14 +453,24 @@ module.exports.courierAccept = async (ctx) => {
 
     // Retrieve egg data from Redis
     const eggsData = JSON.parse(await redis.get(`eggsData:${courierId}`));
-    const { distributedEggsData = {}, brokenEggsData = {}, remainedEggsData = {}, melangeEggsData = {} } = eggsData;
+    const { distributedEggsData = {}, brokenEggsData = {}, remainedEggsData = {}, melangeEggsData = {}, loadingTime = "" } = eggsData;
+
+    // Create new accepted entry
+    const newAcceptedEntry = {
+      eggs: distributedEggsData,
+      loadingTime: loadingTime, // Time when eggs were loaded
+      acceptTime: new Date().toISOString()   // Time when courier accepted
+    };
+
+    // Update current eggs
+    const updatedCurrent = updateCategory(courierActivity.current || {}, distributedEggsData, 'add', false);
 
     // Usage for courier
     const updatedCourierActivity = {
       ...courierActivity,
       by_morning: remainedEggsData,
-      accepted: distributedEggsData,
-      current: updateCategory(remainedEggsData, distributedEggsData, 'add', false),
+      accepted: [...courierActivity.accepted, newAcceptedEntry],
+      current: updatedCurrent,
       accepted_today: true,
       day_finished: false
     };
@@ -555,7 +548,7 @@ module.exports.courierAccept = async (ctx) => {
     const distributedEggsMessage = formatEggData(distributedEggsData, false);
     const melangeEggsMessage = formatEggData(melangeEggsData, true);
 
-    await ctx.reply(`✅ Tuxumlar xisobingizga muvaffaqiyatli qo’shildi va saqlandi.\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`);
+    await ctx.reply(`✅ Tuxumlar xisobingizga muvaffaqiyatli qo'shildi va saqlandi.\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`);
 
     // Find the group id by courier's phone number
     let groupId = groups;
@@ -567,8 +560,29 @@ module.exports.courierAccept = async (ctx) => {
       finalMessageGroup
     );
   } catch (error) {
-    logger.info(error);
-    await ctx.reply("Tuxumlar xisobingizga qo’shishda xatolik yuz berdi. Qayta urunib ko’ring");
+    logger.error(error);
+    await ctx.reply("Tuxumlar xisobingizga qo'shishda xatolik yuz berdi. Qayta urunib ko'ring");
+  }
+};
+
+// Helper function to update category totals
+const updateCategory = (currentData = {}, newData = {}, operation = 'add', isWarehouse = false) => {
+  try {
+    const result = { ...currentData };
+  
+    for (const [key, value] of Object.entries(newData)) {
+      const actualKey = isWarehouse && key === 'UP' ? 'D1' : key;
+      if (operation === 'add') {
+        result[actualKey] = (result[actualKey] || 0) + value;
+      } else {
+        result[actualKey] = (result[actualKey] || 0) - value;
+      }
+    }
+  
+    return result;
+  } catch (error) {
+    logger.error(error);
+    ctx.reply("Xatolik yuz berdi. Qayta urunib ko'ring.");
   }
 };
 
@@ -624,7 +638,7 @@ module.exports.courierReject = async (ctx) => {
     await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
     await ctx.reply(`❌ Tuxumlar xisobga qo’shilishi rad etildi.\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply("Tuxumlar qo’shishni rad etishda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };

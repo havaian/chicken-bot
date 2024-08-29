@@ -12,7 +12,7 @@ module.exports = (eggs) => {
   
     return nonZeroCategories;
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 }

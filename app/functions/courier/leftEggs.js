@@ -54,7 +54,7 @@ const promptLeft = async (ctx, type) => {
       }
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 }
@@ -80,7 +80,7 @@ exports.sendLeft = async (ctx) => {
 
     promptLeft(ctx, type);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
@@ -115,7 +115,7 @@ const confirmLeftEggs = async (ctx) => {
 
     ctx.session.awaitingLeft = false;
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Qolgan butun tuxum qo'shishda xatolik yuz berdi. Qayta urunib ko'ring"
     );
@@ -171,7 +171,7 @@ exports.addLeft = async (ctx) => {
 
     await sendMelange(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );

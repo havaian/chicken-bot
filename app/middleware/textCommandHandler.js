@@ -44,7 +44,7 @@ const textCommandHandler = async (ctx, next) => {
       await next();
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 };
 

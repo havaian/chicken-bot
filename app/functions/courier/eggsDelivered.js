@@ -107,7 +107,7 @@ module.exports.deliverEggs = async (ctx) => {
       await sendSummaryAndCompleteDelivery(ctx);
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
@@ -159,7 +159,7 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko'ring.");
   }
 };
@@ -171,7 +171,7 @@ module.exports.confirmEggsDelivered = async (ctx) => {
     }
     await paymentReceived(ctx);
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 }

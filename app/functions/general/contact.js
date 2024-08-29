@@ -67,7 +67,7 @@ module.exports = async (ctx) => {
       );
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     await ctx.reply(
       "Sizning telegram nomeringiz tizimda topilmadi. Qayta urunib ko’ring"
     );

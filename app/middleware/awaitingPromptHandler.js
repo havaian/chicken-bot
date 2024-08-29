@@ -175,7 +175,7 @@ const awaitingPromptHandler = async (ctx, next) => {
       await next();
     }
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
