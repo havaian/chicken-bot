@@ -1,6 +1,5 @@
 const { Markup } = require("telegraf");
 const axios = require("../../axios");
-const groups = require("../data/groups");
 
 const { logger, readLog } = require("../../utils/logging");
 
@@ -70,16 +69,8 @@ exports.confirmDayFinished = async (ctx) => {
     await ctx.deleteMessage();
 
     ctx.session.updatedActivity = undefined;
-
-    // Find the group id by courier's phone number
-    let groupId = groups;
-
-    if (!groupId) {
-      logger.info("finishDay. Courier groupId not found:", groupId, !groupId);
-      await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-    }
         
-    await report(updatedCourierActivity, ctx, groupId, phone_num, full_name, "Kun tugatildi", forward = true);
+    await report(updatedCourierActivity, ctx, phone_num, full_name, "📊 Kun tugatildi", forward = true);
 
     cancel(ctx, `Ish kunini yakunladingiz.`);
   } catch (error) {

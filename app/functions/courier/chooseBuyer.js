@@ -40,10 +40,10 @@ const getPrices = () => {
       }
     }
     
-    logger.info('Failed to extract valid prices from file');
+    logger.info('❌ Failed to extract valid prices from file');
     return null;
   } catch (error) {
-    logger.error('Error reading prices file:', error);
+    logger.error('❌ Error reading prices file:', error);
     return null;
   }
 };

@@ -92,7 +92,7 @@ module.exports.promptCourierBroken = async (ctx) => {
 
     ctx.session.currentEggs = warehouse.current;
 
-    if (!ctx.session.selectedCourier || !ctx.session.selectedCourier._id) {
+    if (!ctx.session.selectedCourier || !ctx.session.selectedCourier._id || !ctx.session.telegram_chat_id) {
       const courierId = ctx.match[1];
 
       const courierResponse = await axios.get(`/courier/${courierId}`, {
@@ -102,10 +102,8 @@ module.exports.promptCourierBroken = async (ctx) => {
       });
       const courier = courierResponse.data;
 
-      console.log(courier._id)
-
       ctx.session.selectedCourier = {};
-      ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num };
+      ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num, telegram_chat_id: courier.telegram_chat_id };
     }
 
     // this.promptCourierRemained(ctx);
@@ -114,6 +112,14 @@ module.exports.promptCourierBroken = async (ctx) => {
 
     if (deleteMsg) {
       await ctx.deleteMessage();
+    }
+    
+    const courier = ctx.session.selectedCourier;
+
+    if (!courier.telegram_chat_id || typeof courier.telegram_chat_id === "undefined") {
+      ctx.reply("Bu kuryer uchun telegram id topilmadi! Kuryer birinchi botga kirib /start qilib kontakt yuborishi zarur");
+      ctx.session.selectedCourier = {};
+      return;
     }
 
     const type = ((ctx?.match && ctx?.match[0] === "courier-broken-no") || typeof ctx.session["brokenEggsData"] === "undefined") ? 2 : 1;
@@ -558,7 +564,7 @@ module.exports.courierAccept = async (ctx) => {
     await botInstance.telegram.sendMessage(
       groupId,
       finalMessageGroup
-    );
+    );  
   } catch (error) {
     logger.error(error);
     await ctx.reply("Tuxumlar xisobingizga qo'shishda xatolik yuz berdi. Qayta urunib ko'ring");

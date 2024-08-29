@@ -1,6 +1,5 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
-const groups = require("../data/groups");
 const message = require("../data/message");
 
 const sendSMS = require("../../utils/message/index");
@@ -42,7 +41,7 @@ module.exports.completeTransaction = async (ctx) => {
       `Tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("Ha ✅ ", "confirm-transaction"), 
+          Markup.button.callback("Ha ✅", "confirm-transaction"), 
           Markup.button.callback("Yo’q ❌", "confirm-transaction-no")
         ],
       ])
@@ -68,15 +67,6 @@ module.exports.confirmTransaction = async (ctx) => {
 const handleCircleVideo = async (ctx) => {
   try {
     const phone_num = ctx.session.user.phone_num;
-
-    // Find the group id by courier's phone number
-    let groupId = groups;
-
-    if (!groupId) {
-      logger.info("paymentReceived. Courier groupId not found:", groupId, !groupId);
-      await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-    }
-
     const selectedBuyer = ctx.session.buyer;
 
     console.log(selectedBuyer.debt);
@@ -233,7 +223,7 @@ const handleCircleVideo = async (ctx) => {
     updatedCourierActivity.car_num = courier.car_num;
     
     try {
-      await report(updatedCourierActivity, ctx, groupId, phone_num, full_name, "Tuxum yetkazildi", forward = true);
+      await report(updatedCourierActivity, ctx, phone_num, full_name, "Tuxum yetkazildi", forward = true);
     } catch (reportError) {
       logger.info("Error in report function:", reportError);
       // Optionally, you can send a message to the user or perform any other error handling

@@ -18,7 +18,7 @@ module.exports = async (ctx) => {
     );
     const warehouseActivity = warehouseActivityResponse.data;
     
-    await report(warehouseActivity, ctx, "", "Hisobot", false);
+    await report(warehouseActivity, ctx, "Hisobot", false);
 
     // Show main menu buttons
     await ctx.reply(

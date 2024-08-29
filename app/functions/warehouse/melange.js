@@ -1,6 +1,5 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
-const groups = require("../data/groups");
 
 const cancel = require("../general/cancel");
 
@@ -292,16 +291,7 @@ module.exports.confirmMelange = async (ctx) => {
             headers: { "x-user-telegram-chat-id": ctx.chat.id },
         });
 
-        const warehousePhoneNum = ctx.session.user.phone_num;
-
-        let groupId = groups;
-
-        if (!groupId) {
-            logger.info("melange. Warehouse groupId not found:", groupId, !groupId);
-            await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-        }
-
-        await report(updatedWarehouseActivity, ctx, groupId, "Melanj", true);
+        await report(updatedWarehouseActivity, ctx, "Melanj", true);
 
         ctx.session["dailyBroken"] = undefined;
         ctx.session["dailyIntact"] = undefined;

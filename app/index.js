@@ -25,6 +25,8 @@ const eggIntake = require("./functions/warehouse/eggIntake.js");
 const melange = require("./functions/warehouse/melange.js");
 const remained = require("./functions/warehouse/remained.js");
 
+const autoDayFinishedCron = require("./functions/cron");
+
 const { logger, readLog } = require("./utils/logging/index.js");
 
 const bot = new Telegraf(process.env.TG_TOKEN);
@@ -318,3 +320,4 @@ logger.info("Bot ✅");
 // Pass bot instance to selectCourier and melange
 selectCourier.setBotInstance(bot);
 melange.setBotInstance(bot);
+autoDayFinishedCron.setBotInstance(bot);

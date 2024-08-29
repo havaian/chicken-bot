@@ -6,7 +6,6 @@ const moment = require('moment-timezone');
 const eggs_prices = require("../data/prices");
 
 const { logger, readLog } = require("../../utils/logging");
-const report = require("../courier/report");
 
 const formatNumber = (num) => {
   if (isNaN(num) || !isFinite(num)) {
@@ -23,7 +22,7 @@ const generateCourierHTML = (data, filename) => {
       current = {},
       current_by_courier = {},
       money_by_courier = 0,
-      accepted = {},
+      accepted = [],
       incision = {},
       earnings = 0,
       expenses = 0,
@@ -33,14 +32,10 @@ const generateCourierHTML = (data, filename) => {
       day_finished = false,
       date = ""
     } = data;
-  
+
     let totalDeliveredByCategory = {};
     let totalPayments = 0;
-  
-    // // Limit to 40 entries
-    // const limitedDeliveredTo = delivered_to.slice(0, 40);
-    const limitedDeliveredTo = delivered_to;
-  
+
     // Get today's date at 6 a.m.
     const today6am = new Date();
     const today6amStr = today6am.toLocaleString('uz-UZ', {
@@ -54,23 +49,13 @@ const generateCourierHTML = (data, filename) => {
     });
 
     const reportDate = moment(date).tz('Asia/Karachi').format('DD/MM/YYYY');
-  
+
     // Prepare prices from eggs_prices
     const eggPrices = eggs_prices; // Assuming eggs_prices is an object {category: price}
-  
-    let deliveredToIndex = 0;
-  
-    limitedDeliveredTo.forEach((delivery) => {      
-      totalPayments += parseInt(delivery.payment, 10);
-      delivery.eggs.forEach((egg, index) => {
-        totalDeliveredByCategory[egg.category] = totalDeliveredByCategory[egg.category] || 0;     
-        totalDeliveredByCategory[egg.category] += egg.amount;
-      });
-    });
-    
-    // Prepare the rows in the final HTML with alternating colors
-    const totalAccepted = accepted.reduce((acc, entry) => {
-      Object.entries(entry.eggs).forEach(([category, amount]) => {
+
+    // Calculate total accepted eggs
+    const totalAccepted = accepted.reduce((acc, distribution) => {
+      Object.entries(distribution.eggs).forEach(([category, amount]) => {
         acc[category] = (acc[category] || 0) + amount;
       });
       return acc;
@@ -88,127 +73,205 @@ const generateCourierHTML = (data, filename) => {
       return shortage;
     };
 
-    const rows = [
-      ["1", "Tarqatilgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(totalDeliveredByCategory[category] || 0)), "", "Umumiy yig'ilgan pul:", formatNumber(totalPayments)],
-      ["2", "Qolgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(current_by_courier[category] || 0)), "", "Chiqim:", formatNumber(expenses)],
-      ["3", "Nasechka tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", formatNumber(earnings - expenses)],
-      ["4", "Tuxum kamomad", ...Object.keys(eggPrices).map(category => {
-        const shortage = calculateShortage(category);
-        return formatNumber(shortage);
-      }), "", "Kassa topshirildi:", formatNumber(money_by_courier)],
-      ["5", "Melanj", ...Object.keys(eggPrices).map(category => {
-        const amount = melange_by_courier[category] || 0;
-        return `${formatNumber(amount)} (${formatNumber(amount * 28)})`;
-      }), "", "Kassa kamomad:", formatNumber((earnings - expenses) - money_by_courier)]
-    ];
+    // Function to generate the delivery table HTML
+    const generateDeliveryTableHTML = (deliveries, startIndex) => {
+      let deliveryHtml = "";
+      let deliveredToIndex = startIndex;
 
-    // Prepare the rows in the final HTML with alternating colors
-    const summaryHtml = 
-      `<table style="width:100%">
-        <tr>
-          <td colspan="2">Men yetkazib beruvchi: ${courier_name}</td>
-          <td colspan="3">Avtomobil davlat raqami: ${car_num}</td>
-        </tr>
-        <tr height="30px" style="width:100%">
-          <td>Sana: ${today6amStr}</td>
-          <td>Hisobot sanasi: ${reportDate}</td>
-        </tr>
-        <tr>
-          <td>Olingan tuxum soni:</br>${Object.entries(totalAccepted).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join(",</br>")}</td>
-          <td>Bor edi:</br>${Object.entries(by_morning).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join(",</br>")}</td>
-          <td>Jami:</br>${Object.entries(totalAccepted).map(([category, amount]) => `${category}: <b>${formatNumber((amount ?? 0) + (by_morning[category] ?? 0))}</b>`).join(",</br>")}</td>
-          <td>Sanab oldim_____________</td>
-        </tr>
-      </table>
-      <br>
-      <table border="1" style="width:100%; border-collapse: collapse;">
-        <tr>
-          <th style="width:15px; text-align: center; vertical-align: middle">№</th>
-          <th style="width:125px; text-align: center; vertical-align: middle">Mijoz</th>
-          <th style="width:75px; text-align: center; vertical-align: middle">Tuxum soni</th>
-          <th style="width:75px; text-align: center; vertical-align: middle">Narxi</th>
-          <th style="width:100px; text-align: center; vertical-align: middle">Summa</th>
-          <th style="width:75px; text-align: center; vertical-align: middle">Olingan pul</th>
-          <th style="width:100px; text-align: center; vertical-align: middle">Qolgan pul</th>
-        </tr>
-        ${limitedDeliveredTo
-          .map((delivery, rowIndex) => {
-            let deliveryHtml = "";
-            const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
-            const hasDelivery = deliveredEggs.length > 0;
-            const hasPayment = delivery.payment > 0;
-            
-            if (hasDelivery || hasPayment) {
-              const rowspan = Math.max(deliveredEggs.length, 1);
-              const paymentHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.payment || 0)}</td>`;
-              const debtHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.debt)}</td>`;
-              
-              if (hasDelivery) {
-                deliveredEggs.forEach((egg, index) => {
-                  const deliveryIndex = ++deliveredToIndex;
-                  deliveryHtml += `
-                  <tr>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
-                    <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${formatNumber(egg.amount)}</td>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price)}</td>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price * egg.amount)}</td>
-                    ${index === 0 ? paymentHtml : ''}
-                    ${index === 0 ? debtHtml : ''}
-                  </tr>`;
-                });
-              } else {
-                const deliveryIndex = ++deliveredToIndex;
-                deliveryHtml += `
-                  <tr>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
-                    <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
-                    <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
-                    ${paymentHtml}
-                    ${debtHtml}
-                  </tr>`;
-              }
-            }
-            
-            totalPayments += parseInt(delivery.payment || 0, 10);
-            return deliveryHtml;
-          })
-          .join("")}
-      </table>
-      <br>
-      <table border="1" style="width:100%; border-collapse: collapse;">
-        <tr>
-          <th style="width:15px; text-align: center; vertical-align: middle">№</th>
-          <th style="width:130px; text-align: center; vertical-align: middle">Nomi</th>
-          ${Object.keys(eggPrices).map(category => `<th style="width:35px; text-align: center; vertical-align: middle">${category}</th>`).join("")}
-          <th style="width:25px; text-align: center; vertical-align: middle"></th>
-          <th style="width:95px; text-align: center; vertical-align: middle">Nomi</th>
-          <th style="width:75px; text-align: center; vertical-align: middle">Qiymat</th>
-        </tr>
-        ${rows.map((row, rowIndex) => 
-          `<tr>
-            ${row.map(cell => `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};">${cell}</td>`).join("")}
-          </tr>`
-        ).join("")}
-      </table>
-      <br>
-      <p>______________________________________________________________________________________________</p>
-      <p>______________________________________________________________________________________________</p>
-      <table style="width:100%">
-        <tr>
-          <td>Yetkazib beruvchi: ${courier_name}</td>
-          <td>Tasdiqlayman_____________</td>
-        </tr>
-      </table>`;
-  
-    const directory = path.dirname(filename);
-    if (!fs.existsSync(directory)) {
-      fs.mkdirSync(directory, { recursive: true });
+      deliveries.forEach((delivery, rowIndex) => {
+        const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
+        const hasDelivery = deliveredEggs.length > 0;
+        const hasPayment = delivery.payment > 0;
+        
+        if (hasDelivery || hasPayment) {
+          const rowspan = Math.max(deliveredEggs.length, 1);
+          const paymentHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.payment || 0)}</td>`;
+          const debtHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.debt)}</td>`;
+          
+          if (hasDelivery) {
+            deliveredEggs.forEach((egg, index) => {
+              const deliveryIndex = ++deliveredToIndex;
+              deliveryHtml += `
+              <tr>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${formatNumber(egg.amount)}</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price)}</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price * egg.amount)}</td>
+                ${index === 0 ? paymentHtml : ''}
+                ${index === 0 ? debtHtml : ''}
+              </tr>`;
+
+              totalDeliveredByCategory[egg.category] = (totalDeliveredByCategory[egg.category] || 0) + egg.amount;
+            });
+          } else {
+            const deliveryIndex = ++deliveredToIndex;
+            deliveryHtml += `
+              <tr>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
+                ${paymentHtml}
+                ${debtHtml}
+              </tr>`;
+          }
+        }
+        
+        totalPayments += parseInt(delivery.payment || 0, 10);
+      });
+      
+      return deliveryHtml;
+    };
+
+    // Function to generate the full HTML report
+    const generateFullHTML = (deliveryTableHTML, partNumber, totalParts) => {
+      const rows = [
+        ["1", "Tarqatilgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(totalDeliveredByCategory[category] || 0)), "", "Umumiy yig'ilgan pul:", formatNumber(totalPayments)],
+        ["2", "Qolgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(current_by_courier[category] || 0)), "", "Chiqim:", formatNumber(expenses)],
+        ["3", "Nasechka tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", formatNumber(totalPayments - expenses)],
+        ["4", "Tuxum kamomad", ...Object.keys(eggPrices).map(category => {
+          const shortage = calculateShortage(category);
+          return formatNumber(shortage);
+        }), "", "Kassa topshirildi:", formatNumber(money_by_courier)],
+        ["5", "Melanj", ...Object.keys(eggPrices).map(category => {
+          const amount = melange_by_courier[category] || 0;
+          return `${formatNumber(amount)} (${formatNumber(amount * 28)})`;
+        }), "", "Kassa kamomad:", formatNumber((totalPayments - expenses) - money_by_courier)]
+      ];
+
+      return `
+        <html>
+        <head>
+          <style>
+            table { border-collapse: collapse; width: 100%; }
+          </style>
+        </head>
+        <body>
+          <h3 style="text-align: center; vertical-align: middle; background-color: '#f6f6f6'">Qism ${partNumber} / ${totalParts}</h3>
+          <table style="width:100%">
+            <tr>
+              <td colspan="2">Men yetkazib beruvchi: ${courier_name}</td>
+              <td colspan="3">Avtomobil davlat raqami: ${car_num}</td>
+            </tr>
+            <tr height="30px" style="width:100%">
+              <td>Sana: ${today6amStr}</td>
+              <td>Hisobot sanasi: ${reportDate}</td>
+            </tr>
+            <tr>
+              <td>Olingan tuxum soni:</br>${Object.entries(totalAccepted).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("</br>")}</td>
+              <td>Bor edi:</br>${Object.entries(by_morning).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("</br>")}</td>
+              <td>Jami:</br>${Object.entries(totalAccepted).map(([category, amount]) => `${category}: <b>${formatNumber((amount ?? 0) + (by_morning[category] ?? 0))}</b>`).join("</br>")}</td>
+              <td>Sanab oldim_____________</td>
+            </tr>
+          </table>
+          <br>
+          <table border="1" style="width:100%; border-collapse: collapse;">
+            <tr>
+              <th style="width:15px; text-align: center; vertical-align: middle">№</th>
+              <th style="width:125px; text-align: center; vertical-align: middle">Mijoz</th>
+              <th style="width:75px; text-align: center; vertical-align: middle">Tuxum soni</th>
+              <th style="width:75px; text-align: center; vertical-align: middle">Narxi</th>
+              <th style="width:100px; text-align: center; vertical-align: middle">Summa</th>
+              <th style="width:75px; text-align: center; vertical-align: middle">Olingan pul</th>
+              <th style="width:100px; text-align: center; vertical-align: middle">Qolgan pul</th>
+            </tr>
+            ${deliveryTableHTML}
+          </table>
+          <br>
+          <table border="1" style="width:100%; border-collapse: collapse;">
+            <tr>
+              <th style="width:15px; text-align: center; vertical-align: middle">№</th>
+              <th style="width:130px; text-align: center; vertical-align: middle">Nomi</th>
+              ${Object.keys(eggPrices).map(category => `<th style="width:35px; text-align: center; vertical-align: middle">${category}</th>`).join("")}
+              <th style="width:25px; text-align: center; vertical-align: middle"></th>
+              <th style="width:95px; text-align: center; vertical-align: middle">Nomi</th>
+              <th style="width:75px; text-align: center; vertical-align: middle">Qiymat</th>
+            </tr>
+            ${rows.map((row, rowIndex) => 
+              `<tr>
+                ${row.map(cell => `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};">${cell}</td>`).join("")}
+              </tr>`
+            ).join("")}
+          </table>
+          <p>______________________________________________________________________________________________</p>
+          <p>______________________________________________________________________________________________</p>
+          <table style="width:100%">
+            <tr>
+              <td>Yetkazib beruvchi: ${courier_name}</td>
+              <td>Tasdiqlayman_____________</td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+    };
+
+    let lastIndexes = [];
+
+    const splitDeliveries = (delivered_to = [], maxPerPart = 40) => {
+      const parts = [];
+      let y = 0;
+      let page = 0;
+
+      lastIndexes[page] = 0;
+
+      for (let i = 0; i < delivered_to.length; i++) {
+        if (!parts[page] || typeof parts[page] === "undefined") {
+          parts[page] = [];
+        }
+        parts[page].push(delivered_to[i]);
+
+        y += delivered_to[i].eggs.length;
+
+        lastIndexes[page] = y > lastIndexes[page] ? y : lastIndexes[page];
+
+        if (y > maxPerPart) {
+          y = 0;
+          page++;
+        }
+      }
+
+      return parts;
+    };
+
+    // Split deliveries into parts
+    const deliveryParts = splitDeliveries(delivered_to);
+
+    const totalParts = deliveryParts.length;
+
+    if (deliveryParts.length > 0) {
+      // Generate and save HTML files for each part
+      deliveryParts.forEach((part, index) => {
+        const partNumber = index + 1;
+        const partFilename = totalParts > 1 
+          ? filename.replace('.html', `${partNumber === deliveryParts.length ? "" : "_" + partNumber}.html`)
+          : filename;
+    
+        const deliveryTableHTML = generateDeliveryTableHTML(part, (partNumber - 2) < 0 ? 0 : lastIndexes[partNumber - 2]);
+        const fullHTML = generateFullHTML(deliveryTableHTML, partNumber, totalParts);
+    
+        const directory = path.dirname(partFilename);
+        if (!fs.existsSync(directory)) {
+          fs.mkdirSync(directory, { recursive: true });
+        }
+    
+        fs.writeFileSync(partFilename, fullHTML);
+      });
+    } else {
+      // Handle case where there are no delivery parts
+      const emptyDeliveryTableHTML = generateDeliveryTableHTML([], 0);
+      const fullHTML = generateFullHTML(emptyDeliveryTableHTML, 1, 1);
+    
+      const directory = path.dirname(filename);
+      if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true });
+      }
+    
+      fs.writeFileSync(filename, fullHTML);
     }
-  
-    fs.writeFileSync(filename, summaryHtml);
+
   } catch (error) {
     logger.error(error);
   }
@@ -221,7 +284,7 @@ const generateCourierExcel = async (data, filename) => {
       by_morning = {},
       current = {},
       current_by_courier = {},
-      accepted = {},
+      accepted = [],
       broken = {},
       expenses = 0,
       earnings = 0,
@@ -232,15 +295,12 @@ const generateCourierExcel = async (data, filename) => {
     let totalDelivered = 0;
     let totalPayments = 0;
   
-    // Limit to 40 entries
-    const limitedDeliveredTo = delivered_to.slice(0, 40);
-  
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Courier Report");
   
     // Calculate total accepted eggs
-    const totalAccepted = accepted.reduce((acc, entry) => {
-      Object.entries(entry.eggs).forEach(([category, amount]) => {
+    const totalAccepted = accepted.reduce((acc, distribution) => {
+      Object.entries(distribution).forEach(([category, amount]) => {
         acc[category] = (acc[category] || 0) + amount;
       });
       return acc;
@@ -259,7 +319,7 @@ const generateCourierExcel = async (data, filename) => {
   
     let deliveredToIndex = 0;
   
-    limitedDeliveredTo.forEach((delivery) => {
+    delivered_to.forEach((delivery) => {
       delivery.eggs.forEach(egg => {
         sheet.addRow([
           `${++deliveredToIndex}. ${delivery.name}`,
@@ -275,7 +335,7 @@ const generateCourierExcel = async (data, filename) => {
   
     sheet.addRow([]);
     sheet.addRow(["Tarqatilgan tuxum soni:", totalDelivered]);
-    sheet.addRow(["Umumiy yig‘ilgan pul:", totalPayments]);
+    sheet.addRow(["Umumiy yig'ilgan pul:", totalPayments]);
     sheet.addRow(["Qolgan tuxum soni", Object.entries(current_by_courier).map(([category, amount]) => `${category}: ${amount}`).join(", ")]);
     sheet.addRow(["Nasechka tuxum soni", Object.entries(broken).map(([category, amount]) => `${category}: ${amount}`).join(", ")]);
     sheet.addRow(["Topshiriladigan pul", earnings - expenses]);

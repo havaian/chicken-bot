@@ -1,6 +1,5 @@
 const axios = require("../../axios");
 const { Markup } = require("telegraf");
-const groups = require("../data/groups");
 
 const cancel = require("../general/cancel");
 
@@ -25,14 +24,6 @@ const setBotInstance = (bot) => {
 
 const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
     try {
-        // Find the group id by courier"s phone number
-        let groupId = groups;
-
-        if (!groupId) {
-            logger.info("remained. Warehouse groupId not found:", groupId, !groupId);
-            await ctx.reply("Guruh topilmadi. Qayta urunib ko‘ring.");
-        }
-
         if (forward) {
             if (!ctx.message.video_note || ctx.message.forward_from) {
                 await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
@@ -54,7 +45,7 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
             await ctx.telegram.forwardMessage(groupId, ctx.chat.id, messageId);
         }
         
-        await report(data, ctx, groupId, "Ombor astatka", true);
+        await report(data, ctx, "Ombor astatka", true);
 
         cancel(ctx, "Tanlang:");
     } catch (error) {
@@ -109,10 +100,8 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
                 "x-user-telegram-chat-id": ctx.chat.id,
             },
         });
-
-        let groupId = groups;
         
-        await report(updatedWarehouseActivity, ctx, groupId, "Ombor astatka", true);
+        await report(updatedWarehouseActivity, ctx, "Ombor astatka", true);
 
         cancel(ctx, "Tanlang:");
         
@@ -233,10 +222,8 @@ const handleCircleVideo = async (ctx) => {
         });
 
         // const messageId = ctx.message.message_id;
-
-        let groupId = groups;
         
-        await report(updatedWarehouseActivity, ctx, groupId, "Ombor astatka", true);
+        await report(updatedWarehouseActivity, ctx, "Ombor astatka", true);
 
         ctx.session["warehouseRemained"] = {};
         ctx.session["deficit"] = 0;

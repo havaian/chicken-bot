@@ -3,8 +3,6 @@ const { Markup } = require("telegraf");
 
 const cancel = require("../general/cancel");
 
-const groups = require("../data/groups");
-
 const { logger, readLog } = require("../../utils/logging");
 const eggs = { 
   "D1": 960,
@@ -234,9 +232,7 @@ exports.addIntakeEggs = async (ctx) => {
     // Delete the previous message
     await ctx.deleteMessage();
     
-    let groupId = groups;
-    
-    await report(updatedWarehouseActivity, ctx, groupId, "Tuxum kirimi", true);
+    await report(updatedWarehouseActivity, ctx, "Tuxum kirimi", true);
 
     await cancel(ctx, "Tuxum kirimi qabul qilindi");
 

@@ -31,7 +31,7 @@ module.exports = async (ctx) => {
     courierActivity.courier_name = courier.full_name;
     courierActivity.car_num = courier.car_num;
         
-    await report(courierActivity, ctx, groupId = "", phone_num, full_name, "Hisobot", forward = false);
+    await report(courierActivity, ctx, phone_num, full_name, "Hisobot", forward = false);
 
     // Show main menu buttons
     await ctx.reply(

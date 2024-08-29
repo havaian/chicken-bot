@@ -9,7 +9,9 @@ const path = require("path");
 const fs = require("fs");
 const { logger } = require("../../utils/logging");
 
-module.exports = async(data, ctx, groupId, phone_num, full_name, message, forward = true) => {
+const groupId = require("../data/groups");
+
+module.exports = async(data, ctx, phone_num, full_name, message, forward = true) => {
   try {
       // File paths
       const reportDate = new Date().toISOString().split("T")[0];
