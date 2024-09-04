@@ -40,24 +40,24 @@ module.exports.promptCourier = async (ctx) => {
   try {
     ctx.session.selectedCourier = {};
 
-    const response = await axios.get("/courier/activity/today/unaccepted", {
+    const response = await axios.get("/courier/activity/today/accepted-unfinished", {
       headers: {
         "x-user-telegram-chat-id": ctx.chat.id,
       },
     });
-    const couriers = response.data;
+    const courierActivities = response.data;
 
-    if (couriers.length === 0) {
+    if (courierActivities.length === 0) {
       await ctx.reply("Kuryerlar topilmadi.");
       return;
     }
 
     let message = "Kuryerni tanlang:\n";
-    const buttons = couriers.map((courier, index) => {
-      message += `${index + 1}. ${courier.car_num ? courier.car_num + ", " : ""} ${courier.full_name ? courier.full_name : ""}\n`;
+    const buttons = courierActivities.map((activity, index) => {
+      message += `${index + 1}. ${activity.courier.car_num ? activity.courier.car_num + ", " : ""} ${activity.courier.full_name ? activity.courier.full_name : ""}\n`;
       return Markup.button.callback(
         `${index + 1}`,
-        `select-courier:${courier._id}`
+        `select-courier-accepted:${activity.courier._id}`
       );
     });
 
@@ -77,21 +77,12 @@ module.exports.promptCourier = async (ctx) => {
     await ctx.deleteMessage();
   } catch (error) {
     logger.error(error);
-    await ctx.reply("Mashinalar topilmadi. Qayta urunib ko’ring");
+    await ctx.reply("Qayta yuklash uchun mashinalar topilmadi.");
   }
 };
 
-module.exports.promptCourierBroken = async (ctx) => {
+module.exports.promptDistribution = async (ctx) => {
   try {
-    const warehouseResponse = await axios.get(`/warehouse/activity/today`, {
-      headers: {
-        "x-user-telegram-chat-id": ctx.chat.id,
-      },
-    });
-    const warehouse = warehouseResponse.data;
-
-    ctx.session.currentEggs = warehouse.current;
-
     if (!ctx.session.selectedCourier || !ctx.session.selectedCourier._id) {
       const courierId = ctx.match[1];
 
@@ -102,71 +93,13 @@ module.exports.promptCourierBroken = async (ctx) => {
       });
       const courier = courierResponse.data;
 
-      console.log(courier._id)
-
       ctx.session.selectedCourier = {};
       ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num };
     }
 
-    // this.promptCourierRemained(ctx);
+    const type = ((ctx?.match && ctx?.match[0] === "accept-distribution-accepted-no") || typeof ctx.session["distributedEggsData"] === "undefined") ? 2 : 1;
 
-    const deleteMsg = ctx?.match && (ctx?.match[0] === "courier-broken-no" || ctx?.match[0].split(":")[0] === "select-courier");
-
-    if (deleteMsg) {
-      await ctx.deleteMessage();
-    }
-    
-    const courierResponse = await axios.get(`/courier/${ctx.session.selectedCourier._id}`, {
-      headers: {
-        "x-user-telegram-chat-id": ctx.chat.id,
-      },
-    });
-    const courier = courierResponse.data;
-
-    if (!courier.telegram_chat_id || typeof courier.telegram_chat_id === "undefined") {
-      ctx.reply("Bu kuryer uchun telegram id topilmadi! Kuryer birinchi botga kirib /start qilib kontakt yuborishi zarur");
-      ctx.session.selectedCourier = {};
-      return;
-    }
-
-    const type = ((ctx?.match && ctx?.match[0] === "courier-broken-no") || typeof ctx.session["brokenEggsData"] === "undefined") ? 2 : 1;
-
-    const keyboard = Markup.inlineKeyboard([
-      [
-        Markup.button.callback("Ha ✅", "courier-broken-yes"),
-        Markup.button.callback("Yo’q ❌", "courier-broken-no"),
-      ]
-    ]);
-
-    if (type === 2) {
-      await ctx.reply(`${ctx.session.selectedCourier.full_name} ${ctx.session.selectedCourier.car_num ? "(" + ctx.session.selectedCourier.car_num + ")" : ""} mashinadagi nasechka tuxumlarni kiriting`,
-        Markup.keyboard([
-          ["Bekor qilish ❌"]
-        ]));
-    }
-
-    categoriesByTextObject(ctx, "awaitingCourierBrokenEggs", "nasechka", keyboard, type, "brokenEggsData");
-  } catch (error) {
-    logger.error(error);
-    await ctx.reply("Nasechka tuxumlarni kiritishda xatolik yuz berdi. Qayta urunib ko’ring");
-  }
-};
-
-module.exports.confirmCourierBroken = async (ctx) => {
-  try {
-    await ctx.deleteMessage();
-    this.promptCourierRemained(ctx);
-  } catch (error) {
-    logger.error(error);
-    await ctx.reply("Singan tuxumlarni saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
-  }
-};
-
-module.exports.promptCourierRemained = async (ctx) => {
-  try {
-    const type = ((ctx?.match && ctx?.match[0] === "courier-remained-no") || typeof ctx.session["remainedEggsData"] === "undefined") ? 2 : 1;
-
-    const deleteMsg = ctx?.match && ctx?.match[0] === "courier-remained-no";
+    const deleteMsg = ctx?.match && ctx?.match[0] === "accept-distribution-accepted-no";
 
     if (deleteMsg) {
       await ctx.deleteMessage();
@@ -174,108 +107,22 @@ module.exports.promptCourierRemained = async (ctx) => {
 
     const keyboard = Markup.inlineKeyboard([
       [
-        Markup.button.callback("Ha ✅", "courier-remained-yes"),
-        Markup.button.callback("Yo’q ❌", "courier-remained-no"),
+        Markup.button.callback("Ha ✅", "accept-distribution-accepted-yes"),
+        Markup.button.callback("Yo’q ❌", "accept-distribution-accepted-no")
       ]
     ]);
 
     const { full_name, car_num } = ctx.session.selectedCourier;
 
     if (type === 2) {
-      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinadagi ostatkani kiriting`,
+      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinaga qayta yuklangan tuxumlar sonini kiriting`,
         Markup.keyboard([
           ["Bekor qilish ❌"]
         ]));
     }
 
-    categoriesByTextObject(ctx, "awaitingCourierRemainedEggs", "ostatka", keyboard, type, "remainedEggsData");
-  } catch (error) {
-    logger.error(error);
-    await ctx.reply("Mashinada qolgan tuxumda xatolik yuz berdi. Qayta urunib ko’ring");
-  }
-};
-
-module.exports.confirmCourierRemained = async (ctx) => {
-  try {
-    await ctx.deleteMessage();
-    this.promptCourierMelange(ctx);
-  } catch (error) {
-    logger.error(error);
-    await ctx.reply("Mashinada ostatka tuxumni saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
-  }
-};
-
-module.exports.promptCourierMelange = async (ctx) => {
-  try {
-    const type = ((ctx?.match && ctx?.match[0] === "courier-melange-no") || typeof ctx.session["melangeEggsData"] === "undefined") ? 2 : 1;
-
-    const deleteMsg = ctx?.match && ctx?.match[0] === "courier-melange-no";
-
-    if (deleteMsg) {
-      await ctx.deleteMessage();
-    }
-
-    const keyboard = Markup.inlineKeyboard([
-      [
-        Markup.button.callback("Ha ✅", "courier-melange-yes"),
-        Markup.button.callback("Yo’q ❌", "courier-melange-no"),
-      ]
-    ]);
-
-    const { full_name, car_num } = ctx.session.selectedCourier;
-
-    if (type === 2) {
-      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinadagi melanjni kiriting`,
-        Markup.keyboard([
-          ["Bekor qilish ❌"]
-        ]));
-    }
-
-    categoriesByTextObject(ctx, "awaitingCourierMelangeEggs", "melanj", keyboard, type, "melangeEggsData", egg_prices, true);
-  } catch (error) {
-    logger.error(error);
-    await ctx.reply("Kuryer melanj kiritishda xatolik yuz berdi. Qayta urunib ko’ring");
-  }
-};
-
-module.exports.confirmCourierMelange = async (ctx) => {
-  try {
-    await ctx.deleteMessage();
-    this.promptDistribution(ctx);
-  } catch (error) {
-    logger.error(error);
-    await ctx.reply("Kuryer melanj saqlashda xatolik yuz berdi. Qayta urunib ko’ring");
-  }
-};
-
-module.exports.promptDistribution = async (ctx) => {
-  try {
-    const type = ((ctx?.match && ctx?.match[0] === "accept-distribution-no") || typeof ctx.session["distributedEggsData"] === "undefined") ? 2 : 1;
-
-    const deleteMsg = ctx?.match && ctx?.match[0] === "accept-distribution-no";
-
-    if (deleteMsg) {
-      await ctx.deleteMessage();
-    }
-
-    const keyboard = Markup.inlineKeyboard([
-      [
-        Markup.button.callback("Ha ✅", "accept-distribution-yes"),
-        Markup.button.callback("Yo’q ❌", "accept-distribution-no")
-      ]
-    ]);
-
-    const { full_name, car_num } = ctx.session.selectedCourier;
-
-    if (type === 2) {
-      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinaga yuklangan tuxumlar sonini kiriting`,
-        Markup.keyboard([
-          ["Bekor qilish ❌"]
-        ]));
-    }
-
-    // categoriesByButtonsObject(ctx, "awaitingEggsDistributedEggs", actionKey1, actionKey2, "yuklangan", "yuklanganini", keyboard, type, "distributedEggsData")
-    categoriesByTextObject(ctx, "awaitingEggsDistributedEggs", "yuklangan", keyboard, type, "distributedEggsData", egg_prices, false, true);
+    // categoriesByButtonsObject(ctx, "awaitingEggsDistributedAcceptedEggs", actionKey1, actionKey2, "yuklangan", "yuklanganini", keyboard, type, "distributedEggsData")
+    categoriesByTextObject(ctx, "awaitingEggsDistributedAcceptedEggs", "yuklangan", keyboard, type, "distributedEggsData", egg_prices, false, true);
   } catch (error) {
     logger.error(error);
   }
@@ -361,44 +208,26 @@ const handleCircleVideo = async (ctx) => {
     // Retrieve selected courier information from session
     const { _id, full_name, car_num } = ctx.session.selectedCourier;
 
-    const brokenEggsData = ctx.session.brokenEggsData;
-    const remainedEggsData = ctx.session.remainedEggsData;
     const distributedEggsData = ctx.session.distributedEggsData;
-    const melangeEggsData = ctx.session.melangeEggsData;
 
     // Save the data to Redis as one object
     const eggsData = {
-      brokenEggsData,
-      melangeEggsData,
-      remainedEggsData,
       distributedEggsData,
       loadingTime: new Date().toISOString()
     };
     await redis.set(`eggsData:${_id}`, JSON.stringify(eggsData));
 
-    ctx.session.brokenEggsData = undefined;
-    ctx.session.remainedEggsData = undefined;
     ctx.session.distributedEggsData = undefined;
-    ctx.session.melangeEggsData = undefined;
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
 
-    const formatEggData = (data, melange) => {
-      if (melange) {
+    const formatEggData = (data) => {
         return Object.entries(data)
-          .map(([category, amount]) => `${letters[category]}: ${amount} litr`) 
-          .join(',\n');
-      } else {
-        return Object.entries(data)
-          .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
-          .join(',\n');
-      }
+            .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
+            .join(',\n');
     };
 
-    const brokenEggsMessage = formatEggData(brokenEggsData, false);
-    const remainedEggsMessage = formatEggData(remainedEggsData, false);
-    const distributedEggsMessage = formatEggData(distributedEggsData, false);
-    const melangeEggsMessage = formatEggData(melangeEggsData, true);
+    const distributedEggsMessage = formatEggData(distributedEggsData);
 
     // Update warehouse activity and send confirmation message
     const courierResponse = await axios.get(`/courier/${_id}`, {
@@ -408,8 +237,8 @@ const handleCircleVideo = async (ctx) => {
     });
     const courier = courierResponse.data;
     
-    const finalMessageGroup = `⚠️ Tasdiqlashni kutilmoqda\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
-    const finalMessageCourier = `⚠️ Sizning xisobingizga tuxum qo’shildi.\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `⚠️ Tasdiqlashni kutilmoqda\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
+    const finalMessageCourier = `⚠️ Sizning xisobingizga tuxum qo’shildi.\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
 
     // Send message to courier
     const messageToCourier = await botInstance.telegram.sendMessage(
@@ -421,8 +250,8 @@ const handleCircleVideo = async (ctx) => {
       courier.telegram_chat_id,
       `Tasdiqlang.`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Tasdiqlash ✅ ", `courier-accept:${_id}`)],
-        [Markup.button.callback("Rad etish", `courier-reject:${_id}`)],
+        [Markup.button.callback("Tasdiqlash ✅", `courier-accepted-accept:${_id}`)],
+        [Markup.button.callback("Rad etish ❌", `courier-accepted-reject:${_id}`)],
       ])
     );
 
@@ -466,12 +295,11 @@ module.exports.courierAccept = async (ctx) => {
 
     // Retrieve egg data from Redis
     const eggsData = JSON.parse(await redis.get(`eggsData:${courierId}`));
-    const { distributedEggsData = {}, brokenEggsData = {}, remainedEggsData = {}, melangeEggsData = {}, loadingTime = "" } = eggsData;
+    const { distributedEggsData = {}, loadingTime = "" } = eggsData;
 
     // Create new accepted entry
     const newAcceptedEntry = {
       eggs: distributedEggsData,
-      remained: remainedEggsData,
       loadingTime: loadingTime, // Time when eggs were loaded
       acceptTime: new Date().toISOString()   // Time when courier accepted
     };
@@ -513,9 +341,6 @@ module.exports.courierAccept = async (ctx) => {
       _id: courierId,
       courier_name: full_name,
       eggs: distributedEggsData,
-      incision: brokenEggsData,
-      remained: remainedEggsData,
-      melange: melangeEggsData,
       time: new Date().toLocaleString(),
     });
 
@@ -544,29 +369,20 @@ module.exports.courierAccept = async (ctx) => {
     }
     await redis.del(messageIdsKey);
 
-    const formatEggData = (data, melange) => {
-      if (melange) {
-        return Object.entries(data)
-          .map(([category, amount]) => `${letters[category]}: ${amount} litr`) 
-          .join(',\n');
-      } else {
-        return Object.entries(data)
-          .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
-          .join(',\n');
-      }
+    const formatEggData = (data) => {
+    return Object.entries(data)
+        .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
+        .join(',\n');
     };
 
-    const brokenEggsMessage = formatEggData(brokenEggsData, false);
-    const remainedEggsMessage = formatEggData(remainedEggsData, false);
-    const distributedEggsMessage = formatEggData(distributedEggsData, false);
-    const melangeEggsMessage = formatEggData(melangeEggsData, true);
+    const distributedEggsMessage = formatEggData(distributedEggsData);
 
-    await ctx.reply(`✅ Tuxumlar xisobingizga muvaffaqiyatli qo'shildi va saqlandi.\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`);
+    await ctx.reply(`✅ Tuxumlar xisobingizga muvaffaqiyatli qo'shildi va saqlandi.\n\nQayta yuklangan:\n${distributedEggsMessage}`);
 
     // Find the group id by courier's phone number
     let groupId = groups;
 
-    const finalMessageGroup = `✅ Tasdiqlandi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `✅ Tasdiqlandi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
 
     await botInstance.telegram.sendMessage(
       groupId,
@@ -617,26 +433,17 @@ module.exports.courierReject = async (ctx) => {
 
     // Retrieve egg data from Redis
     const eggsData = JSON.parse(await redis.get(`eggsData:${courierId}`));
-    const { distributedEggsData = {}, brokenEggsData = {}, remainedEggsData = {}, melangeEggsData = {} } = eggsData;
+    const { distributedEggsData = {} } = eggsData;
 
-    const formatEggData = (data, melange) => {
-      if (melange) {
-        return Object.entries(data)
-          .map(([category, amount]) => `${letters[category]}: ${amount} litr`) 
-          .join(',\n');
-      } else {
-        return Object.entries(data)
-          .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
-          .join(',\n');
-      }
+    const formatEggData = (data) => {
+    return Object.entries(data)
+        .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
+        .join(',\n');
     };
 
-    const brokenEggsMessage = formatEggData(brokenEggsData, false);
-    const remainedEggsMessage = formatEggData(remainedEggsData, false);
-    const distributedEggsMessage = formatEggData(distributedEggsData, false);
-    const melangeEggsMessage = formatEggData(melangeEggsData, true);
+    const distributedEggsMessage = formatEggData(distributedEggsData);
 
-    const finalMessageGroup = `❌ Rad etildi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `❌ Rad etildi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
 
     // Find the group id by courier's phone number
     let groupId = groups;
@@ -649,7 +456,7 @@ module.exports.courierReject = async (ctx) => {
       finalMessageGroup
     );
     await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
-    await ctx.reply(`❌ Tuxumlar xisobga qo’shilishi rad etildi.\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`);
+    await ctx.reply(`❌ Tuxumlar xisobga qo’shilishi rad etildi.\n\nQayta yuklangan:\n${distributedEggsMessage}`);
   } catch (error) {
     logger.error(error);
     await ctx.reply("Tuxumlar qo’shishni rad etishda xatolik yuz berdi. Qayta urunib ko’ring");

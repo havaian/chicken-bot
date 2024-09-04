@@ -86,16 +86,12 @@ module.exports = async (ctx) => {
       cancel(ctx, "Qarzdorlik chegarasini o'qishda xatolik yuz berdi", true);
       return;
     }
-    
-    if (buyerDebt > (buyer.debt_limit || debtLimit)) {
-      cancel(ctx, "Ushbu mijozning qarzi ruxsat berilgan chegaradan oshgan", true);
-      return;
-    }
 
     ctx.reply("Yetkazilgan tuxumlar sonini kiriting:",
       Markup.keyboard([
         ["Bekor qilish ❌"]
     ]));
+    
     eggsDelivered.deliverEggs(ctx);
 
   } catch (error) {

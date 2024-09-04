@@ -21,11 +21,10 @@ const leftEggs = require("./functions/courier/leftEggs.js");
 const leftMoney = require("./functions/courier/leftMoney.js");
 const finishDay = require("./functions/courier/finishDay.js");
 const selectCourier = require("./functions/warehouse/selectCourier.js");
+const selectCourierAccepted = require("./functions/warehouse/selectCourierAccepted.js");
 const eggIntake = require("./functions/warehouse/eggIntake.js");
 const melange = require("./functions/warehouse/melange.js");
 const remained = require("./functions/warehouse/remained.js");
-
-const autoDayFinishedCron = require("./functions/cron");
 
 const { logger, readLog } = require("./utils/logging/index.js");
 
@@ -115,6 +114,9 @@ bot.action("add-more", async (ctx) => {
 bot.action(/select-courier:(.+)/, async (ctx) => {
   await selectCourier.promptCourierBroken(ctx);
 });
+bot.action(/select-courier-accepted:(.+)/, async (ctx) => {
+  await selectCourierAccepted.promptDistribution(ctx);
+});
 bot.action(/courier-broken-yes/, async (ctx) => {
   await selectCourier.confirmCourierBroken(ctx);
 });
@@ -139,11 +141,23 @@ bot.action(/accept-distribution-yes/, async (ctx) => {
 bot.action(/accept-distribution-no/, async (ctx) => {
   await selectCourier.promptDistribution(ctx);
 });
+bot.action(/accept-distribution-accepted-yes/, async (ctx) => {
+  await selectCourierAccepted.confirmDistribution(ctx);
+});
+bot.action(/accept-distribution-accepted-no/, async (ctx) => {
+  await selectCourierAccepted.promptDistribution(ctx);
+});
 bot.action(/courier-accept:(.+)/, async (ctx) => {
   await selectCourier.courierAccept(ctx);
 });
 bot.action(/courier-reject:(.+)/, async (ctx) => {
   await selectCourier.courierReject(ctx);
+});
+bot.action(/courier-accepted-accept:(.+)/, async (ctx) => {
+  await selectCourierAccepted.courierAccept(ctx);
+});
+bot.action(/courier-accepted-reject:(.+)/, async (ctx) => {
+  await selectCourierAccepted.courierReject(ctx);
 });
 
 bot.action(/choose-importer:(.+):(.+)/, async (ctx) => {
@@ -319,5 +333,8 @@ logger.info("Bot ✅");
 
 // Pass bot instance to selectCourier and melange
 selectCourier.setBotInstance(bot);
+selectCourierAccepted.setBotInstance(bot);
 melange.setBotInstance(bot);
+
+const autoDayFinishedCron = require("./functions/cron");
 autoDayFinishedCron.setBotInstance(bot);

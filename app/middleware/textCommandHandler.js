@@ -1,5 +1,6 @@
 const addMore = require("../functions/courier/addMore");
 const selectCourier = require("../functions/warehouse/selectCourier");
+const selectCourierAccepted = require("../functions/warehouse/selectCourierAccepted");
 const todayDeliveries = require("../functions/courier/todayDeliveries");
 const cancel = require("../functions/general/cancel");
 const warehouseStatus = require("../functions/warehouse/warehouseStatus");
@@ -15,6 +16,7 @@ const { logger, readLog } = require("../utils/logging");
 const commands = {
   "Tuxum yetkazildi": [addMore, "courier"],
   "Tuxum chiqimi": [selectCourier.promptCourier, "warehouse"],
+  "Qayta yuklash": [selectCourierAccepted.promptCourier, "warehouse"],
   "Hisobot": [todayDeliveries, "courier"],
   "Bekor qilish ❌": [cancel, "all"],
   "Ombor holati": [warehouseStatus, "warehouse"],

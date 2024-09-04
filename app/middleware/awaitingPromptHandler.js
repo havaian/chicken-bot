@@ -11,6 +11,7 @@ const eggsDelivered = require("../functions/courier/eggsDelivered");
 const paymentReceived = require("../functions/courier/paymentReceived");
 const eggIntake = require("../functions/warehouse/eggIntake");
 const selectCourier = require("../functions/warehouse/selectCourier");
+const selectCourierAccepted = require("../functions/warehouse/selectCourierAccepted");
 const melange = require("../functions/warehouse/melange");
 const remained = require("../functions/warehouse/remained");
 
@@ -30,6 +31,7 @@ const awaitingPromptHandler = async (ctx, next) => {
       const falseUnhandleList = [
         "awaitingCourierBrokenEggs",
         "awaitingEggsDistributedEggs",
+        "awaitingEggsDistributedAcceptedEggs",
         "awaitingCourierRemainedEggs",
         "awaitingCourierMelangeEggs",
         "awaitingBrokenEggs",
@@ -42,7 +44,8 @@ const awaitingPromptHandler = async (ctx, next) => {
         "awaitingWarehouseDailyIntact",
         "awaitingWarehouseRemained",
         "awaitingWarehouseDailyMelange",
-        "awaitingEggsDelivered"
+        "awaitingEggsDelivered",
+        "awaitingPaymentAmount"
       ]
   
       const handleNumericInput = async (
@@ -137,6 +140,9 @@ const awaitingPromptHandler = async (ctx, next) => {
           break;
         case ctx.session.awaitingEggsDistributedEggs:
           await handleSpecificNumericInput(ctx, selectCourier.promptDistribution, "awaitingEggsDistributedEggs");
+          break;
+        case ctx.session.awaitingEggsDistributedAcceptedEggs:
+          await handleSpecificNumericInput(ctx, selectCourierAccepted.promptDistribution, "awaitingEggsDistributedAcceptedEggs");
           break;
         case ctx.session.awaitingCourierRemainedEggs:
           await handleSpecificNumericInput(ctx, selectCourier.promptCourierRemained, "awaitingCourierRemainedEggs");

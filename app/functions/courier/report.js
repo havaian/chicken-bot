@@ -60,6 +60,11 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
                   { source: imageFilename },
                   { caption: caption }
               );
+              await ctx.telegram.sendDocument(
+                groupId,
+                { source: excelFilename },
+                { caption: caption }
+              );
           } catch (error) {
               logger.error("Error forwarding report to group:", error);
           }

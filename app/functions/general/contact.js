@@ -59,7 +59,7 @@ module.exports = async (ctx) => {
         "Salom!",
         Markup.keyboard([
           ["Tuxum kirimi", "Tuxum chiqimi"], 
-          ["Singan tuxum"], 
+          ["Singan tuxum", "Qayta yuklash"],
           // ["Singan tuxum", "Qolgan tuxum"], 
           ["Ombor holati"]
         ])

@@ -1,5 +1,5 @@
 const cron = require('node-cron');
-const axios = require('axios');
+const axios = require('../axios');
 
 const { generateCourierHTML, generateCourierExcel } = require("./report/courierReport");
 const convertHTMLToImage = require("./report/convertHTMLToImage");
@@ -90,11 +90,11 @@ const processCouriersAndGenerateReports = async () => {
       const newMelangeByCourier = { D1: 0, D2: 0, UP: 0 };
 
       // Update fields based on current values
-      activity.current.forEach(category => {
-        if (activity[category] !== 0) {
-          newIncision[category] = activity[category];
-          newCurrentByCourier[category] = activity[category];
-          newMelangeByCourier[category] = activity[category];
+      Object.entries(activity.current).forEach(([category, value]) => {
+        if (value !== 0) {
+          newIncision[category] = 0;
+          newCurrentByCourier[category] = 0;
+          newMelangeByCourier[category] = 0;
         }
       });
 
@@ -122,14 +122,15 @@ const processCouriersAndGenerateReports = async () => {
 }
 
 // Schedule the cron job to run at 5:59 UTC+5 every day
-// cron.schedule('59 0 * * *', async () => {
-cron.schedule('59 * * * *', async () => {
+cron.schedule('59 5 * * *', async () => {
+// cron.schedule('59 * * * *', async () => {
+// cron.schedule('* * * * *', async () => {
   processCouriersAndGenerateReports();
 }, {
   scheduled: true,
   timezone: "Asia/Tashkent" // Adjust timezone as needed
 });
 
-console.log('✅ Courier days auto-finish cron job');
+logger.info('Courier day auto-finish cron job ✅');
 
 module.exports.setBotInstance = setBotInstance;

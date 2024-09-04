@@ -12,7 +12,12 @@ const report = require("./report");
 
 module.exports = async (ctx) => {
   try {
-    // await ctx.deleteMessage();
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-transaction-no";
+
+    if (deleteMsg) {
+      await ctx.deleteMessage();
+    }
+    
     ctx.session.awaitingPaymentAmount = true;
     await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nNecha pul olganingizni kiriting:`);
   } catch (error) {
@@ -27,6 +32,13 @@ module.exports.completeTransaction = async (ctx) => {
   
     const paymentAmount = ctx.message.text
     selectedBuyer.paymentAmount = paymentAmount;
+
+    if ((ctx.session.buyer.newDebt - selectedBuyer.paymentAmount) > ctx.session.buyer.debt_limit) {
+      ctx.reply("Ushbu mijozning qoldiq qarzi ruxsat berilgan chegaradan oshgan");
+      await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nNecha pul olganingizni kiriting:`);
+      ctx.session.awaitingPaymentAmount = true;
+      return;
+    }
   
     if (paymentAmount < 0) {
       await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting");

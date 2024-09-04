@@ -25,8 +25,7 @@ module.exports = async (ctx) => {
       "Tanlang:",
       Markup.keyboard([
         ["Tuxum kirimi", "Tuxum chiqimi"], 
-        ["Singan tuxum"], 
-        // ["Singan tuxum", "Qolgan tuxum"], 
+        ["Singan tuxum", "Qayta yuklash"],
         ["Ombor holati"]
       ])
     );
