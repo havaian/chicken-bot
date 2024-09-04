@@ -291,35 +291,64 @@ app.use(cors(corsOptions));
 
 const crypto = require('crypto');
 
-// Function to generate a simple hash
-const generateHash = (login, password) => {
-  return crypto.createHash('sha256').update(`${login}:${password}`).digest('hex');
-};
-
-// Middleware to capture and log request and response details
 app.use((req, res, next) => {
-  // Check for the auth header
-  const authHash = req.headers['x-auth-hash'];
-  const expectedHash = generateHash(process.env.API_LOGIN, process.env.API_PASSWORD);
+  // Only apply this middleware if the request is not GET /
+  if (!(req.method === 'GET' && req.path === '/')) {
+    let isAuthenticated = false;
 
-  if (authHash !== expectedHash) {
-    res.status(403).json({ error: "Forbidden: Access denied." });
-    return;
+    const generateHash = (login, password) => {
+      return crypto.createHash('sha256').update(`${login}:${password}`).digest('hex');
+    };
+
+    logger.info(`Authenticating request to ${req.method} ${req.path}`);
+
+    const authHash = req.headers['x-auth-hash'];
+    const expectedHash = generateHash(process.env.API_LOGIN, process.env.API_PASSWORD);
+
+    if (authHash) {
+      logger.info('Attempting authentication with x-auth-hash');
+      if (authHash === expectedHash) {
+        isAuthenticated = true;
+        logger.info('Authentication successful with x-auth-hash');
+      } else {
+        logger.info('Authentication failed with x-auth-hash');
+      }
+    }
+
+    if (!isAuthenticated) {
+      const authHeader = req.headers.authorization;
+      if (authHeader) {
+        logger.info('Attempting authentication with basic auth');
+        const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+        const user = auth[0];
+        const pass = auth[1];
+
+        if (user === process.env.API_LOGIN && pass === process.env.API_PASSWORD) {
+          isAuthenticated = true;
+          logger.info('Authentication successful with basic auth');
+        } else {
+          logger.info('Authentication failed with basic auth');
+        }
+      }
+    }
+
+    if (!isAuthenticated) {
+      logger.info('Authentication failed. Access denied.');
+      return res.status(401).json({ error: "Unauthorized: Access denied." });
+    }
+
+    const originalSend = res.send;
+    res.send = function (data) {
+      res.locals.body = data;
+      originalSend.call(this, data);
+    };
+
+    res.on('finish', () => {
+      logger.info(`Request Headers: ${JSON.stringify(req.headers)}`);
+      logger.info(`Request Body: ${JSON.stringify(req.body)}`);
+      logger.info(`Response Data: ${res.locals.body}`);
+    });
   }
-
-  // Middleware to log request and response details
-  const originalSend = res.send;
-
-  res.send = function (data) {
-    res.locals.body = data;
-    originalSend.call(this, data);
-  };
-
-  res.on('finish', () => {
-    logger.info(`Request Headers: ${JSON.stringify(req.headers)}`);
-    logger.info(`Request Body: ${JSON.stringify(req.body)}`);
-    logger.info(`Response Data: ${res.locals.body}`);
-  });
 
   next();
 });
