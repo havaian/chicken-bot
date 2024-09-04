@@ -289,13 +289,21 @@ var corsOptions = {
 };
 app.use(cors(corsOptions));
 
+const crypto = require('crypto');
+
+// Function to generate a simple hash
+const generateHash = (login, password) => {
+  return crypto.createHash('sha256').update(`${login}:${password}`).digest('hex');
+};
+
 // Middleware to capture and log request and response details
 app.use((req, res, next) => {
-  const allowedHost = ["http://141.98.153.217:6173/"];  
+  // Check for the auth header
+  const authHash = req.headers['x-auth-hash'];
+  const expectedHash = generateHash(process.env.API_LOGIN, process.env.API_PASSWORD);
 
-  // Check if the Host header matches the allowed host
-  if (req.headers.host !== "127.0.0.1:26005" && req.headers.host !== "141.98.153.217:26005" && req.headers.host !== "bot:26005" && !allowedHost.includes(req.headers.referer)) {
-    res.status(403).json({ error: "Forbidden: Access is denied." });
+  if (authHash !== expectedHash) {
+    res.status(403).json({ error: "Forbidden: Access denied." });
     return;
   }
 
