@@ -102,8 +102,6 @@ module.exports.promptCourierBroken = async (ctx) => {
       });
       const courier = courierResponse.data;
 
-      console.log(courier._id)
-
       ctx.session.selectedCourier = {};
       ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num };
     }
@@ -476,8 +474,11 @@ module.exports.courierAccept = async (ctx) => {
       acceptTime: new Date().toISOString()   // Time when courier accepted
     };
 
-    // Update current eggs
-    const updatedCurrent = updateCategory(courierActivity.current || {}, distributedEggsData, 'add', false);
+    // Calculate the new current eggs as the sum of distributedEggsData and remainedEggsData
+    const updatedCurrent = {};
+    for (const category in distributedEggsData) {
+      updatedCurrent[category] = (distributedEggsData[category] || 0) + (remainedEggsData[category] || 0);
+    }
 
     // Usage for courier
     const updatedCourierActivity = {

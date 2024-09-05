@@ -13,25 +13,39 @@ const groupId = require("../data/groups");
 
 module.exports = async(data, ctx, phone_num, full_name, message, forward = true) => {
   try {
+      // Generate timestamp for Excel file name
+      const now = new Date();
+      const timestamp = now.getFullYear().toString() +
+                        (now.getMonth() + 1).toString().padStart(2, '0') +
+                        now.getDate().toString().padStart(2, '0') + '_' +
+                        now.getHours().toString().padStart(2, '0') +
+                        now.getMinutes().toString().padStart(2, '0') +
+                        now.getSeconds().toString().padStart(2, '0');
+
       // File paths
-      const reportDate = new Date().toISOString().split("T")[0];
+      const reportDate = now.toISOString().split("T")[0];
       const reportDir = path.join(
         "reports",
         `courier/${reportDate}`,
         phone_num
       );
+      const excelDir = path.join("reports", "courier", "excel", reportDate);
+
       if (!fs.existsSync(reportDir)) {
         fs.mkdirSync(reportDir, { recursive: true });
       }
+      if (!fs.existsSync(excelDir)) {
+        fs.mkdirSync(excelDir, { recursive: true });
+      }
 
-      // Delete old reports
+      // Delete old reports (except Excel)
       fs.readdirSync(reportDir).forEach((file) => {
         fs.unlinkSync(path.join(reportDir, file));
       });
 
       const htmlFilename = path.join(reportDir, `${data._id}.html`);
       const imageFilename = path.join(reportDir, `${data._id}.jpg`);
-      const excelFilename = path.join(reportDir, `${data._id}.xlsx`);
+      const excelFilename = path.join(excelDir, `${timestamp}.xlsx`);
 
       // Generate HTML and Excel reports
       generateCourierHTML(data, htmlFilename);
@@ -50,7 +64,7 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
           // await ctx.reply("Hisobotni yuborishda xatolik yuz berdi.");
       }
 
-      const caption = `${full_name}. ${message}. Xisobot:`;
+      const caption = `${full_name}. ${message}`;
 
       // Forward reports to the group
       if (forward) {
@@ -58,12 +72,12 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
               await ctx.telegram.sendPhoto(
                   groupId,
                   { source: imageFilename },
-                  { caption: caption }
+                  { caption: `${caption}. Xisobot:` }
               );
               await ctx.telegram.sendDocument(
                 groupId,
                 { source: excelFilename },
-                { caption: caption }
+                { caption: `${caption}. Excel:` }
               );
           } catch (error) {
               logger.error("Error forwarding report to group:", error);

@@ -379,7 +379,6 @@ const generateCourierExcel = async (data, filename) => {
     });
 
     await workbook.xlsx.writeFile(filename);
-    console.log(`Excel file saved: ${filename}`);
   } catch (error) {
     logger.error("Error generating Excel report:", error);
     throw error;
