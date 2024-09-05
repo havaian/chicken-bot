@@ -306,12 +306,8 @@ app.use((req, res, next) => {
     const expectedHash = generateHash(process.env.API_LOGIN, process.env.API_PASSWORD);
 
     if (authHash) {
-      logger.info('Attempting authentication with x-auth-hash');
       if (authHash === expectedHash) {
         isAuthenticated = true;
-        logger.info('Authentication successful with x-auth-hash');
-      } else {
-        logger.info('Authentication failed with x-auth-hash');
       }
     }
 

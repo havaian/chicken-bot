@@ -1,1 +1,1 @@
-module.exports = "-1002183576792";
+module.exports = process.env.TG_GROUP;
