@@ -133,7 +133,7 @@ const generateCourierHTML = (data, filename) => {
         ["3", "Nasechka tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", formatNumber(totalPayments - expenses)],
         ["4", "Tuxum kamomad", ...Object.keys(eggPrices).map(category => {
           const shortage = calculateShortage(category);
-          return formatNumber(shortage);
+          return day_finished ? formatNumber(shortage) : 0;
         }), "", "Kassa topshirildi:", formatNumber(money_by_courier)],
         ["5", "Melanj", ...Object.keys(eggPrices).map(category => {
           const amount = melange_by_courier[category] || 0;
