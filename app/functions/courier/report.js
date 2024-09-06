@@ -49,9 +49,7 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
 
       // Generate HTML and Excel reports
       generateCourierHTML(data, htmlFilename);
-      if (data.day_finished) {
-        await generateCourierExcel(data, excelFilename);
-      }
+      await generateCourierExcel(data, excelFilename);
 
       // Convert HTML report to image
       await convertHTMLToImage(htmlFilename, imageFilename);
@@ -66,7 +64,7 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
           // await ctx.reply("Hisobotni yuborishda xatolik yuz berdi.");
       }
 
-      const caption = `${full_name}\n${message}`;
+      const caption = `${full_name}. ${message}`;
 
       // Forward reports to the group
       if (forward) {
@@ -74,14 +72,13 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
               await ctx.telegram.sendPhoto(
                   groupId,
                   { source: imageFilename },
-                  { caption: `${caption}.\nXisobot:` }
+                  { caption: `${caption}. Xisobot:` }
               );
-              if (data.day_finished) {
-                await ctx.telegram.sendDocument(
-                  groupId,
-                  { source: excelFilename }
-                );
-              }
+              await ctx.telegram.sendDocument(
+                groupId,
+                { source: excelFilename },
+                { caption: `Excel:` }
+              );
           } catch (error) {
               logger.error("Error forwarding report to group:", error);
           }
