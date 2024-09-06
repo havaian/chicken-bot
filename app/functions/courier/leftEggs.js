@@ -61,9 +61,9 @@ const promptLeft = async (ctx, type) => {
 
 exports.sendLeft = async (ctx) => {
   try {
-    const type = ((ctx?.match && ctx?.match[0] === "confirm-left-eggs-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
+    const type = ((ctx?.match && ctx?.match[0] === "confirm-left-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
 
-    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-left-eggs-no";
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-left-no";
 
     if (deleteMsg) {
       await ctx.deleteMessage();
