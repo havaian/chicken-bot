@@ -316,7 +316,8 @@ const generateCourierExcel = async (data, filename) => {
 
     // Set up headers
     sheet.addRow([
-      "Дата Доставка",
+      "Дата",
+      "Доставка",
       "Харидор",
       "Кол-во",
       "Цена",

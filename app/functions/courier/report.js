@@ -77,7 +77,7 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
               await ctx.telegram.sendDocument(
                 groupId,
                 { source: excelFilename },
-                { caption: `${caption}. Excel:` }
+                { caption: `Excel:` }
               );
           } catch (error) {
               logger.error("Error forwarding report to group:", error);
