@@ -47,6 +47,10 @@ module.exports = async(data, ctx, phone_num, full_name, message, forward = true)
       const imageFilename = path.join(reportDir, `${data._id}.jpg`);
       const excelFilename = path.join(excelDir, `${timestamp}.xlsx`);
 
+      console.log('Starting convertHTMLToImage function');
+      console.log('HTML Filename:', htmlFilename);
+      console.log('Image Filename:', imageFilename);
+
       // Generate HTML and Excel reports
       generateCourierHTML(data, htmlFilename);
       await generateCourierExcel(data, excelFilename);
