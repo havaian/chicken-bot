@@ -92,9 +92,9 @@ const generateWarehouseHTML = (data, filename) => {
       `).join("")
       ).join("") 
       : ''}
-      <tr>
-        <td colspan="5"></td>
-      </tr>
+    </table>
+    <br>
+    <table border="1" style="width:100%; border-collapse: collapse;">
       <tr>
         <td>Nomi</td>
         <td>Yuklandi</td>
@@ -137,9 +137,9 @@ const generateWarehouseHTML = (data, filename) => {
       `
       )
       .join("")}
-      <tr>
-        <td colspan="5"></td>
-      </tr>
+    </table>
+    <br>
+    <table border="1" style="width:100%; border-collapse: collapse;">
       <tr>
         <td colspan="1">Ombor singan</td>
         <td style="text-align: center; vertical-align: middle" colspan="4">${Object.entries(broken).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>

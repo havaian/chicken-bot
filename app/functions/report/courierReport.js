@@ -130,15 +130,15 @@ const generateCourierHTML = (data, filename) => {
       const rows = [
         ["1", "Tarqatilgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(totalDeliveredByCategory[category] || 0)), "", "Umumiy yig'ilgan pul:", formatNumber(totalPayments)],
         ["2", "Qolgan tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(current_by_courier[category] || 0)), "", "Chiqim:", formatNumber(expenses)],
-        ["3", "Nasechka tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", formatNumber(totalPayments - expenses)],
+        ["3", "Nasechka tuxum soni", ...Object.keys(eggPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", expenses > 0 ? formatNumber(totalPayments - expenses) : 0],
         ["4", "Tuxum kamomad", ...Object.keys(eggPrices).map(category => {
           const shortage = calculateShortage(category);
-          return formatNumber(shortage);
+          return day_finished ? formatNumber(shortage) : 0;
         }), "", "Kassa topshirildi:", formatNumber(money_by_courier)],
         ["5", "Melanj", ...Object.keys(eggPrices).map(category => {
           const amount = melange_by_courier[category] || 0;
           return `${formatNumber(amount)} (${formatNumber(amount * 28)})`;
-        }), "", "Kassa kamomad:", formatNumber((totalPayments - expenses) - money_by_courier)]
+        }), "", "Kassa kamomad:", day_finished ? formatNumber((totalPayments - expenses) - money_by_courier) : 0]
       ];
 
       let acceptedHtml = 
@@ -316,7 +316,8 @@ const generateCourierExcel = async (data, filename) => {
 
     // Set up headers
     sheet.addRow([
-      "Дата Доставка",
+      "Дата",
+      "Доставка",
       "Харидор",
       "Кол-во",
       "Цена",
@@ -379,7 +380,6 @@ const generateCourierExcel = async (data, filename) => {
     });
 
     await workbook.xlsx.writeFile(filename);
-    console.log(`Excel file saved: ${filename}`);
   } catch (error) {
     logger.error("Error generating Excel report:", error);
     throw error;
