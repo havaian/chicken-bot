@@ -112,25 +112,25 @@ const generateWarehouseHTML = (data, filename) => {
             ${Object.entries(distribution.eggs || {})
               .filter(([_, amount]) => amount > 0)
               .map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`)
-              .join("<br>") || "➖"}
+              .join("<br>") || "−"}
           </td>
           <td style="text-align: left; vertical-align: middle">
             ${Object.entries(distribution.remained || {})
               .filter(([_, amount]) => amount > 0)
               .map(([category, amount]) => `${category}: <b>${amount}</b>`)
-              .join("<br>") || "➖"}
+              .join("<br>") || "−"}
           </td>
           <td style="text-align: left; vertical-align: middle">
             ${Object.entries(distribution.incision || {})
               .filter(([_, amount]) => amount > 0)
               .map(([category, amount]) => `${category}: <b>${amount}</b>`)
-              .join("<br>") || "➖"}
+              .join("<br>") || "−"}
           </td>
           <td style="text-align: left; vertical-align: middle">
             ${Object.entries(distribution.melange || {})
               .filter(([_, amount]) => amount > 0)
               .map(([category, amount]) => `${category}: <b>${amount}</b>`)
-              .join("<br>") || "➖"}
+              .join("<br>") || "−"}
           </td>
           <td style="text-align: left; vertical-align: middle"></td>
         </tr>

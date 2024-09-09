@@ -110,9 +110,9 @@ const generateCourierHTML = (data, filename) => {
               <tr>
                 <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
                 <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
-                <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">➖</td>
+                <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
+                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
                 ${paymentHtml}
                 ${debtHtml}
               </tr>`;
@@ -172,7 +172,7 @@ const generateCourierHTML = (data, filename) => {
         `<tr>
           <td style="padding: 5px 0; text-align: center; vertical-align: middle;">${date.toLocaleString("uz-UZ")}</td>  
           <td style="padding: 5px 5px; text-align: center; vertical-align: middle;">${Object.entries(eggs).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join(", ")}</td>
-          <td style="padding: 5px 0; text-align: center; vertical-align: middle;">${remained ? Object.entries(remained).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("</br>") : "➖"}</td>
+          <td style="padding: 5px 0; text-align: center; vertical-align: middle;">${remained ? Object.entries(remained).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("</br>") : "−"}</td>
           <td style="padding: 5px 0; text-align: center; vertical-align: middle;">${Object.entries(totalAccepted).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("</br>")}</td>
         </tr>`;
       });
@@ -357,9 +357,9 @@ const generateCourierExcel = async (data, filename) => {
             deliveryDate,
             courierName,
             delivery.name,
-            '➖',
-            '➖',
-            '➖',
+            '−',
+            '−',
+            '−',
             delivery.payment,
             delivery.debt
           ]);
