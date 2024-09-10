@@ -39,7 +39,7 @@ const generateCourierHTML = (data, filename) => {
     let totalPayments = 0;
 
     // Get today's date at 6 a.m.
-    const today6am = new Date();
+    const today6am = date;
     const today6amStr = today6am.toLocaleString('uz-UZ', {
       hour12: false,
       year: 'numeric',
@@ -340,7 +340,7 @@ const generateCourierExcel = async (data, filename) => {
       const courierName = courierActivity.courier.full_name || "Unknown Courier";
 
       courierActivity.delivered_to.forEach(delivery => {
-        const deliveryDate = new Date(delivery.time).toLocaleString("uz-UZ");
+        const deliveryDate = new Date(delivery.time).toLocaleDateString("uz-UZ");
         
         const nonZeroEggs = delivery.eggs.filter(egg => egg.amount > 0);
         
