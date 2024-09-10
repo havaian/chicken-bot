@@ -329,7 +329,7 @@ const generateCourierExcel = async (data, filename) => {
       "Остаток"
     ]);
 
-    const courierName = data.courier.full_name || "Unknown Courier";
+    const courierName = data.courier_name || "Unknown Courier";
 
     data.delivered_to.forEach(delivery => {
       const deliveryDate = new Date(data.date).toLocaleDateString("uz-UZ");
