@@ -39,7 +39,7 @@ const generateCourierHTML = (data, filename) => {
     let totalPayments = 0;
 
     // Get today's date at 6 a.m.
-    const today6am = date;
+    const today6am = new Date();
     const today6amStr = today6am.toLocaleString('uz-UZ', {
       hour12: false,
       year: 'numeric',
@@ -248,26 +248,33 @@ const generateCourierHTML = (data, filename) => {
       let page = 0;
 
       lastIndexes[page] = 0;
-
-      for (let i = 0; i < delivered_to.length; i++) {
-        if (!parts[page] || typeof parts[page] === "undefined") {
-          parts[page] = [];
-        }
-        parts[page].push(delivered_to[i]);
-
-        delivered_to[i].eggs.forEach(element => {
-          if (element.amount > 0) {
-            y++;
-          }
-        });
-
-        lastIndexes[page] = y > lastIndexes[page] ? y : lastIndexes[page];
-
-        if (y > maxPerPart) {
+      
+      delivered_to.forEach((delivery, rowIndex) => {
+        if (y === maxPerPart) {
           y = 0;
           page++;
         }
-      }
+
+        if (!parts[page] || typeof parts[page] === "undefined") {
+          parts[page] = [];
+        }
+
+        parts[page].push(delivery);
+
+        lastIndexes[page] = y > lastIndexes[page] ? y : lastIndexes[page];
+
+        const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
+        const hasDelivery = deliveredEggs.length > 0;
+        const hasPayment = delivery.payment > 0;
+
+        if (hasDelivery) {
+          deliveredEggs.forEach((egg, index) => {
+            y++;
+          });
+        } else if (hasPayment) {
+          y++;
+        }
+      })
 
       return parts;
     };
@@ -285,7 +292,7 @@ const generateCourierHTML = (data, filename) => {
           ? filename.replace('.html', `${partNumber === deliveryParts.length ? "" : "_" + partNumber}.html`)
           : filename;
     
-        const deliveryTableHTML = generateDeliveryTableHTML(part, (partNumber - 2) < 0 ? 0 : lastIndexes[partNumber - 2]);
+        const deliveryTableHTML = generateDeliveryTableHTML(part, (partNumber - 2) < 0 ? 0 : (lastIndexes[partNumber - 2] + 1));
         const fullHTML = generateFullHTML(deliveryTableHTML, partNumber, totalParts);
     
         const directory = path.dirname(partFilename);
