@@ -338,46 +338,39 @@ const generateCourierExcel = async (data, filename) => {
       "Остаток"
     ]);
 
-    // Fetch all courier activities for today
-    const response = await axios.get("/courier/activity/today/all");
-    const allCourierActivities = response.data;
+    const courierName = data.courier.full_name || "Unknown Courier";
 
-    // Process each courier's activities
-    allCourierActivities.forEach(courierActivity => {
-      const courierName = courierActivity.courier.full_name || "Unknown Courier";
-
-      courierActivity.delivered_to.forEach(delivery => {
-        const deliveryDate = new Date(delivery.time).toLocaleDateString("uz-UZ");
-        
-        const nonZeroEggs = delivery.eggs.filter(egg => egg.amount > 0);
-        
-        if (nonZeroEggs.length > 0) {
-          nonZeroEggs.forEach(egg => {
-            sheet.addRow([
-              deliveryDate,
-              courierName,
-              delivery.name,
-              egg.category,
-              egg.amount,
-              egg.price,
-              egg.amount * egg.price,
-              delivery.payment,
-              delivery.debt
-            ]);
-          });
-        } else if (delivery.payment > 0) {
+    data.delivered_to.forEach(delivery => {
+      const deliveryDate = new Date(data.date).toLocaleDateString("uz-UZ");
+      
+      const nonZeroEggs = delivery.eggs.filter(egg => egg.amount > 0);
+      
+      if (nonZeroEggs.length > 0) {
+        nonZeroEggs.forEach(egg => {
           sheet.addRow([
             deliveryDate,
             courierName,
             delivery.name,
-            '−',
-            '−',
-            '−',
+            egg.category,
+            egg.amount,
+            egg.price,
+            egg.amount * egg.price,
             delivery.payment,
             delivery.debt
           ]);
-        }
-      });
+        });
+      } else if (delivery.payment > 0) {
+        sheet.addRow([
+          deliveryDate,
+          courierName,
+          delivery.name,
+          '−',
+          '−',
+          '−',
+          delivery.payment,
+          delivery.debt
+        ]);
+      }
     });
 
     // Auto-fit columns
