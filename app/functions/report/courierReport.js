@@ -61,7 +61,7 @@ const generateCourierHTML = (data, filename) => {
         return sum + (entry.eggs[category] || 0);
       }, 0);
     
-      const by_morning = accepted[0].remained;
+      const by_morning = accepted[0].remained || {};
     
       const acceptedAmount = totalAcceptedEggs + (by_morning[category] || 0);
       const remaining = current_by_courier[category] || 0;
@@ -152,8 +152,8 @@ const generateCourierHTML = (data, filename) => {
       let totalAccepted = {};
 
       accepted.forEach((element, index) => {
-        const eggs = element.eggs;
-        const remained = element.remained;
+        const eggs = element.eggs || {};
+        const remained = element.remained || {};
         const date = new Date(element.loadingTime);
       
         // Initialize totalAccepted with remained from the first entry
@@ -242,7 +242,7 @@ const generateCourierHTML = (data, filename) => {
 
     let lastIndexes = [];
 
-    const splitDeliveries = (delivered_to = [], maxPerPart = 40) => {
+    const splitDeliveries = (delivered_to = [], maxPerPart = 45) => {
       const parts = [];
       let y = 0;
       let page = 0;
@@ -255,7 +255,11 @@ const generateCourierHTML = (data, filename) => {
         }
         parts[page].push(delivered_to[i]);
 
-        y += delivered_to[i].eggs.length;
+        delivered_to[i].eggs.forEach(element => {
+          if (element.amount > 0) {
+            y++;
+          }
+        });
 
         lastIndexes[page] = y > lastIndexes[page] ? y : lastIndexes[page];
 
