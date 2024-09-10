@@ -284,37 +284,28 @@ const generateCourierHTML = (data, filename) => {
 
     const totalParts = deliveryParts.length;
 
-    if (deliveryParts.length > 0) {
-      // Generate and save HTML files for each part
-      deliveryParts.forEach((part, index) => {
-        const partNumber = index + 1;
-        const partFilename = totalParts > 1 
-          ? filename.replace('.html', `${partNumber === deliveryParts.length ? "" : "_" + partNumber}.html`)
-          : filename;
-    
-        const deliveryTableHTML = generateDeliveryTableHTML(part, (partNumber - 2) < 0 ? 0 : (lastIndexes[partNumber - 2] + 1));
-        const fullHTML = generateFullHTML(deliveryTableHTML, partNumber, totalParts);
-    
-        const directory = path.dirname(partFilename);
-        if (!fs.existsSync(directory)) {
-          fs.mkdirSync(directory, { recursive: true });
-        }
-    
-        fs.writeFileSync(partFilename, fullHTML);
-      });
-    } else {
-      // Handle case where there are no delivery parts
-      const emptyDeliveryTableHTML = generateDeliveryTableHTML([], 0);
-      const fullHTML = generateFullHTML(emptyDeliveryTableHTML, 1, 1);
-    
-      const directory = path.dirname(filename);
+    const htmlFiles = [];
+
+    // Generate and save HTML files for each part
+    deliveryParts.forEach((part, index) => {
+      const partNumber = index + 1;
+      const partFilename = totalParts > 1 
+        ? filename.replace('.html', `_${partNumber}.html`)
+        : filename;
+
+      const deliveryTableHTML = generateDeliveryTableHTML(part, (partNumber - 2) < 0 ? 0 : (lastIndexes[partNumber - 2] + 1));
+      const fullHTML = generateFullHTML(deliveryTableHTML, partNumber, totalParts);
+
+      const directory = path.dirname(partFilename);
       if (!fs.existsSync(directory)) {
         fs.mkdirSync(directory, { recursive: true });
       }
-    
-      fs.writeFileSync(filename, fullHTML);
-    }
 
+      fs.writeFileSync(partFilename, fullHTML);
+      htmlFiles.push(partFilename);
+    });
+
+    return htmlFiles;
   } catch (error) {
     logger.error(error);
   }
