@@ -358,6 +358,7 @@ const generateCourierExcel = async (data, filename) => {
           '−',
           '−',
           '−',
+          '−',
           delivery.payment,
           delivery.debt
         ]);
