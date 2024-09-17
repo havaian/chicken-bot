@@ -29,7 +29,10 @@ const generateWarehouseHTML = (data, filename) => {
 
   const totalDistributed = {};
   const totalRemained = {};
-  const totalBroken = {};
+  const totalIncision = {};
+  const totalMelange = {};
+
+  const reportDate = moment(date).tz('Asia/Karachi').format('DD/MM/YYYY HH:mm:ss');
 
   distributed_to.forEach(distribution => {
     for (let [category, amount] of Object.entries(distribution.eggs || {})) {
@@ -40,16 +43,20 @@ const generateWarehouseHTML = (data, filename) => {
       if (!totalRemained[category]) totalRemained[category] = 0;
       totalRemained[category] += amount;
     }
-    for (let [category, amount] of Object.entries(distribution.broken || {})) {
-      if (!totalBroken[category]) totalBroken[category] = 0;
-      totalBroken[category] += amount;
+    for (let [category, amount] of Object.entries(distribution.incision || {})) {
+      if (!totalIncision[category]) totalIncision[category] = 0;
+      totalIncision[category] += amount;
+    }
+    for (let [category, amount] of Object.entries(distribution.melange || {})) {
+      if (!totalMelange[category]) totalMelange[category] = 0;
+      totalMelange[category] += amount;
     }
   });
 
   const summaryHtml = `
     <table border="1" style="width:100%; border-collapse: collapse;">
       <tr>
-        <td style="text-align: center; vertical-align: middle" colspan="1">${date}</td>
+        <td style="text-align: center; vertical-align: middle" colspan="1">${reportDate}</td>
         <td style="text-align: center; vertical-align: middle" colspan="1" rowspan="2">${Object.entries(by_morning).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>
         <td style="text-align: center; vertical-align: middle" colspan="1" rowspan="${accepted.length > 1 ? accepted.length + 2 : 3}">
           Jami:<br>
@@ -148,8 +155,8 @@ const generateWarehouseHTML = (data, filename) => {
         <td>Jami</td>
         <td>${Object.entries(totalDistributed).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>
         <td>${Object.entries(totalRemained).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>
-        <td></td>
-        <td></td>
+        <td>${Object.entries(totalIncision).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>
+        <td>${Object.entries(totalMelange).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>
       </tr>
       <tr>
         <td colspan="3">Kun yakuniga xisobot</td>
@@ -198,7 +205,7 @@ const generateWarehouseExcel = async (data, filename) => {
 
   const totalDistributed = {};
   const totalRemained = {};
-  const totalBroken = {};
+  const totalIncision = {};
 
   distributed_to.forEach(distribution => {
     for (let [category, amount] of Object.entries(distribution.eggs || {})) {
@@ -209,9 +216,9 @@ const generateWarehouseExcel = async (data, filename) => {
       if (!totalRemained[category]) totalRemained[category] = 0;
       totalRemained[category] += amount;
     }
-    for (let [category, amount] of Object.entries(distribution.broken || {})) {
-      if (!totalBroken[category]) totalBroken[category] = 0;
-      totalBroken[category] += amount;
+    for (let [category, amount] of Object.entries(distribution.incision || {})) {
+      if (!totalIncision[category]) totalIncision[category] = 0;
+      totalIncision[category] += amount;
     }
   });
 
@@ -237,7 +244,7 @@ const generateWarehouseExcel = async (data, filename) => {
         .map(([category, amount]) => `${category}: ${amount}`)
         .join("\n"),
       Object.entries(distribution.remained || {}).map(([category, amount]) => `${category}: ${amount}`).join("\n"),
-      Object.entries(distribution.broken || {}).map(([category, amount]) => `${category}: ${amount}`).join("\n"),
+      Object.entries(distribution.incision || {}).map(([category, amount]) => `${category}: ${amount}`).join("\n"),
       "",
     ]);
   });
@@ -248,7 +255,7 @@ const generateWarehouseExcel = async (data, filename) => {
     Object.entries(totalDistributed).map(([category, amount]) => `${category}: ${amount}`).join("\n"),
     Object.entries(totalRemained).map(([category, amount]) => `${category}: ${amount}`).join("\n"),
     "Jami",
-    Object.entries(totalBroken).map(([category, amount]) => `${category}: ${amount}`).join("\n")
+    Object.entries(totalIncision).map(([category, amount]) => `${category}: ${amount}`).join("\n")
   ]);
   sheet.addRow(["Ombor singan", Object.entries(broken).map(([category, amount]) => `${category}: ${amount}`).join("\n")]);
   sheet.addRow(["Kun yakuniga xisobot", "Butun", Object.entries(intact).map(([category, amount]) => `${category}: ${amount}`).join("\n")]);

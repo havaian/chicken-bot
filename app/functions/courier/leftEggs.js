@@ -38,9 +38,13 @@ const promptLeft = async (ctx, type) => {
         //   return;
         // }
   
-        if (!ctx.session[eggsDataKey][category]) {
+        if (ctx.session[eggsDataKey] && !ctx.session[eggsDataKey][category]) {
           ctx.session[eggsDataKey][category] = 0;
+        } else {
+          ctx.session = { ...ctx.session.user };
+          return;
         }
+        
         ctx.session[eggsDataKey][category] += amount;
   
         ctx.session.currentCategoryIndex++;
@@ -66,7 +70,7 @@ exports.sendLeft = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-left-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     if (type === 2) {
@@ -131,7 +135,7 @@ exports.addLeft = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-left-yes";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     // for (let y in Object.keys(ctx.session[eggsDataKey] || {})) {

@@ -23,7 +23,7 @@ module.exports = async (ctx) => {
     const current = courierActivity.current;
 
     if (Object.keys(current).length === 0 || typeof current === "undefined") {
-      ctx.reply("Mashinada tuxum yo’q. Ombordan tuxum olishingiz kerak.");
+      await ctx.reply("Mashinada tuxum yo’q. Ombordan tuxum olishingiz kerak.");
       return;
     }
 

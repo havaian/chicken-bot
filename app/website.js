@@ -25,15 +25,15 @@ router.get('/prices', (req, res) => {
                 const prices = JSON.parse(jsonString);
                 res.json(prices);
             } catch (parseError) {
-                logger.info('Failed to parse prices data: ' + parseError.message);
+                logger.error('Failed to parse prices data: ' + parseError.message);
                 res.status(500).json({ message: 'Failed to parse prices data' });
             }
         } else {
-            logger.info('Failed to extract prices data from file');
+            logger.error('Failed to extract prices data from file');
             res.status(500).json({ message: 'Failed to extract prices data from file' });
         }
     } catch (err) {
-        logger.info('Error reading prices file: ' + err.message);
+        logger.error('Error reading prices file: ' + err.message);
         res.status(500).json({ message: 'Error reading prices file' });
     }
 });
@@ -57,7 +57,7 @@ router.put('/prices', (req, res) => {
             res.status(200).json({ message: 'Prices updated!' });
         });
     } catch (err) {
-        logger.info(err);
+        logger.error(err);
     }
 });
 
@@ -74,11 +74,11 @@ router.get('/debt-limit', (req, res) => {
             const debtLimit = parseInt(match[1], 10);
             res.json({ debtLimit });
         } else {
-            logger.info('Failed to extract debt limit from file');
+            logger.error('Failed to extract debt limit from file');
             res.status(500).json({ message: 'Failed to extract debt limit from file' });
         }
     } catch (err) {
-        logger.info('Error reading debt limit file: ' + err.message);
+        logger.error('Error reading debt limit file: ' + err.message);
         res.status(500).json({ message: 'Error reading debt limit file' });
     }
 });
@@ -97,13 +97,13 @@ router.put('/debt-limit', (req, res) => {
     
         fs.writeFile(debtLimitFilePath, dataToWrite, 'utf8', (err) => {
             if (err) {
-                logger.info('Error writing debt limit file: ' + err.message);
+                logger.error('Error writing debt limit file: ' + err.message);
                 return res.status(500).json({ message: 'Error writing debt limit file' });
             }
             res.status(200).json({ message: 'Debt limit updated!', debtLimit });
         });
     } catch (err) {
-        logger.info('Error updating debt limit: ' + err.message);
+        logger.error('Error updating debt limit: ' + err.message);
         res.status(500).json({ message: 'Error updating debt limit' });
     }
 });
@@ -115,7 +115,7 @@ router.post('/login', (req, res) => {
     
         // Check if both fields are provided
         if (!username || !password) {
-                logger.info('Username and password are required.')
+            logger.error('Username and password are required.')
             return res.status(400).json({ message: 'Username and password are required.' });
         }
 
@@ -126,12 +126,12 @@ router.post('/login', (req, res) => {
         if (userData[username] && userData[username] === password) {
             return res.status(200).json({ login: username, message: 'Login successful!' });
         } else {
-            logger.info('Invalid username or password.')
+            logger.error('Invalid username or password.')
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 
     } catch (err) {
-        logger.info(err)
+        logger.error(err)
         return res.status(500).json({ message: 'Error reading user data.' });
     }
 });

@@ -16,7 +16,7 @@ const getDebtLimit = () => {
     if (match) {
       return parseInt(match[1], 10);
     }
-    logger.info('Failed to extract debt limit from file');
+    logger.error('Failed to extract debt limit from file');
     return null;
   } catch (error) {
     logger.error('Error reading debt limit file:', error);
@@ -40,7 +40,7 @@ const getPrices = () => {
       }
     }
     
-    logger.info('❌ Failed to extract valid prices from file');
+    logger.error('❌ Failed to extract valid prices from file');
     return null;
   } catch (error) {
     logger.error('❌ Error reading prices file:', error);
@@ -83,11 +83,11 @@ module.exports = async (ctx) => {
       debt_limit: buyer.debt_limit || debtLimit
     };
     if (debtLimit === null) {
-      cancel(ctx, "Qarzdorlik chegarasini o'qishda xatolik yuz berdi", true);
+      await cancel(ctx, "Qarzdorlik chegarasini o'qishda xatolik yuz berdi", true);
       return;
     }
 
-    ctx.reply("Yetkazilgan tuxumlar sonini kiriting:",
+    await ctx.reply("Yetkazilgan tuxumlar sonini kiriting:",
       Markup.keyboard([
         ["Bekor qilish ❌"]
     ]));

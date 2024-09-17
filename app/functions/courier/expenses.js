@@ -96,11 +96,11 @@ exports.addExpenses = async (ctx) => {
     );
 
     // Delete the previous message
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 
     ctx.session.awaitingExpenses = false;
 
-    cancel(ctx, `${amount} so’m chiqim hisobingizga qo’shildi.`);
+    await cancel(ctx, `${amount} so’m chiqim hisobingizga qo’shildi.`);
   } catch (error) {
     logger.error(error);
     await ctx.reply(

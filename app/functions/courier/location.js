@@ -8,13 +8,13 @@ module.exports.buyerLocation = async (ctx) => {
   try {
     if (ctx.match) {
       // Delete the previous message
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
   
       ctx.session.match = ctx.match;
       ctx.session.awaitingClientLocation = true;
 
       if (ctx.chat.id == "1661951561" || ctx.chat.id == "1672509888") {
-        ctx.reply("Siz uchun geolokatsiya kiritilish so’ralmaydi")
+        await ctx.reply("Siz uchun geolokatsiya kiritilish so’ralmaydi")
         ctx.session.awaitingClientLocation = false;
         chooseBuyer(ctx);
         return;
@@ -80,7 +80,7 @@ module.exports.chooseBuyer = async (ctx) => {
     }
   } catch (error) {
     logger.error(error);
-    ctx.reply("Ushbu nomli mijoz topilmadi. Yana bir marotaba urunib ko'ring");
+    await ctx.reply("Ushbu nomli mijoz topilmadi. Yana bir marotaba urunib ko'ring");
   }
 }
 

@@ -9,12 +9,6 @@ module.exports = async (data, ctx, phone_num, full_name, message, forward = true
   try {
     // Generate timestamp for file names
     const now = new Date();
-    const timeDateStamp = now.getFullYear().toString() +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0') + '_' +
-      now.getHours().toString().padStart(2, '0') +
-      now.getMinutes().toString().padStart(2, '0') +
-      now.getSeconds().toString().padStart(2, '0');
     
     const dateStamp = now.getFullYear().toString() +
       (now.getMonth() + 1).toString().padStart(2, '0') +
@@ -37,7 +31,7 @@ module.exports = async (data, ctx, phone_num, full_name, message, forward = true
       fs.unlinkSync(path.join(reportDir, file));
     });
 
-    const baseFilename = `${full_name}-${timeDateStamp}-${data._id}`;
+    const baseFilename = `${data._id}`;
     const excelFilename = path.join(excelDir, `${full_name}-${dateStamp}.xlsx`);
 
     // Generate HTML and Excel reports

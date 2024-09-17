@@ -1,10 +1,10 @@
 const { Telegraf, Markup, session } = require("telegraf");
+const { message } = require("telegraf/filters");
 const express = require("express");
 const { middleware } = require("./middleware/index.js");
 const textCommandHandler = require("./middleware/textCommandHandler.js");
 const awaitingPromptHandler = require("./middleware/awaitingPromptHandler.js");
 const courierAccepted = require("./middleware/courierAccepted.js");
-const dayFinished = require("./middleware/dayFinished.js");
 const start = require("./functions/general/start.js");
 const contact = require("./functions/general/contact.js");
 const location = require("./functions/courier/location.js");
@@ -54,8 +54,6 @@ bot.on("contact", async (ctx) => {
 });
 
 bot.use(courierAccepted);
-
-bot.use(dayFinished);
 
 bot.use(textCommandHandler);
 
@@ -248,7 +246,7 @@ bot.action("warehouse-dailyDeficit-no", async (ctx) => {
 // Handle voice messages
 bot.on("voice", async (ctx) => {
   if (ctx.session.awaitingCircleVideoCourier || ctx.session.awaitingCircleVideoWarehouse || ctx.session.awaitingCircleVideoWarehouse2) {
-    ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
+    await ctx.reply("Iltimos, hisobot uchun dumaloq video yuboring.",
       Markup.keyboard([
           ["Bekor qilish ❌"]
       ]));
@@ -346,7 +344,7 @@ app.use((req, res, next) => {
     });
   }
 
-  next();
+  return next();
 });
 
 app.use("/data", require("./website"));

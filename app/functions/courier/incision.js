@@ -24,12 +24,24 @@ const promptIncision = async (ctx, type) => {
     }
   
     if (sessionKey) {
+      if (typeof ctx.session[eggsDataKey] === "null") {
+        ctx.session = { ...ctx.session.user };
+        return;
+      }
+
       const category = ctx.session.categories[ctx.session.currentCategoryIndex];
   
       if (ctx.message && ctx.message.text && type != 2) {
         const amount = parseInt(ctx.message.text, 10);
         if (isNaN(amount) || amount < 0) {
-          await ctx.reply("Iltimos, to’g’ri son kiriting:");
+          if (ctx.session.awaitingDayFinish) {
+
+            ctx.session[eggsDataKey] = undefined;
+            this.sendIncisionEggs(ctx);
+          }
+          if (ctx.session.awaitingIncisionEggs) {
+            await ctx.reply("Iltimos, to’g’ri son kiriting:");
+          }
           return;
         }
 
@@ -38,9 +50,13 @@ const promptIncision = async (ctx, type) => {
         //   return;
         // }
   
-        if (!ctx.session[eggsDataKey][category]) {
+        if (ctx.session[eggsDataKey] && !ctx.session[eggsDataKey][category]) {
           ctx.session[eggsDataKey][category] = 0;
+        } else {
+          ctx.session = { ...ctx.session.user };
+          return;
         }
+        
         ctx.session[eggsDataKey][category] += amount;
   
         ctx.session.currentCategoryIndex++;
@@ -66,7 +82,7 @@ exports.sendIncisionEggs = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-incision-eggs-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     if (type === 2) {
@@ -136,7 +152,7 @@ exports.addIncisionEggs = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-incision-eggs-yes";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     for (let y in Object.keys(ctx.session[eggsDataKey])) {
@@ -148,7 +164,7 @@ exports.addIncisionEggs = async (ctx) => {
       }     
 
       // if (current[x] < ctx.session[eggsDataKey][x]) {
-      //   ctx.reply(`Sizning mashinangizdagi ${letters[x]} qolgan tuxum soni ${ctx.session.currentEggs[x]}!`);
+      //   await ctx.reply(`Sizning mashinangizdagi ${letters[x]} qolgan tuxum soni ${ctx.session.currentEggs[x]}!`);
   
       //   ctx.session[eggsDataKey] = undefined;
       //   ctx.session.categories = null;

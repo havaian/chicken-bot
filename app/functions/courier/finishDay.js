@@ -51,7 +51,8 @@ exports.confirmDayFinished = async (ctx) => {
     updatedCourierActivity.courier_name = courier.full_name;
     updatedCourierActivity.car_num = courier.car_num;
 
-    // ctx.session.dayFinished = true;
+    ctx.session.dayFinished = true;
+    ctx.session.awaitingDayFinish = false;
     ctx.session.accepted = false;
     ctx.session.currentEggs = null;
 
@@ -66,13 +67,13 @@ exports.confirmDayFinished = async (ctx) => {
     );
 
     // Delete the previous message
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
 
     ctx.session.updatedActivity = undefined;
         
     await report(updatedCourierActivity, ctx, phone_num, full_name, "📊 Kun tugatildi", forward = true);
 
-    cancel(ctx, `Ish kunini yakunladingiz.`);
+    await cancel(ctx, `Ish kunini yakunladingiz.`);
   } catch (error) {
     logger.error(error);
     await ctx.reply(

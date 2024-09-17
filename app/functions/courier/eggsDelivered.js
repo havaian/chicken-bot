@@ -14,6 +14,7 @@ const eggsDataKey = "eggsDeliveredData";
 let eggs = "";
 
 const generateEggButtons = (category, currentCategoryIndex) => {
+  console.log(currentCategoryIndex);
   const buttons = [
     currentCategoryIndex > 0 
       ? [
@@ -57,8 +58,8 @@ module.exports.deliverEggs = async (ctx) => {
   
     if (action === "eggs-amount") {
       // Delete the previous message
-      ctx.session[sessionKey] ? {} : await ctx.deleteMessage();
-      deleteMessage ? await ctx.deleteMessage() : {};
+      ctx.session[sessionKey] ? {} : await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
+      deleteMessage ? await ctx.editMessageReplyMarkup({ inline_keyboard: [] }) : {};
 
       ctx.session[sessionKey] = false;
 
@@ -68,13 +69,13 @@ module.exports.deliverEggs = async (ctx) => {
           ctx.session[sessionKey] = true;
 
           deleteMessage = true;
+
+          console.log(ctx.session.currentCategoryIndex);
   
-          setTimeout(async () => {
-            await ctx.reply(
-              `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
-              Markup.inlineKeyboard(generateEggButtons(category), ctx.session.currentCategoryIndex)
-            );
-          }, 1000);
+          await ctx.reply(
+            `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
+            Markup.inlineKeyboard(generateEggButtons(category, ctx.session.currentCategoryIndex))
+          );
           return;
       }
 
@@ -102,25 +103,24 @@ module.exports.deliverEggs = async (ctx) => {
         ]));
   
       // Delete the previous message
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
       return;
     } else if (action === "eggs-prev") {
       ctx.session.currentCategoryIndex = Math.max(ctx.session.currentCategoryIndex - 1, 0);
   
       // Delete the previous message
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
     } else if (action === "eggs-distributed-no") {
       // Delete the previous message
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
     }
   
     if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
       const category = ctx.session.categories[ctx.session.currentCategoryIndex];
-  
 
       await ctx.reply(
         `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
-        Markup.inlineKeyboard(generateEggButtons(category), ctx.session.currentCategoryIndex)
+        Markup.inlineKeyboard(generateEggButtons(category, ctx.session.currentCategoryIndex))
       );
     } else {
       await sendSummaryAndCompleteDelivery(ctx);
@@ -182,14 +182,14 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
     ctx.session.currentCategoryIndex = null;
   } catch (error) {
     logger.error(error);
-    ctx.reply("Xatolik yuz berdi. Qayta urunib ko'ring.");
+    await ctx.reply("Xatolik yuz berdi. Qayta urunib ko'ring.");
   }
 };
 
 module.exports.confirmEggsDelivered = async (ctx) => {
   try {
     if (ctx.match[0] === "eggs-distributed-yes") {
-      ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
     }
     await paymentReceived(ctx);
   } catch (error) {

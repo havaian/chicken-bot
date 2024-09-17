@@ -22,7 +22,7 @@ exports.sendLeftMoney = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-money-left-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
   } catch (error) {
@@ -74,7 +74,7 @@ exports.addLeftMoney = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-money-left-yes";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
   
     ctx.session[eggsDataKey] = undefined;

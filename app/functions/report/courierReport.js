@@ -79,47 +79,51 @@ const generateCourierHTML = (data, filename) => {
       let deliveredToIndex = startIndex;
 
       deliveries.forEach((delivery, rowIndex) => {
-        const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
-        const hasDelivery = deliveredEggs.length > 0;
-        const hasPayment = delivery.payment > 0;
-        
-        if (hasDelivery || hasPayment) {
-          const rowspan = Math.max(deliveredEggs.length, 1);
-          const paymentHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.payment || 0)}</td>`;
-          const debtHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.debt)}</td>`;
+        if (Object.keys(delivery).length > 0) {
+          const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
+          const hasDelivery = deliveredEggs.length > 0;
+          const hasPayment = delivery.payment > 0;
           
-          if (hasDelivery) {
-            deliveredEggs.forEach((egg, index) => {
+          if (hasDelivery || hasPayment) {
+            const rowspan = Math.max(deliveredEggs.length, 1);
+            const paymentHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.payment || 0)}</td>`;
+            const debtHtml = `<td style="text-align: center; vertical-align: middle; background-color: ${rowIndex % 2 === 0 ? '#f6f6f6' : '#ffffff'};" rowspan="${rowspan}">${formatNumber(delivery.debt)}</td>`;
+            
+            if (hasDelivery) {
+              deliveredEggs.forEach((egg, index) => {
+                const deliveryIndex = ++deliveredToIndex;
+                deliveryHtml += `
+                <tr>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                  <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${formatNumber(egg.amount)}</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price)}</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price * egg.amount)}</td>
+                  ${index === 0 ? paymentHtml : ''}
+                  ${index === 0 ? debtHtml : ''}
+                </tr>`;
+  
+                totalDeliveredByCategory[egg.category] = (totalDeliveredByCategory[egg.category] || 0) + egg.amount;
+              });
+            } else {
               const deliveryIndex = ++deliveredToIndex;
               deliveryHtml += `
-              <tr>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
-                <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${formatNumber(egg.amount)}</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price)}</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price * egg.amount)}</td>
-                ${index === 0 ? paymentHtml : ''}
-                ${index === 0 ? debtHtml : ''}
-              </tr>`;
-
-              totalDeliveredByCategory[egg.category] = (totalDeliveredByCategory[egg.category] || 0) + egg.amount;
-            });
-          } else {
-            const deliveryIndex = ++deliveredToIndex;
-            deliveryHtml += `
-              <tr>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
-                <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
-                <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
-                ${paymentHtml}
-                ${debtHtml}
-              </tr>`;
+                <tr>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                  <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
+                  ${paymentHtml}
+                  ${debtHtml}
+                </tr>`;
+            }
           }
+          
+          totalPayments += parseInt(delivery.payment || 0, 10);
+        } else {
+          deliveryHtml += "";
         }
-        
-        totalPayments += parseInt(delivery.payment || 0, 10);
       });
       
       return deliveryHtml;
@@ -248,33 +252,50 @@ const generateCourierHTML = (data, filename) => {
       let page = 0;
 
       lastIndexes[page] = 0;
+
+      if (delivered_to.length === 0) {
+        delivered_to.push({});
+      }
       
       delivered_to.forEach((delivery, rowIndex) => {
-        if (y === maxPerPart) {
-          y = 0;
-          page++;
-        }
-
-        if (!parts[page] || typeof parts[page] === "undefined") {
-          parts[page] = [];
-        }
-
-        parts[page].push(delivery);
-
-        lastIndexes[page] = y > lastIndexes[page] ? y : lastIndexes[page];
-
-        const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
-        const hasDelivery = deliveredEggs.length > 0;
-        const hasPayment = delivery.payment > 0;
-
-        if (hasDelivery) {
-          deliveredEggs.forEach((egg, index) => {
+        if (Object.keys(delivery).length > 0) {
+          if (y === maxPerPart) {
+            y = 0;
+            page++;
+          }
+  
+          if (!parts[page] || typeof parts[page] === "undefined") {
+            parts[page] = [];
+          }
+  
+          parts[page].push(delivery);
+  
+          lastIndexes[page] = y > lastIndexes[page] ? y : lastIndexes[page];
+  
+          const deliveredEggs = delivery.eggs.filter(egg => egg.amount > 0);
+          const hasDelivery = deliveredEggs.length > 0;
+          const hasPayment = delivery.payment > 0;
+  
+          if (hasDelivery) {
+            deliveredEggs.forEach((egg, index) => {
+              y++;
+            });
+          } else if (hasPayment) {
             y++;
-          });
-        } else if (hasPayment) {
-          y++;
+          }
+        } else {
+          if (y === maxPerPart) {
+            y = 0;
+            page++;
+          }
+
+          if (!parts[page] || typeof parts[page] === "undefined") {
+            parts[page] = [];
+          }
+  
+          parts[page].push(delivery);
         }
-      })
+      });
 
       return parts;
     };
@@ -332,36 +353,38 @@ const generateCourierExcel = async (data, filename) => {
     const courierName = data.courier_name || "Unknown Courier";
 
     data.delivered_to.forEach(delivery => {
-      const deliveryDate = new Date(data.date).toLocaleDateString("uz-UZ");
-      
-      const nonZeroEggs = delivery.eggs.filter(egg => egg.amount > 0);
-      
-      if (nonZeroEggs.length > 0) {
-        nonZeroEggs.forEach(egg => {
+      if (Object.keys(delivery).length > 0) {
+        const deliveryDate = new Date(data.date).toLocaleDateString("uz-UZ");
+        
+        const nonZeroEggs = delivery.eggs.filter(egg => egg.amount > 0);
+        
+        if (nonZeroEggs.length > 0) {
+          nonZeroEggs.forEach(egg => {
+            sheet.addRow([
+              deliveryDate,
+              courierName,
+              delivery.name,
+              egg.category,
+              egg.amount,
+              egg.price,
+              egg.amount * egg.price,
+              delivery.payment,
+              delivery.debt
+            ]);
+          });
+        } else if (delivery.payment > 0) {
           sheet.addRow([
             deliveryDate,
             courierName,
             delivery.name,
-            egg.category,
-            egg.amount,
-            egg.price,
-            egg.amount * egg.price,
+            '−',
+            '−',
+            '−',
+            '−',
             delivery.payment,
             delivery.debt
           ]);
-        });
-      } else if (delivery.payment > 0) {
-        sheet.addRow([
-          deliveryDate,
-          courierName,
-          delivery.name,
-          '−',
-          '−',
-          '−',
-          '−',
-          delivery.payment,
-          delivery.debt
-        ]);
+        }
       }
     });
 

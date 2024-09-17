@@ -30,7 +30,7 @@ module.exports.promptBroken = async (ctx) => {
         // const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyBroken-no");
 
         // if (deleteMsg) {
-        //     await ctx.deleteMessage();
+        //     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         // }
 
         // const keyboard = Markup.inlineKeyboard([
@@ -49,7 +49,7 @@ module.exports.promptBroken = async (ctx) => {
 
         // categoriesByTextObject(ctx, "awaitingWarehouseDailyBroken", "singan", keyboard, type, "dailyBroken", eggs);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Singan tuxumlar sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
@@ -59,9 +59,9 @@ module.exports.confirmBroken = async (ctx) => {
         ctx.session.categories = null;
         ctx.session.currentCategoryIndex = null;
         this.promptIncision(ctx);
-        await ctx.deleteMessage();
+        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Nasechka tuxum sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
@@ -73,7 +73,7 @@ module.exports.promptIncision = async (ctx) => {
         const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyIncision-no");
 
         if (deleteMsg) {
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         }
 
         const keyboard = Markup.inlineKeyboard([
@@ -92,7 +92,7 @@ module.exports.promptIncision = async (ctx) => {
 
         categoriesByTextObject(ctx, "awaitingWarehouseDailyIncision", "nasechka", keyboard, type, "dailyIncision", eggs);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Nasechka tuxumlar kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
@@ -102,9 +102,9 @@ module.exports.confirmIncision = async (ctx) => {
         ctx.session.categories = null;
         ctx.session.currentCategoryIndex = null;
         this.promptIntact(ctx);
-        await ctx.deleteMessage();
+        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Butun tuxum sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
@@ -116,7 +116,7 @@ module.exports.promptIntact = async (ctx) => {
         const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyIntact-no");
 
         if (deleteMsg) {
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         }
 
         const keyboard = Markup.inlineKeyboard([
@@ -135,7 +135,7 @@ module.exports.promptIntact = async (ctx) => {
 
         categoriesByTextObject(ctx, "awaitingWarehouseDailyIntact", "butun", keyboard, type, "dailyIntact", eggs);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Butun tuxum kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
@@ -148,7 +148,7 @@ const updateCategorySum = (currentData = {}, newData = {}) => {
             return acc;
         }, { ...currentData });
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
     }
 };
@@ -163,7 +163,7 @@ const exceedsBrokenByCategory = (totalBroken, dailyIntact, dailyIncision) => {
             return (intact + incision) > broken;
         });
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
     }
 };
@@ -187,15 +187,15 @@ module.exports.confirmIntact = async (ctx) => {
 
         // if (exceedsBrokenByCategory(combinedBroken, dailyIntact, dailyIncision)) {
         //     await cancel(ctx, "Butun va nasechka tuxumlar soni singan tuxumlar sonidan ko’p bo’lishi mumkin emas", true);
-        //     await ctx.deleteMessage();
+        //     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         //     return;
         // }
         ctx.session.categories = null;
         ctx.session.currentCategoryIndex = null;
         this.promptMelange(ctx);
-        await ctx.deleteMessage();
+        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Butun tuxumlarni kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 };
@@ -207,7 +207,7 @@ module.exports.promptMelange = async (ctx) => {
         const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyMelanj-no");
 
         if (deleteMsg) {
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         }
 
         const keyboard = Markup.inlineKeyboard([
@@ -226,7 +226,7 @@ module.exports.promptMelange = async (ctx) => {
 
         categoriesByTextObject(ctx, "awaitingWarehouseDailyMelange", "litr melanj", keyboard, type, "dailyMelange", eggs, true);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Melanj kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 };
@@ -243,7 +243,7 @@ module.exports.confirmMelange = async (ctx) => {
         const melange = {};
         const current = warehouseActivity.current || {};
 
-        await ctx.deleteMessage();
+        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
 
         for (let y in Object.keys(dailyMelange || {})) {
             const x = Object.keys(dailyMelange)[y];
@@ -297,9 +297,9 @@ module.exports.confirmMelange = async (ctx) => {
         ctx.session["dailyIntact"] = undefined;
         ctx.session["dailyIncision"] = undefined;
         ctx.session["dailyMelange"] = undefined;
-        cancel(ctx, "Tanlang:");
+        await cancel(ctx, "Tanlang:");
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Melanj kiritilishni tasdiqlashda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 };
@@ -315,7 +315,7 @@ const updateCategory = (currentData = {}, newData = {}, operation = 'add', isWar
             return acc;
         }, {});
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
     }
 };

@@ -47,9 +47,9 @@ const sendReport = async (ctx, warehousePhoneNum, data, forward, messageId) => {
         
         await report(data, ctx, "Ombor astatka", true);
 
-        cancel(ctx, "Tanlang:");
+        await cancel(ctx, "Tanlang:");
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Hisobot chiqarishda xatolik yuz berdi. Qayta urunib ko’ring");
     }
 }
@@ -75,7 +75,7 @@ module.exports.promptWarehouseRemainedConfirm = async (ctx) => {
                 ]
             ]))
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring");
     }
 }
@@ -103,12 +103,12 @@ module.exports.confirmWarehouseRemained = async (ctx) => {
         
         await report(updatedWarehouseActivity, ctx, "Ombor astatka", true);
 
-        cancel(ctx, "Tanlang:");
+        await cancel(ctx, "Tanlang:");
         
         // sendReport(ctx, ctx.session.user.phone_num, updatedWarehouseActivity);
-        await ctx.deleteMessage();
+        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!");
     }
 }
@@ -120,7 +120,7 @@ module.exports.promptWarehouseRemained = async (ctx) => {
         const deleteMsg = ctx?.match && (ctx?.match[0] === "warehouse-dailyDeficit-no");
 
         if (deleteMsg) {
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         }
 
         const keyboard = Markup.inlineKeyboard([
@@ -139,7 +139,7 @@ module.exports.promptWarehouseRemained = async (ctx) => {
 
         categoriesByTextObject(ctx, "awaitingWarehouseRemained", "qolgan", keyboard, type, "warehouseRemained", eggs);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!");
     }
 }
@@ -175,7 +175,7 @@ module.exports.sendDeficit = async (ctx) => {
         
         this.promptCircleVideo(ctx);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Xatolik yuz berdi! Qayta urunib ko’ring!");
     }
 };
@@ -188,9 +188,9 @@ module.exports.promptCircleVideo = async (ctx) => {
     //             ["Bekor qilish ❌"]
     //         ]));
     //     ctx.session.awaitingCircleVideoWarehouse2 = true;
-    //     await ctx.deleteMessage();
+    //     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!",
             Markup.keyboard([
                 ["Bekor qilish ❌"]
@@ -228,11 +228,11 @@ const handleCircleVideo = async (ctx) => {
         ctx.session["warehouseRemained"] = {};
         ctx.session["deficit"] = 0;
 
-        cancel(ctx, "Tanlang:");
+        await cancel(ctx, "Tanlang:");
 
         // sendReport(ctx, ctx.session.user.phone_num, updatedWarehouseActivity, true, messageId);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!");
     }
 }

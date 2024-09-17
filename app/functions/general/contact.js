@@ -22,8 +22,18 @@ module.exports = async (ctx) => {
     });
     const user = response.data;
 
+    let courierData;
+
     // Check if telegram_chat_id is present, if not, update the user
     if (user.userType === "courier") {
+      const response = await axios.get(`/courier/activity/today/${user.phone_num}`, {
+        headers: {
+          "x-user-telegram-chat-id": ctx.chat.id,
+        },
+      });
+
+      courierData = response.data;
+
       if (!user.telegram_chat_id) {
         user.telegram_chat_id = userId;
         await axios.put(`/courier/${user._id}`, user, {
@@ -47,13 +57,23 @@ module.exports = async (ctx) => {
     ctx.session.user = user;
 
     if (ctx.session.user.userType === "courier") {
-      await ctx.reply(
-        "Salom!",
-        Markup.keyboard([
-          ["Tuxum yetkazildi", "Kunni yakunlash"],
-          ["Chiqim", "Hisobot"]
-        ])
-      );
+      if (courierData.unfinished) {
+        await ctx.reply(
+          "Kechagi kuningiz tugatilmagan",
+          Markup.keyboard([
+            ["Kunni yakunlash"]
+          ])
+        );
+        ctx.session.awaitingDayFinish = true;
+      } else {
+        await ctx.reply(
+          "Salom!",
+          Markup.keyboard([
+            ["Tuxum yetkazildi", "Kunni yakunlash"],
+            ["Chiqim", "Hisobot"]
+          ])
+        );
+      }
     } else if (ctx.session.user.userType === "warehouse") {
       await ctx.reply(
         "Salom!",
@@ -63,7 +83,6 @@ module.exports = async (ctx) => {
           // ["Singan tuxum", "Qolgan tuxum"], 
           ["Ombor holati"]
         ])
-          
       );
     }
   } catch (error) {

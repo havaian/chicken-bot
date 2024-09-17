@@ -20,7 +20,7 @@ module.exports.promptEggImporter = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-intake-eggs-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     const response = await axios.get(`/importer/all`, {
@@ -56,7 +56,7 @@ module.exports.promptEggImporter = async (ctx) => {
     );
   } catch (error) {
     logger.error(error);
-    ctx.reply("Tuxum fabrikasini ko’rsatishda xatolik yuz berdi. Qayta urunib ko’ring.");
+    await ctx.reply("Tuxum fabrikasini ko’rsatishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
@@ -67,7 +67,7 @@ module.exports.handleEggImporter = async (ctx) => {
     const intakeTime = new Date().toLocaleString();
     ctx.session.intakeTime = intakeTime;
     this.sendIntakeEggs(ctx);
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
   } catch (error) {
     logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
@@ -110,7 +110,7 @@ module.exports.promptEggIntake = async (ctx, type) => {
     }
   } catch (error) {
     logger.error(error);
-    ctx.reply("Olingdan tuxum sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring.");
+    await ctx.reply("Olingdan tuxum sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
@@ -230,7 +230,7 @@ exports.addIntakeEggs = async (ctx) => {
     );
 
     // Delete the previous message
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     
     await report(updatedWarehouseActivity, ctx, "Tuxum kirimi", true);
 

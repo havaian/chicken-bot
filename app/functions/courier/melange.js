@@ -39,10 +39,14 @@ const promptMelange = async (ctx, type) => {
                     await ctx.reply(`Melanj 0 litrdan kam bolishi mumkin emas`);
                     return;
                 }
-    
-                if (!ctx.session[eggsDataKey][category]) {
-                    ctx.session[eggsDataKey][category] = 0;
+  
+                if (ctx.session[eggsDataKey] && !ctx.session[eggsDataKey][category]) {
+                  ctx.session[eggsDataKey][category] = 0;
+                } else {
+                  ctx.session = { ...ctx.session.user };
+                  return;
                 }
+                
                 ctx.session[eggsDataKey][category] += amount;
     
                 ctx.session.currentCategoryIndex++;
@@ -56,7 +60,7 @@ const promptMelange = async (ctx, type) => {
             }
         }
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
     }
 }
@@ -68,7 +72,7 @@ exports.sendMelange = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-melange-eggs-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     promptMelange(ctx, type);
@@ -107,7 +111,7 @@ module.exports.acceptMelange = async (ctx) => {
         ])
       );
     } catch (error) {
-      logger.info(error);
+      logger.error(error);
       await ctx.reply("Melanj kiritilganini tasdiqlastishda xatolik yuz berdi. Qayta uruni ko'ring");
     }
 };
@@ -135,14 +139,14 @@ module.exports.confirmMelangeEggs = async (ctx) => {
         const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-melange-eggs-yes";
     
         if (deleteMsg) {
-          await ctx.deleteMessage();
+          await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         }
 
         ctx.session[eggsDataKey] = undefined;
 
         await sendLeftMoney(ctx);
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
         await ctx.reply(
             "Melanj qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
         );

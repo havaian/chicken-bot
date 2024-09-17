@@ -73,8 +73,6 @@ module.exports.promptCourier = async (ctx) => {
         [Markup.button.callback("Bekor qilish ❌", "cancel")],
       ])
     );
-
-    await ctx.deleteMessage();
   } catch (error) {
     logger.error(error);
     await ctx.reply("Mashinalar topilmadi. Qayta urunib ko’ring");
@@ -111,7 +109,7 @@ module.exports.promptCourierBroken = async (ctx) => {
     const deleteMsg = ctx?.match && (ctx?.match[0] === "courier-broken-no" || ctx?.match[0].split(":")[0] === "select-courier");
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
     
     const courierResponse = await axios.get(`/courier/${ctx.session.selectedCourier._id}`, {
@@ -122,7 +120,7 @@ module.exports.promptCourierBroken = async (ctx) => {
     const courier = courierResponse.data;
 
     if (!courier.telegram_chat_id || typeof courier.telegram_chat_id === "undefined") {
-      ctx.reply("Bu kuryer uchun telegram id topilmadi! Kuryer birinchi botga kirib /start qilib kontakt yuborishi zarur");
+      await ctx.reply("Bu kuryer uchun telegram id topilmadi! Kuryer birinchi botga kirib /start qilib kontakt yuborishi zarur");
       ctx.session.selectedCourier = {};
       return;
     }
@@ -152,7 +150,7 @@ module.exports.promptCourierBroken = async (ctx) => {
 
 module.exports.confirmCourierBroken = async (ctx) => {
   try {
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     this.promptCourierRemained(ctx);
   } catch (error) {
     logger.error(error);
@@ -167,7 +165,7 @@ module.exports.promptCourierRemained = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "courier-remained-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     const keyboard = Markup.inlineKeyboard([
@@ -195,7 +193,7 @@ module.exports.promptCourierRemained = async (ctx) => {
 
 module.exports.confirmCourierRemained = async (ctx) => {
   try {
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     this.promptCourierMelange(ctx);
   } catch (error) {
     logger.error(error);
@@ -210,7 +208,7 @@ module.exports.promptCourierMelange = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "courier-melange-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     const keyboard = Markup.inlineKeyboard([
@@ -238,7 +236,7 @@ module.exports.promptCourierMelange = async (ctx) => {
 
 module.exports.confirmCourierMelange = async (ctx) => {
   try {
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     this.promptDistribution(ctx);
   } catch (error) {
     logger.error(error);
@@ -253,7 +251,7 @@ module.exports.promptDistribution = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "accept-distribution-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
     const keyboard = Markup.inlineKeyboard([
@@ -281,7 +279,7 @@ module.exports.promptDistribution = async (ctx) => {
 
 module.exports.confirmDistribution = async (ctx) => {
   try {
-    await ctx.deleteMessage();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     this.promptCircleVideo(ctx);
   } catch (error) {
     logger.error(error);
@@ -341,7 +339,7 @@ const handleCircleVideo = async (ctx) => {
         current[z] = 0;
       }
       if (current[z] - ctx.session.distributedEggsData[x] < 0) {
-        ctx.reply("Kuryerga yuklangan tuxum soni omborda bor tuxum sonidan katta");
+        await ctx.reply("Kuryerga yuklangan tuxum soni omborda bor tuxum sonidan katta");
         return;
       }
     }
@@ -435,10 +433,10 @@ const handleCircleVideo = async (ctx) => {
       finalMessageGroup
     );
 
-    cancel(ctx, "Xabar kuryerga jo’natildi.");
+    await cancel(ctx, "Xabar kuryerga jo’natildi.");
   } catch (error) {
     logger.error(error);
-    ctx.reply("Kuryerga xabar jo’natishda xatolik yuz berdi .")
+    await ctx.reply("Kuryerga xabar jo’natishda xatolik yuz berdi .")
   }
 };
 
@@ -523,7 +521,7 @@ module.exports.courierAccept = async (ctx) => {
     // Usage for warehouse
     const updatedWarehouseActivity = {
       ...warehouseActivity,
-      current: updateCategory(warehouseActivity.current, distributedEggsData, 'subtract', true), // is warehouse? true
+      current: await updateCategory(warehouseActivity.current, distributedEggsData, 'subtract', true), // is warehouse? true
       distributed_to: updatedDistributedTo,
     };
 
@@ -580,7 +578,7 @@ module.exports.courierAccept = async (ctx) => {
 };
 
 // Helper function to update category totals
-const updateCategory = (currentData = {}, newData = {}, operation = 'add', isWarehouse = false) => {
+const updateCategory = async (currentData = {}, newData = {}, operation = 'add', isWarehouse = false) => {
   try {
     const result = { ...currentData };
   
@@ -649,7 +647,7 @@ module.exports.courierReject = async (ctx) => {
       groupId,
       finalMessageGroup
     );
-    await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });(ctx.callbackQuery.message.message_id);
     await ctx.reply(`❌ Tuxumlar xisobga qo’shilishi rad etildi.\n\nNasechka:\n${brokenEggsMessage}\n\nOstatka:\n${remainedEggsMessage}\n\nMelanj:\n${melangeEggsMessage}\n\nYuklangan:\n${distributedEggsMessage}`);
   } catch (error) {
     logger.error(error);

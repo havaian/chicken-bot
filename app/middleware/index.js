@@ -21,8 +21,7 @@ exports.middleware = async (ctx, next) => {
         },
       });
     } else {
-      // If user data is already present, continue to next middleware
-      next();
+      return next();
     }
   } catch (error) {
     logger.error(error);

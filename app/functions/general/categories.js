@@ -23,7 +23,7 @@ module.exports.categoriesByButtonsObject = async (ctx, sessionKey, actionKey1, a
             ctx.session.currentCategoryIndex++;
     
             // Delete the previous message
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         } else if (action === actionKey2) {
             const category = ctx.session.categories[ctx.session.currentCategoryIndex];
     
@@ -31,7 +31,7 @@ module.exports.categoriesByButtonsObject = async (ctx, sessionKey, actionKey1, a
             await ctx.reply(`Nechta ${letters[category]} kategoriya tuxum ${message2} kiriting:`);
     
             // Delete the previous message
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
             return;
         }
     
@@ -63,7 +63,7 @@ module.exports.categoriesByButtonsObject = async (ctx, sessionKey, actionKey1, a
             await sendSummaryAndCompleteObject(ctx, sessionKey, keyboard, eggsDataKey, message1);
         } 
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
     }
 };
 
@@ -113,7 +113,7 @@ module.exports.categoriesByTextObject = async (ctx, sessionKey, message, keyboar
             }
         }
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
     }
 };
 
@@ -134,7 +134,7 @@ const sendSummaryAndCompleteObject = async (ctx, sessionKey, keyboard, eggsDataK
           keyboard
         );
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
     }
 };
 
@@ -153,7 +153,7 @@ module.exports.categoriesByButtonsArray = async (ctx, sessionKey, actionKey1, ac
             ctx.session.currentCategoryIndex++;
     
             // Delete the previous message
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         } else if (action === actionKey2) {
             const category = ctx.session.categories[ctx.session.currentCategoryIndex];
     
@@ -161,7 +161,7 @@ module.exports.categoriesByButtonsArray = async (ctx, sessionKey, actionKey1, ac
             await ctx.reply(`Nechta ${letters[category]} kategoriya tuxum ${message2} kiriting:`);
     
             // Delete the previous message
-            await ctx.deleteMessage();
+            await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
             return;
         }
     
@@ -193,7 +193,7 @@ module.exports.categoriesByButtonsArray = async (ctx, sessionKey, actionKey1, ac
             await sendSummaryAndCompleteArray(ctx, sessionKey, keyboard, eggsDataKey, message1);
         } 
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
     }
 };
 
@@ -228,7 +228,7 @@ module.exports.categoriesByTextArray = async (ctx, sessionKey, message, keyboard
             }
         }
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
     }
 };
 
@@ -249,7 +249,7 @@ const sendSummaryAndCompleteArray = async (ctx, sessionKey, keyboard, eggsDataKe
           keyboard
         );
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
     }
 };
 
@@ -272,6 +272,6 @@ module.exports.saveEggs = async (ctx, eggsKey, eggsDataKey) => {
         const updatedActivity = activity;
         updatedActivity[eggsKey] = ctx.session[eggsDataKey];
     } catch (error) {
-        logger.info(error);
+        logger.error(error);
     }
 }

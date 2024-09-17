@@ -1,7 +1,7 @@
 // const { Markup } = require("telegraf");
 const axios = require("../../axios");
 
-// const { logger, readLog } = require("../../utils/logging");
+const { logger, readLog } = require("../../utils/logging");
 
 const { sendIncisionEggs } = require("./incision");
 const { sendMelange } = require("./melange");
@@ -104,7 +104,7 @@ exports.sendBrokenEggs = async (ctx) => {
 //       ])
 //     );
 //   } catch (error) {
-//     logger.info(error);
+//     logger.error(error);
 //     await ctx.reply(
 //       "Singan tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
 //     );
@@ -155,7 +155,7 @@ exports.sendBrokenEggs = async (ctx) => {
 //     );
 
 //     // Delete the previous message
-//     await ctx.deleteMessage();
+//     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 
 //     ctx.session[eggsDataKey] = {};
 //     ctx.session.categories = null;
@@ -164,7 +164,7 @@ exports.sendBrokenEggs = async (ctx) => {
 
 //     await sendIncisionEggs(ctx);
 //   } catch (error) {
-//     logger.info(error);
+//     logger.error(error);
 //     await ctx.reply(
 //       "Singan tuxumlar qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
 //     );

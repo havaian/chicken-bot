@@ -15,11 +15,11 @@ module.exports = async (ctx) => {
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-transaction-no";
 
     if (deleteMsg) {
-      await ctx.deleteMessage();
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
     
     ctx.session.awaitingPaymentAmount = true;
-    await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nNecha pul olganingizni kiriting:`);
+    await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nQarz: ${ctx.session.buyer.debt.toLocaleString()}\n\nNecha pul olganingizni kiriting:`);
   } catch (error) {
     logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
@@ -32,13 +32,6 @@ module.exports.completeTransaction = async (ctx) => {
   
     const paymentAmount = ctx.message.text
     selectedBuyer.paymentAmount = paymentAmount;
-
-    if ((ctx.session.buyer.newDebt - selectedBuyer.paymentAmount) > ctx.session.buyer.debt_limit) {
-      ctx.reply("Ushbu mijozning qoldiq qarzi ruxsat berilgan chegaradan oshgan");
-      await ctx.reply(`Mijoz: ${ctx.session.buyer.full_name}\n\nNecha pul olganingizni kiriting:`);
-      ctx.session.awaitingPaymentAmount = true;
-      return;
-    }
   
     if (paymentAmount < 0) {
       await ctx.reply("Noldan baland bo’lgan pul qiymatini kiriting");
@@ -69,7 +62,7 @@ module.exports.confirmTransaction = async (ctx) => {
     await handleCircleVideo(ctx);
   
     // Delete the previous message
-    await ctx.deleteMessage(ctx.callbackQuery.message.message_id);
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });(ctx.callbackQuery.message.message_id);
   } catch (error) {
     logger.error(error);
     ctx.reply("Xatolik yuz berdi. Qayta urunib ko’ring.");
@@ -136,7 +129,7 @@ const handleCircleVideo = async (ctx) => {
 
       if (Object.keys(current).length > 0) {
         if (current[category] - amount < 0) { 
-          ctx.reply("Sizning moshinangizda tuxum yetarli emas"); 
+          await ctx.reply("Sizning moshinangizda tuxum yetarli emas"); 
           return; 
         } else { 
           current[category] = current[category] - amount;
@@ -237,12 +230,12 @@ const handleCircleVideo = async (ctx) => {
     try {
       await report(updatedCourierActivity, ctx, phone_num, full_name, "Tuxum yetkazildi", forward = true);
     } catch (reportError) {
-      logger.info("Error in report function:", reportError);
+      console.log("Error in report function:", reportError);
       // Optionally, you can send a message to the user or perform any other error handling
       // await ctx.reply("Hisobotni yuborishda xatolik yuz berdi, lekin ma'lumotlar saqlandi.");
     }
 
-    cancel(ctx, "Tanlang:");
+    await cancel(ctx, "Tanlang:");
   } catch (error) {
     logger.error(error);
     await ctx.reply(
