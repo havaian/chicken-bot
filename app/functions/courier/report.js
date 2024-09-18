@@ -65,16 +65,7 @@ module.exports = async (data, ctx, phone_num, full_name, message, forward = true
         logger.error("Error sending last report image to user:", error);
       }
     }
-
-    // Send Excel file to user if day is finished
-    if (data.day_finished) {
-      try {
-        await ctx.replyWithDocument({ source: excelFilename });
-      } catch (error) {
-        logger.error("Error sending Excel report to user:", error);
-      }
-    }
-
+    
     const caption = `${full_name}. ${message}`;
 
     // Forward reports to the group

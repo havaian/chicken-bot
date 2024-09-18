@@ -95,7 +95,7 @@ const generateCourierHTML = (data, filename) => {
                 deliveryHtml += `
                 <tr>
                   <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.buyer.full_name}</td>
                   <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${egg.category}: ${formatNumber(egg.amount)}</td>
                   <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price)}</td>
                   <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${formatNumber(egg.price * egg.amount)}</td>
@@ -110,7 +110,7 @@ const generateCourierHTML = (data, filename) => {
               deliveryHtml += `
                 <tr>
                   <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${deliveryIndex}</td>
-                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.name}</td>
+                  <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">${delivery.buyer.full_name}</td>
                   <td style="text-align: left; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
                   <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
                   <td style="text-align: center; vertical-align: middle; background-color: ${deliveryIndex % 2 !== 0 ? '#f6f6f6' : '#ffffff'};">−</td>
@@ -338,7 +338,8 @@ const generateCourierExcel = async (data, filename) => {
     const sheet = workbook.addWorksheet("Courier Report");
 
     // Set up headers
-    sheet.addRow([
+    const headers = [
+      "ID",
       "Дата",
       "Доставка",
       "Харидор",
@@ -348,7 +349,18 @@ const generateCourierExcel = async (data, filename) => {
       "Сумма",
       "Оплата",
       "Остаток"
-    ]);
+    ];
+    const headerRow = sheet.addRow(headers);
+
+    // Style the header row
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFD3D3D3' }
+      };
+    });
 
     const courierName = data.courier_name || "Unknown Courier";
 
@@ -360,10 +372,11 @@ const generateCourierExcel = async (data, filename) => {
         
         if (nonZeroEggs.length > 0) {
           nonZeroEggs.forEach(egg => {
-            sheet.addRow([
+            const row = sheet.addRow([
+              delivery._id ? delivery._id : '',
               deliveryDate,
               courierName,
-              delivery.name,
+              delivery.buyer.full_name,
               egg.category,
               egg.amount,
               egg.price,
@@ -371,33 +384,73 @@ const generateCourierExcel = async (data, filename) => {
               delivery.payment,
               delivery.debt
             ]);
+            
+            // Lock only the ID cell in this row
+            row.getCell(1).protection = { locked: true };
           });
         } else if (delivery.payment > 0) {
-          sheet.addRow([
+          const row = sheet.addRow([
+            delivery._id ? delivery._id : '',
             deliveryDate,
             courierName,
-            delivery.name,
-            '−',
-            '−',
-            '−',
-            '−',
+            delivery.buyer.full_name,
+            ' ',
+            ' ',
+            ' ',
+            ' ',
             delivery.payment,
             delivery.debt
           ]);
+          
+          // Lock only the ID cell in this row
+          row.getCell(1).protection = { locked: true };
         }
       }
     });
 
-    // Auto-fit columns
-    sheet.columns.forEach(column => {
-      let maxLength = 0;
-      column.eachCell({ includeEmpty: true }, cell => {
-        const columnLength = cell.value ? cell.value.toString().length : 10;
-        if (columnLength > maxLength) {
-          maxLength = columnLength;
-        }
-      });
-      column.width = maxLength < 10 ? 10 : maxLength;
+    // Hide the ID column
+    sheet.getColumn(1).hidden = true;
+
+    // Protect the sheet, but allow editing of unlocked cells
+    sheet.protect(process.env.EXCEL_PASS, {
+      selectLockedCells: false,
+      selectUnlockedCells: true,
+      formatCells: true,
+      formatColumns: true,
+      formatRows: true,
+      insertColumns: false,
+      insertRows: true,
+      insertHyperlinks: true,
+      deleteColumns: false,
+      deleteRows: true,
+      sort: true,
+      autoFilter: true,
+      pivotTables: true
+    });
+
+    // Auto-fit columns (excluding the hidden ID column)
+    sheet.columns.forEach((column, index) => {
+      if (index > 0) { // Skip the first (hidden) column
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, cell => {
+          const columnLength = cell.value ? cell.value.toString().length : 10;
+          if (columnLength > maxLength) {
+            maxLength = columnLength;
+          }
+        });
+        column.width = maxLength < 10 ? 10 : maxLength;
+      }
+    });
+
+    // Unlock all cells except the ID column
+    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber > 1) { // Skip header row
+        row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+          if (colNumber > 1) { // Skip ID column
+            cell.protection = { locked: false };
+          }
+        });
+      }
     });
 
     await workbook.xlsx.writeFile(filename);
@@ -411,4 +464,3 @@ module.exports = {
   generateCourierHTML,
   generateCourierExcel,
 };
-

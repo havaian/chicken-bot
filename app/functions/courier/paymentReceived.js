@@ -6,6 +6,8 @@ const sendSMS = require("../../utils/message/index");
 
 const cancel = require("../general/cancel");
 
+const generateUniqueId = require('../general/generateId');
+
 const { logger, readLog } = require("../../utils/logging");
 
 const report = require("./report");
@@ -137,8 +139,11 @@ const handleCircleVideo = async (ctx) => {
       }
     }
 
+    const uniqueId = await generateUniqueId();
+
     // Create delivered_to object with details
     const deliveryDetailsBuyer = {
+      _id: uniqueId,
       courier: {
         _id: courier._id,
         full_name: courier.full_name,
@@ -188,12 +193,12 @@ const handleCircleVideo = async (ctx) => {
 
     // Create delivered_to object with details
     const deliveryDetailsCourier = {
+      _id: uniqueId,
       buyer: {
         _id: selectedBuyer._id,
         full_name: selectedBuyer.full_name,
         phone_num: selectedBuyer.phone_num,
       },
-      name: selectedBuyer.full_name,
       eggs: selectedBuyer.eggsDelivered || [],
       payment: paymentAmount || 0,
       debt: buyerActivity.debt + totalPrice - paymentAmount,
