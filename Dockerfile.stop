@@ -70,6 +70,4 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # Run the application
-# CMD ["npm", "run", "build"]
-# CMD ["npm", "run", "dev"]
 CMD ["npm", "run", "stop"]

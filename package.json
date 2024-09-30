@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node --trace-warnings index.js",
+    "stop": "node --trace-warnings stop.js",
     "dev": "nodemon index.js"
   },
   "author": "",
