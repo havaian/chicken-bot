@@ -14,15 +14,15 @@ module.exports = async (ctx, message = "Bekor qilindi.", showKeyboard = true, de
           ]);
         } else {
           keyboardOptions = Markup.keyboard([
-            ["Tuxum yetkazildi", "Kunni yakunlash"],
+            ["Maxsulot yetkazildi", "Kunni yakunlash"],
             ["Chiqim", "Hisobot"]
           ]);
         }
       } else if (ctx.session.user.userType === "warehouse") {
         keyboardOptions = Markup.keyboard([
-          ["Tuxum kirimi", "Tuxum chiqimi"],
-          ["Singan tuxum", "Qayta yuklash"],
-          // ["Singan tuxum", "Qolgan tuxum"],
+          ["Maxsulot kirimi", "Maxsulot chiqimi"],
+          ["Singan maxsulot", "Qayta yuklash"],
+          // ["Singan maxsulot", "Qolgan maxsulot"],
           ["Ombor holati"]
         ]);
       }

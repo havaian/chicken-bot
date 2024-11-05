@@ -9,7 +9,7 @@ const { categoriesByTextObject } = require("../general/categories");
 
 const letters = require("../data/btnEmojis");
 
-const eggs = {
+const items = {
     "D1": 960,
     "D2": 990
 };
@@ -67,7 +67,7 @@ module.exports.promptWarehouseRemainedConfirm = async (ctx) => {
             .map(([category, amount]) => `${letters[category]}: ${amount}`)
             .join("\n");
 
-        await ctx.reply(`Omborda qolgan tuxum bo’yicha ma’lumot:\n\n${summaryMessage}`,
+        await ctx.reply(`Omborda qolgan maxsulot bo’yicha ma’lumot:\n\n${summaryMessage}`,
             Markup.inlineKeyboard([
                 [
                     Markup.button.callback("Ha ✅", "warehouse-remainedConfirm-yes"),
@@ -131,13 +131,13 @@ module.exports.promptWarehouseRemained = async (ctx) => {
         ]);
 
         if (type === 2) {
-            await ctx.reply("Ombordagi qolgan tuxumlar sonini kiriting",
+            await ctx.reply("Ombordagi qolgan maxsulotlar sonini kiriting",
                 Markup.keyboard([
                     ["Bekor qilish ❌"]
                 ]));
         }
 
-        categoriesByTextObject(ctx, "awaitingWarehouseRemained", "qolgan", keyboard, type, "warehouseRemained", eggs);
+        categoriesByTextObject(ctx, "awaitingWarehouseRemained", "qolgan", keyboard, type, "warehouseRemained", items);
     } catch (error) {
         logger.error(error);
         await ctx.reply("Xatolik yuz berdi!. Qayta urunib ko’ring!");
@@ -168,7 +168,7 @@ module.exports.sendDeficit = async (ctx) => {
             .map(([category, amount]) => `${letters[category]}: ${amount}ta`)
             .join("\n");
 
-        await ctx.reply(`Sizda quyidagi tuxum kamomad aniqlandi:\n${deficitMessage}`);
+        await ctx.reply(`Sizda quyidagi maxsulot kamomad aniqlandi:\n${deficitMessage}`);
 
         ctx.session.categories = null;
         ctx.session.currentCategoryIndex = null;

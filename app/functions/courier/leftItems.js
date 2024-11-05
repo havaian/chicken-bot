@@ -10,16 +10,16 @@ const nonZero = require("../general/non-zero");
 const letters = require("../data/btnEmojis");
 
 const sessionKey = "awaitingLeft";
-const eggsDataKey = "eggsLeftData";
+const itemsDataKey = "itemsLeftData";
 
 const promptLeft = async (ctx, type) => {
   try {
-    const eggs = nonZero(ctx.session.currentEggs);
+    const items = nonZero(ctx.session.currentItems);
 
     if (!ctx.session.categories || type === 2) {
-      ctx.session.categories = Object.keys(eggs);
+      ctx.session.categories = Object.keys(items);
       ctx.session.currentCategoryIndex = 0;
-      ctx.session[eggsDataKey] = {};
+      ctx.session[itemsDataKey] = {};
       ctx.session[sessionKey] = true;
     }
   
@@ -33,28 +33,28 @@ const promptLeft = async (ctx, type) => {
           return;
         }
 
-        // if (amount > eggs[category]) {
-        //   await ctx.reply(`Sizning mashinangizda ${eggs[category]}ta ${letters[category]} kategoriya tuxum qolgan!`);
+        // if (amount > items[category]) {
+        //   await ctx.reply(`Sizning mashinangizda ${items[category]}ta ${letters[category]} kategoriya maxsulot qolgan!`);
         //   return;
         // }
   
-        if (ctx.session[eggsDataKey] && !ctx.session[eggsDataKey][category]) {
-          ctx.session[eggsDataKey][category] = 0;
+        if (ctx.session[itemsDataKey] && !ctx.session[itemsDataKey][category]) {
+          ctx.session[itemsDataKey][category] = 0;
         } else {
           ctx.session = { ...ctx.session.user };
           return;
         }
         
-        ctx.session[eggsDataKey][category] += amount;
+        ctx.session[itemsDataKey][category] += amount;
   
         ctx.session.currentCategoryIndex++;
       }
   
       if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
         const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
-        await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum butun qolgan?`);
+        await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya maxsulot butun qolgan?`);
       } else {
-        await confirmLeftEggs(ctx);
+        await confirmLeftItems(ctx);
       }
     }
   } catch (error) {
@@ -65,7 +65,7 @@ const promptLeft = async (ctx, type) => {
 
 exports.sendLeft = async (ctx) => {
   try {
-    const type = ((ctx?.match && ctx?.match[0] === "confirm-left-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
+    const type = ((ctx?.match && ctx?.match[0] === "confirm-left-no") || typeof ctx.session[itemsDataKey] === "undefined") ? 2 : 1;
 
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-left-no";
 
@@ -75,7 +75,7 @@ exports.sendLeft = async (ctx) => {
 
     if (type === 2) {
       await ctx.reply(
-        "Mashinada nechta tuxum butun qolganini kiriting",
+        "Mashinada nechta maxsulot butun qolganini kiriting",
         Markup.keyboard([
           ["Bekor qilish ❌"]
         ])
@@ -86,31 +86,31 @@ exports.sendLeft = async (ctx) => {
   } catch (error) {
     logger.error(error);
     await ctx.reply(
-      "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Qolgan butun maxsulot qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
   }
 };
 
-const confirmLeftEggs = async (ctx) => {
+const confirmLeftItems = async (ctx) => {
   try {
-    const leftEggs = ctx.session[eggsDataKey];
+    const leftItems = ctx.session[itemsDataKey];
     let amountMsg = "";
 
-    if (!leftEggs || Object.keys(leftEggs).length === 0) {
+    if (!leftItems || Object.keys(leftItems).length === 0) {
       amountMsg = "yo'q";
-      await ctx.reply(`Qolgan butun tuxumlar: ${amountMsg}`);
+      await ctx.reply(`Qolgan butun maxsulotlar: ${amountMsg}`);
       this.addLeft(ctx);
       return;
     } else {
-      for (let category in leftEggs) {
-        amountMsg += `${letters[category]}: ${leftEggs[category]}\n`;
+      for (let category in leftItems) {
+        amountMsg += `${letters[category]}: ${leftItems[category]}\n`;
       }
     }
 
     ctx.session[sessionKey] = false;
 
-    await ctx.reply(`Qolgan butun tuxumlar\n\n${amountMsg}`);
-    await ctx.reply(`Kiritilganini qolgan butun tuxumlar sonini tasdiqlaysizmi?`,
+    await ctx.reply(`Qolgan butun maxsulotlar\n\n${amountMsg}`);
+    await ctx.reply(`Kiritilganini qolgan butun maxsulotlar sonini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
         [Markup.button.callback("Ha ✅", "confirm-left-yes"),
         Markup.button.callback("Yo'q ❌", "confirm-left-no")],
@@ -121,7 +121,7 @@ const confirmLeftEggs = async (ctx) => {
   } catch (error) {
     logger.error(error);
     await ctx.reply(
-      "Qolgan butun tuxum qo'shishda xatolik yuz berdi. Qayta urunib ko'ring"
+      "Qolgan butun maxsulot qo'shishda xatolik yuz berdi. Qayta urunib ko'ring"
     );
   }
 };
@@ -138,8 +138,8 @@ exports.addLeft = async (ctx) => {
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
 
-    // for (let y in Object.keys(ctx.session[eggsDataKey] || {})) {
-    //     const x = Object.keys(ctx.session[eggsDataKey])[y];
+    // for (let y in Object.keys(ctx.session[itemsDataKey] || {})) {
+    //     const x = Object.keys(ctx.session[itemsDataKey])[y];
       
     //     // If current[x] is not defined, set it to 0
     //     if (typeof current[x] === 'undefined') {
@@ -151,12 +151,12 @@ exports.addLeft = async (ctx) => {
     //       incision[x] = 0;
     //     }
 
-    //     if (current[x] < ctx.session[eggsDataKey][x]) {
+    //     if (current[x] < ctx.session[itemsDataKey][x]) {
     //       await ctx.reply(`Sizda ${letters[x]} kategoriya bo’yicha ${current[x]}ta dan ko’p qolishi mumkin emas!`,
     //         Markup.keyboard([["Bekor qilish ❌"]])
     //       );
 
-    //       ctx.session[eggsDataKey] = undefined;
+    //       ctx.session[itemsDataKey] = undefined;
     //       ctx.session.categories = null;
     //       ctx.session.currentCategoryIndex = null;
 
@@ -166,10 +166,10 @@ exports.addLeft = async (ctx) => {
 
     ctx.session.updatedActivity = {
       ...ctx.session.updatedActivity,
-      current_by_courier: ctx.session[eggsDataKey],
+      current_by_courier: ctx.session[itemsDataKey],
     };
   
-    ctx.session[eggsDataKey] = undefined;
+    ctx.session[itemsDataKey] = undefined;
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
 
@@ -177,7 +177,7 @@ exports.addLeft = async (ctx) => {
   } catch (error) {
     logger.error(error);
     await ctx.reply(
-      "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Qolgan butun maxsulot qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
   }
 };

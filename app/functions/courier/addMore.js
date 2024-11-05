@@ -23,11 +23,11 @@ module.exports = async (ctx) => {
     const current = courierActivity.current;
 
     if (Object.keys(current).length === 0 || typeof current === "undefined") {
-      await ctx.reply("Mashinada tuxum yo’q. Ombordan tuxum olishingiz kerak.");
+      await ctx.reply("Mashinada maxsulot yo’q. Ombordan maxsulot olishingiz kerak.");
       return;
     }
 
-    ctx.session.currentEggs = current;
+    ctx.session.currentItems = current;
     
     ctx.session.awaitingClientName = true;
     await ctx.reply("Do’kon nomini kiriting.",

@@ -54,7 +54,7 @@ exports.confirmDayFinished = async (ctx) => {
     ctx.session.dayFinished = true;
     ctx.session.awaitingDayFinish = false;
     ctx.session.accepted = false;
-    ctx.session.currentEggs = null;
+    ctx.session.currentItems = null;
 
     await axios.put(
       `/courier/activity/${updatedCourierActivity._id}`,

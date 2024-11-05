@@ -10,10 +10,10 @@ const { logger, readLog } = require("../../utils/logging");
 
 const { categoriesByTextObject } = require("../general/categories");
 
-const egg_prices = require("../data/prices");
+const item_prices = require("../data/prices");
 const letters = require("../data/btnEmojis");
 
-const eggs = { 
+const items = { 
   "D1": 960,
   "D2": 990
 };
@@ -95,7 +95,7 @@ module.exports.promptDistribution = async (ctx) => {
       ctx.session.selectedCourier = { _id: courier._id, full_name: courier.full_name, car_num: courier.car_num };
     }
 
-    const type = ((ctx?.match && ctx?.match[0] === "accept-distribution-accepted-no") || typeof ctx.session["distributedEggsData"] === "undefined") ? 2 : 1;
+    const type = ((ctx?.match && ctx?.match[0] === "accept-distribution-accepted-no") || typeof ctx.session["distributedItemsData"] === "undefined") ? 2 : 1;
 
     const deleteMsg = ctx?.match && ctx?.match[0] === "accept-distribution-accepted-no";
 
@@ -113,14 +113,14 @@ module.exports.promptDistribution = async (ctx) => {
     const { full_name, car_num } = ctx.session.selectedCourier;
 
     if (type === 2) {
-      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinaga qayta yuklangan tuxumlar sonini kiriting`,
+      await ctx.reply(`${full_name} ${car_num ? "(" + car_num + ")" : ""} mashinaga qayta yuklangan maxsulotlar sonini kiriting`,
         Markup.keyboard([
           ["Bekor qilish ❌"]
         ]));
     }
 
-    // categoriesByButtonsObject(ctx, "awaitingEggsDistributedAcceptedEggs", actionKey1, actionKey2, "yuklangan", "yuklanganini", keyboard, type, "distributedEggsData")
-    categoriesByTextObject(ctx, "awaitingEggsDistributedAcceptedEggs", "yuklangan", keyboard, type, "distributedEggsData", egg_prices, false, true);
+    // categoriesByButtonsObject(ctx, "awaitingItemsDistributedAcceptedItems", actionKey1, actionKey2, "yuklangan", "yuklanganini", keyboard, type, "distributedItemsData")
+    categoriesByTextObject(ctx, "awaitingItemsDistributedAcceptedItems", "yuklangan", keyboard, type, "distributedItemsData", item_prices, false, true);
   } catch (error) {
     logger.error(error);
   }
@@ -178,8 +178,8 @@ const handleCircleVideo = async (ctx) => {
 
     const current = warehouseActivity.current || {};
 
-    for (let y in Object.keys(ctx.session.distributedEggsData)) {
-      const x = Object.keys(ctx.session.distributedEggsData)[y];
+    for (let y in Object.keys(ctx.session.distributedItemsData)) {
+      const x = Object.keys(ctx.session.distributedItemsData)[y];
       let z = x;
       if (x === "UP") {
         z = "D1";
@@ -187,8 +187,8 @@ const handleCircleVideo = async (ctx) => {
       if (typeof current[z] === "undefined") {
         current[z] = 0;
       }
-      if (current[z] - ctx.session.distributedEggsData[x] < 0) {
-        await ctx.reply("Kuryerga yuklangan tuxum soni omborda bor tuxum sonidan katta");
+      if (current[z] - ctx.session.distributedItemsData[x] < 0) {
+        await ctx.reply("Kuryerga yuklangan maxsulot soni omborda bor maxsulot sonidan katta");
         return;
       }
     }
@@ -206,26 +206,26 @@ const handleCircleVideo = async (ctx) => {
     // Retrieve selected courier information from session
     const { _id, full_name, car_num } = ctx.session.selectedCourier;
 
-    const distributedEggsData = ctx.session.distributedEggsData;
+    const distributedItemsData = ctx.session.distributedItemsData;
 
     // Save the data to Redis as one object
-    const eggsData = {
-      distributedEggsData,
+    const itemsData = {
+      distributedItemsData,
       loadingTime: new Date().toISOString()
     };
-    await redis.set(`eggsData:${_id}`, JSON.stringify(eggsData));
+    await redis.set(`itemsData:${_id}`, JSON.stringify(itemsData));
 
-    ctx.session.distributedEggsData = undefined;
+    ctx.session.distributedItemsData = undefined;
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
 
-    const formatEggData = (data) => {
+    const formatItemData = (data) => {
         return Object.entries(data)
             .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
             .join(',\n');
     };
 
-    const distributedEggsMessage = formatEggData(distributedEggsData);
+    const distributedItemsMessage = formatItemData(distributedItemsData);
 
     // Update warehouse activity and send confirmation message
     const courierResponse = await axios.get(`/courier/${_id}`, {
@@ -235,8 +235,8 @@ const handleCircleVideo = async (ctx) => {
     });
     const courier = courierResponse.data;
     
-    const finalMessageGroup = `⚠️ Tasdiqlashni kutilmoqda\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
-    const finalMessageCourier = `⚠️ Sizning xisobingizga tuxum qo’shildi.\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `⚠️ Tasdiqlashni kutilmoqda\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedItemsMessage}`;
+    const finalMessageCourier = `⚠️ Sizning xisobingizga maxsulot qo’shildi.\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedItemsMessage}`;
 
     // Send message to courier
     const messageToCourier = await botInstance.telegram.sendMessage(
@@ -291,19 +291,19 @@ module.exports.courierAccept = async (ctx) => {
     });
     const courierActivity = courierActivityResponse.data;
 
-    // Retrieve egg data from Redis
-    const eggsData = JSON.parse(await redis.get(`eggsData:${courierId}`));
-    const { distributedEggsData = {}, loadingTime = "" } = eggsData;
+    // Retrieve item data from Redis
+    const itemsData = JSON.parse(await redis.get(`itemsData:${courierId}`));
+    const { distributedItemsData = {}, loadingTime = "" } = itemsData;
 
     // Create new accepted entry
     const newAcceptedEntry = {
-      eggs: distributedEggsData,
-      loadingTime: loadingTime, // Time when eggs were loaded
+      items: distributedItemsData,
+      loadingTime: loadingTime, // Time when items were loaded
       acceptTime: new Date().toISOString()   // Time when courier accepted
     };
 
-    // Update current eggs
-    const updatedCurrent = await updateCategory(courierActivity.current || {}, distributedEggsData, 'add', false);
+    // Update current items
+    const updatedCurrent = await updateCategory(courierActivity.current || {}, distributedItemsData, 'add', false);
 
     // Usage for courier
     const updatedCourierActivity = {
@@ -338,14 +338,14 @@ module.exports.courierAccept = async (ctx) => {
     updatedDistributedTo.push({
       _id: courierId,
       courier_name: full_name,
-      eggs: distributedEggsData,
+      items: distributedItemsData,
       time: new Date().toLocaleString(),
     });
 
     // Usage for warehouse
     const updatedWarehouseActivity = {
       ...warehouseActivity,
-      current: await updateCategory(warehouseActivity.current, distributedEggsData, 'subtract', true), // is warehouse? true
+      current: await updateCategory(warehouseActivity.current, distributedItemsData, 'subtract', true), // is warehouse? true
       distributed_to: updatedDistributedTo,
     };
 
@@ -367,20 +367,20 @@ module.exports.courierAccept = async (ctx) => {
     }
     await redis.del(messageIdsKey);
 
-    const formatEggData = (data) => {
+    const formatItemData = (data) => {
     return Object.entries(data)
         .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
         .join(',\n');
     };
 
-    const distributedEggsMessage = formatEggData(distributedEggsData);
+    const distributedItemsMessage = formatItemData(distributedItemsData);
 
-    await ctx.reply(`✅ Tuxumlar xisobingizga muvaffaqiyatli qo'shildi va saqlandi.\n\nQayta yuklangan:\n${distributedEggsMessage}`);
+    await ctx.reply(`✅ Maxsulotlar xisobingizga muvaffaqiyatli qo'shildi va saqlandi.\n\nQayta yuklangan:\n${distributedItemsMessage}`);
 
     // Find the group id by courier's phone number
     let groupId = groups;
 
-    const finalMessageGroup = `✅ Tasdiqlandi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `✅ Tasdiqlandi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedItemsMessage}`;
 
     await botInstance.telegram.sendMessage(
       groupId,
@@ -388,7 +388,7 @@ module.exports.courierAccept = async (ctx) => {
     );
   } catch (error) {
     logger.error(error);
-    await ctx.reply("Tuxumlar xisobingizga qo'shishda xatolik yuz berdi. Qayta urunib ko'ring");
+    await ctx.reply("Maxsulotlar xisobingizga qo'shishda xatolik yuz berdi. Qayta urunib ko'ring");
   }
 };
 
@@ -429,35 +429,35 @@ module.exports.courierReject = async (ctx) => {
 
     const { full_name, car_num, phone_num } = courier;
 
-    // Retrieve egg data from Redis
-    const eggsData = JSON.parse(await redis.get(`eggsData:${courierId}`));
-    const { distributedEggsData = {} } = eggsData;
+    // Retrieve item data from Redis
+    const itemsData = JSON.parse(await redis.get(`itemsData:${courierId}`));
+    const { distributedItemsData = {} } = itemsData;
 
-    const formatEggData = (data) => {
+    const formatItemData = (data) => {
     return Object.entries(data)
         .map(([category, amount]) => `${letters[category]}: ${amount}ta`) 
         .join(',\n');
     };
 
-    const distributedEggsMessage = formatEggData(distributedEggsData);
+    const distributedItemsMessage = formatItemData(distributedItemsData);
 
-    const finalMessageGroup = `❌ Rad etildi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedEggsMessage}`;
+    const finalMessageGroup = `❌ Rad etildi\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedItemsMessage}`;
 
     // Find the group id by courier's phone number
     let groupId = groups;
 
     // Delete Redis key
-    await redis.del(`eggsData:${courierId}`);
+    await redis.del(`itemsData:${courierId}`);
 
     await botInstance.telegram.sendMessage(
       groupId,
       finalMessageGroup
     );
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });(ctx.callbackQuery.message.message_id);
-    await ctx.reply(`❌ Tuxumlar xisobga qo’shilishi rad etildi.\n\nQayta yuklangan:\n${distributedEggsMessage}`);
+    await ctx.reply(`❌ Maxsulotlar xisobga qo’shilishi rad etildi.\n\nQayta yuklangan:\n${distributedItemsMessage}`);
   } catch (error) {
     logger.error(error);
-    await ctx.reply("Tuxumlar qo’shishni rad etishda xatolik yuz berdi. Qayta urunib ko’ring");
+    await ctx.reply("Maxsulotlar qo’shishni rad etishda xatolik yuz berdi. Qayta urunib ko’ring");
   }
 };
 

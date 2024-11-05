@@ -4,9 +4,9 @@ const selectCourierAccepted = require("../functions/warehouse/selectCourierAccep
 const todayDeliveries = require("../functions/courier/todayDeliveries");
 const cancel = require("../functions/general/cancel");
 const warehouseStatus = require("../functions/warehouse/warehouseStatus");
-const eggIntake = require("../functions/warehouse/eggIntake");
-const brokenEggs = require("../functions/courier/brokenEggs");
-const leftEggs = require("../functions/courier/leftEggs");
+const itemIntake = require("../functions/warehouse/itemIntake");
+const brokenItems = require("../functions/courier/brokenItems");
+const leftItems = require("../functions/courier/leftItems");
 const expenses = require("../functions/courier/expenses");
 const melange = require("../functions/warehouse/melange");
 const remained = require("../functions/warehouse/remained");
@@ -14,17 +14,17 @@ const remained = require("../functions/warehouse/remained");
 const { logger, readLog } = require("../utils/logging");
 
 const commands = {
-  "Tuxum yetkazildi": [addMore, "courier"],
-  "Tuxum chiqimi": [selectCourier.promptCourier, "warehouse"],
+  "Maxsulot yetkazildi": [addMore, "courier"],
+  "Maxsulot chiqimi": [selectCourier.promptCourier, "warehouse"],
   "Qayta yuklash": [selectCourierAccepted.promptCourier, "warehouse"],
   "Hisobot": [todayDeliveries, "courier"],
   "Bekor qilish ❌": [cancel, "all"],
   "Ombor holati": [warehouseStatus, "warehouse"],
-  "Tuxum kirimi": [eggIntake.promptEggImporter, "warehouse"],
-  "Kunni yakunlash": [brokenEggs.sendBrokenEggs, "courier"],
+  "Maxsulot kirimi": [itemIntake.promptItemImporter, "warehouse"],
+  "Kunni yakunlash": [brokenItems.sendBrokenItems, "courier"],
   "Chiqim": [expenses.sendExpenses, "courier"],
-  "Singan tuxum": [melange.promptBroken, "warehouse"],
-  // "Qolgan tuxum": [remained.promptWarehouseRemainedConfirm, "warehouse"],
+  "Singan maxsulot": [melange.promptBroken, "warehouse"],
+  // "Qolgan maxsulot": [remained.promptWarehouseRemainedConfirm, "warehouse"],
 };
 
 const textCommandHandler = async (ctx, next) => {

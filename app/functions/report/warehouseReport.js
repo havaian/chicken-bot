@@ -35,7 +35,7 @@ const generateWarehouseHTML = (data, filename) => {
   const reportDate = moment(date).tz('Asia/Karachi').format('DD/MM/YYYY HH:mm:ss');
 
   distributed_to.forEach(distribution => {
-    for (let [category, amount] of Object.entries(distribution.eggs || {})) {
+    for (let [category, amount] of Object.entries(distribution.items || {})) {
       if (!totalDistributed[category]) totalDistributed[category] = 0;
       totalDistributed[category] += amount;
     }
@@ -63,9 +63,9 @@ const generateWarehouseHTML = (data, filename) => {
           ${(() => {
             const combinedCategories = { ...by_morning };
 
-            // Process eggs from accepted array
+            // Process items from accepted array
             for (const item of accepted) {              
-              for (const [category, amount] of Object.entries(item.eggsReceived || {})) {                
+              for (const [category, amount] of Object.entries(item.itemsReceived || {})) {                
                 combinedCategories[category] = (combinedCategories[category] || 0) + amount;
               }
             }
@@ -91,7 +91,7 @@ const generateWarehouseHTML = (data, filename) => {
       </tr>
       ${accepted.length > 0 
       ? accepted.map(
-        (accept) => Object.entries(accept.eggsReceived || {}).map(([category, amount]) => `
+        (accept) => Object.entries(accept.itemsReceived || {}).map(([category, amount]) => `
         <tr>
           <td style="text-align: center; vertical-align: middle" colspan="1">${accept.importerName}</td>
           <td style="text-align: center; vertical-align: middle" colspan="1">${category}: <b>${formatNumber(amount)}</b></td>
@@ -116,7 +116,7 @@ const generateWarehouseHTML = (data, filename) => {
         <tr>
           <td style="text-align: left; vertical-align: middle">${index + 1}. ${distribution.courier_name || ""}</td>
           <td style="text-align: left; vertical-align: middle">
-            ${Object.entries(distribution.eggs || {})
+            ${Object.entries(distribution.items || {})
               .filter(([_, amount]) => amount > 0)
               .map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`)
               .join("<br>") || "−"}
@@ -170,7 +170,7 @@ const generateWarehouseHTML = (data, filename) => {
         <td style="text-align: center; vertical-align: middle">${Object.entries(incision).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>
       </tr>
       <tr>
-        <td>Qolgan tuxum soni</td>
+        <td>Qolgan maxsulot soni</td>
         <td style="text-align: center; vertical-align: middle" colspan="2">${Object.entries(remained).map(([category, amount]) => `${category}: <b>${formatNumber(amount)}</b>`).join("<br>")}</td>
         <td>Melanj</td>
         <td style="text-align: center; vertical-align: middle">${Object.entries(melange_by_warehouse).map(([category, amount]) => `${category}: <b>${formatNumber(amount || 0)} (${formatNumber(amount * 25)})</b>`).join("<br>")}</td>
@@ -208,7 +208,7 @@ const generateWarehouseExcel = async (data, filename) => {
   const totalIncision = {};
 
   distributed_to.forEach(distribution => {
-    for (let [category, amount] of Object.entries(distribution.eggs || {})) {
+    for (let [category, amount] of Object.entries(distribution.items || {})) {
       if (!totalDistributed[category]) totalDistributed[category] = 0;
       totalDistributed[category] += amount;
     }
@@ -239,7 +239,7 @@ const generateWarehouseExcel = async (data, filename) => {
   distributed_to.forEach((distribution, index) => {
     sheet.addRow([
       `${index + 1}. ${distribution.courier_name || ""}`,
-      Object.entries(distribution.eggs || {})
+      Object.entries(distribution.items || {})
         .filter(([_, amount]) => amount > 0)
         .map(([category, amount]) => `${category}: ${amount}`)
         .join("\n"),
@@ -260,7 +260,7 @@ const generateWarehouseExcel = async (data, filename) => {
   sheet.addRow(["Ombor singan", Object.entries(broken).map(([category, amount]) => `${category}: ${amount}`).join("\n")]);
   sheet.addRow(["Kun yakuniga xisobot", "Butun", Object.entries(intact).map(([category, amount]) => `${category}: ${amount}`).join("\n")]);
   sheet.addRow(["Kamomad", Object.entries(deficit).map(([category, amount]) => `${category}: ${amount}`).join("\n"), "Nasechka", Object.entries(incision).map(([category, amount]) => `${category}: ${amount}`).join("\n")]);
-  sheet.addRow(["Qolgan tuxum soni", Object.entries(current).map(([category, amount]) => `${category}: ${amount}`).join("\n"), "Melanj", Object.entries(melange).map(([category, amount]) => `${category}: ${amount}`).join("\n")]);
+  sheet.addRow(["Qolgan maxsulot soni", Object.entries(current).map(([category, amount]) => `${category}: ${amount}`).join("\n"), "Melanj", Object.entries(melange).map(([category, amount]) => `${category}: ${amount}`).join("\n")]);
   sheet.addRow(["Ombor mudiri_____________"]);
 
   const directory = path.dirname(filename);

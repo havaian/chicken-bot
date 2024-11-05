@@ -8,20 +8,20 @@ const { sendLeftMoney } = require("./leftMoney");
 const letters = require("../data/btnEmojis");
 
 const nonZero = require("../general/non-zero");
-let eggs = "";
+let items = "";
 
-const sessionKey = "awaitingMelangeEggs";
-const eggsDataKey = "eggsMelangeData";
+const sessionKey = "awaitingMelangeItems";
+const itemsDataKey = "itemsMelangeData";
 
 const promptMelange = async (ctx, type) => {
     try {
-        eggs = nonZero(ctx.session.currentEggs);
+        items = nonZero(ctx.session.currentItems);
     
         if (
             !ctx.session.categories || type === 2) {
-            ctx.session.categories = Object.keys(eggs);
+            ctx.session.categories = Object.keys(items);
             ctx.session.currentCategoryIndex = 0;
-            ctx.session[eggsDataKey] = {};
+            ctx.session[itemsDataKey] = {};
             ctx.session[sessionKey] = true;
         }
     
@@ -40,14 +40,14 @@ const promptMelange = async (ctx, type) => {
                     return;
                 }
   
-                if (ctx.session[eggsDataKey] && !ctx.session[eggsDataKey][category]) {
-                  ctx.session[eggsDataKey][category] = 0;
+                if (ctx.session[itemsDataKey] && !ctx.session[itemsDataKey][category]) {
+                  ctx.session[itemsDataKey][category] = 0;
                 } else {
                   ctx.session = { ...ctx.session.user };
                   return;
                 }
                 
-                ctx.session[eggsDataKey][category] += amount;
+                ctx.session[itemsDataKey][category] += amount;
     
                 ctx.session.currentCategoryIndex++;
             }
@@ -67,9 +67,9 @@ const promptMelange = async (ctx, type) => {
 
 exports.sendMelange = async (ctx) => {
   try {
-    const type = ((ctx?.match && ctx?.match[0] === "confirm-melange-eggs-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
+    const type = ((ctx?.match && ctx?.match[0] === "confirm-melange-items-no") || typeof ctx.session[itemsDataKey] === "undefined") ? 2 : 1;
 
-    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-melange-eggs-no";
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-melange-items-no";
 
     if (deleteMsg) {
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
@@ -79,19 +79,19 @@ exports.sendMelange = async (ctx) => {
   } catch (error) {
     logger.error(error);
     await ctx.reply(
-      "Qolgan butun tuxum qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Qolgan butun maxsulot qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
   }
 };
 
 module.exports.acceptMelange = async (ctx) => {
     try {
-      const melangeData = ctx.session[eggsDataKey];
+      const melangeData = ctx.session[itemsDataKey];
       let amountMsg = "";
   
       if (!melangeData || Object.keys(melangeData).length === 0) {
         amountMsg = "Yo'q";
-        this.confirmMelangeEggs(ctx);
+        this.confirmMelangeItems(ctx);
         return;
       } else {
         for (let category in melangeData) {
@@ -105,8 +105,8 @@ module.exports.acceptMelange = async (ctx) => {
       await ctx.reply("Kiritilgan melanj qiymatini tasdiqlaysizmi?",
         Markup.inlineKeyboard([
           [
-            Markup.button.callback("Ha ✅", "confirm-melange-eggs-yes"),
-            Markup.button.callback("Yo'q ❌", "confirm-melange-eggs-no"),
+            Markup.button.callback("Ha ✅", "confirm-melange-items-yes"),
+            Markup.button.callback("Yo'q ❌", "confirm-melange-items-no"),
           ]
         ])
       );
@@ -116,7 +116,7 @@ module.exports.acceptMelange = async (ctx) => {
     }
 };
 
-module.exports.confirmMelangeEggs = async (ctx) => {
+module.exports.confirmMelangeItems = async (ctx) => {
     try {        
         const insicion = ctx.session.updatedActivity.incision;
 
@@ -128,21 +128,21 @@ module.exports.confirmMelangeEggs = async (ctx) => {
                 insicion[x] = 0;
             }
 
-            ctx.session.updatedActivity.current[x] = ctx.session.updatedActivity.current[x] - (ctx.session[eggsDataKey][x] * 28);
+            ctx.session.updatedActivity.current[x] = ctx.session.updatedActivity.current[x] - (ctx.session[itemsDataKey][x] * 28);
         };
 
         ctx.session.updatedActivity = {
           ...ctx.session.updatedActivity,
-          melange_by_courier: ctx.session[eggsDataKey],
+          melange_by_courier: ctx.session[itemsDataKey],
         };
 
-        const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-melange-eggs-yes";
+        const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-melange-items-yes";
     
         if (deleteMsg) {
           await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         }
 
-        ctx.session[eggsDataKey] = undefined;
+        ctx.session[itemsDataKey] = undefined;
 
         await sendLeftMoney(ctx);
     } catch (error) {

@@ -6,8 +6,8 @@ const resetState = (ctx) => {
     const { user } = ctx.session;
     ctx.session = { 
       "user": ctx.session.user, 
-      "courierEggsInCar": ctx.session.courierEggsInCar ? ctx.session. ourierEggsInCar : undefined, 
-      "currentEggs": ctx.session.currentEggs ? ctx.session.currentEggs : undefined, 
+      "courierItemsInCar": ctx.session.courierItemsInCar ? ctx.session. ourierItemsInCar : undefined, 
+      "currentItems": ctx.session.currentItems ? ctx.session.currentItems : undefined, 
       "dayFinished": ctx.session.dayFinished ? ctx.session.dayFinished : undefined, 
       "awaitingDayFinish": ctx.session.awaitingDayFinish ? ctx.session.awaitingDayFinish : undefined 
     };

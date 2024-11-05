@@ -9,20 +9,20 @@ const start = require("./functions/general/start.js");
 const contact = require("./functions/general/contact.js");
 const location = require("./functions/courier/location.js");
 const chooseBuyer = require("./functions/courier/chooseBuyer.js");
-const eggsDelivered = require("./functions/courier/eggsDelivered.js");
+const itemsDelivered = require("./functions/courier/itemsDelivered.js");
 const paymentReceived = require("./functions/courier/paymentReceived.js");
 const addMore = require("./functions/courier/addMore.js");
 const cancel = require("./functions/general/cancel.js");
-const brokenEggs = require("./functions/courier/brokenEggs.js");
-const incisionEggs = require("./functions/courier/incision.js");
+const brokenItems = require("./functions/courier/brokenItems.js");
+const incisionItems = require("./functions/courier/incision.js");
 const courierMelange = require("./functions/courier/melange.js");
 const expenses = require("./functions/courier/expenses.js");
-const leftEggs = require("./functions/courier/leftEggs.js");
+const leftItems = require("./functions/courier/leftItems.js");
 const leftMoney = require("./functions/courier/leftMoney.js");
 const finishDay = require("./functions/courier/finishDay.js");
 const selectCourier = require("./functions/warehouse/selectCourier.js");
 const selectCourierAccepted = require("./functions/warehouse/selectCourierAccepted.js");
-const eggIntake = require("./functions/warehouse/eggIntake.js");
+const itemIntake = require("./functions/warehouse/itemIntake.js");
 const melange = require("./functions/warehouse/melange.js");
 const remained = require("./functions/warehouse/remained.js");
 
@@ -71,23 +71,23 @@ bot.action(/location-buyer:(.+)/, async (ctx) => {
 bot.action(/choose-buyer:(.+)/, async (ctx) => {
   await chooseBuyer(ctx);
 });
-// bot.action(/eggs-delivered-(yes|no)/, async (ctx) => {
-//   await eggsDelivered.deliverEggs(ctx);
+// bot.action(/items-delivered-(yes|no)/, async (ctx) => {
+//   await itemsDelivered.deliverItems(ctx);
 // });
-bot.action(/eggs-amount:\d+:(.+)/, async (ctx) => {
-  await eggsDelivered.deliverEggs(ctx);
+bot.action(/items-amount:\d+:(.+)/, async (ctx) => {
+  await itemsDelivered.deliverItems(ctx);
 });
-bot.action(/eggs-other:(.+)/, async (ctx) => {
-  await eggsDelivered.deliverEggs(ctx);
+bot.action(/items-other:(.+)/, async (ctx) => {
+  await itemsDelivered.deliverItems(ctx);
 });
-bot.action(/eggs-prev:(.+)/, async (ctx) => {
-  await eggsDelivered.deliverEggs(ctx);
+bot.action(/items-prev:(.+)/, async (ctx) => {
+  await itemsDelivered.deliverItems(ctx);
 });
-bot.action(/eggs-distributed-yes/, async (ctx) => {
-  await eggsDelivered.confirmEggsDelivered(ctx);
+bot.action(/items-distributed-yes/, async (ctx) => {
+  await itemsDelivered.confirmItemsDelivered(ctx);
 });
-bot.action(/eggs-distributed-no/, async (ctx) => {
-  await eggsDelivered.deliverEggs(ctx);
+bot.action(/items-distributed-no/, async (ctx) => {
+  await itemsDelivered.deliverItems(ctx);
 });
 // bot.action(/payment-received-(yes|no)/, async (ctx) => {
 //   await paymentReceived(ctx);
@@ -159,41 +159,41 @@ bot.action(/courier-accepted-reject:(.+)/, async (ctx) => {
 });
 
 bot.action(/choose-importer:(.+):(.+)/, async (ctx) => {
-  await eggIntake.handleEggImporter(ctx);
+  await itemIntake.handleItemImporter(ctx);
 });
-bot.action("confirm-intake-eggs-yes", async (ctx) => {
-  await eggIntake.addIntakeEggs(ctx);
+bot.action("confirm-intake-items-yes", async (ctx) => {
+  await itemIntake.addIntakeItems(ctx);
 });
-bot.action("confirm-intake-eggs-no", async (ctx) => {
-  await eggIntake.promptEggImporter(ctx);
+bot.action("confirm-intake-items-no", async (ctx) => {
+  await itemIntake.promptItemImporter(ctx);
 });
 
-bot.action(/confirm-broken-eggs-yes/, async (ctx) => {
-  await brokenEggs.addBrokenEggs(ctx);
+bot.action(/confirm-broken-items-yes/, async (ctx) => {
+  await brokenItems.addBrokenItems(ctx);
 });
-bot.action(/confirm-broken-eggs-no/, async (ctx) => {
-  await brokenEggs.sendBrokenEggs(ctx);
+bot.action(/confirm-broken-items-no/, async (ctx) => {
+  await brokenItems.sendBrokenItems(ctx);
 });
-bot.action(/confirm-incision-eggs-yes/, async (ctx) => {
-  await incisionEggs.addIncisionEggs(ctx);
+bot.action(/confirm-incision-items-yes/, async (ctx) => {
+  await incisionItems.addIncisionItems(ctx);
 });
-bot.action(/confirm-incision-eggs-no/, async (ctx) => {
-  await incisionEggs.sendIncisionEggs(ctx);
+bot.action(/confirm-incision-items-no/, async (ctx) => {
+  await incisionItems.sendIncisionItems(ctx);
 });
-bot.action(/confirm-melange-eggs-yes/, async (ctx) => {
-  await courierMelange.confirmMelangeEggs(ctx);
+bot.action(/confirm-melange-items-yes/, async (ctx) => {
+  await courierMelange.confirmMelangeItems(ctx);
 });
-bot.action(/confirm-melange-eggs-no/, async (ctx) => {
+bot.action(/confirm-melange-items-no/, async (ctx) => {
   await courierMelange.sendMelange(ctx);
 });
 bot.action(/confirm-expenses:\d+/, async (ctx) => {
   await expenses.addExpenses(ctx);
 });
 bot.action(/confirm-left-yes/, async (ctx) => {
-  await leftEggs.addLeft(ctx);
+  await leftItems.addLeft(ctx);
 });
 bot.action(/confirm-left-no/, async (ctx) => {
-  await leftEggs.sendLeft(ctx);
+  await leftItems.sendLeft(ctx);
 });
 bot.action(/confirm-money-left-yes/, async (ctx) => {
   await leftMoney.addLeftMoney(ctx);

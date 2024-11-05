@@ -8,35 +8,35 @@ const cancel = require("../general/cancel");
 
 const { logger, readLog } = require("../../utils/logging");
 
-const sessionKey = "awaitingEggsDelivered";
-const eggsDataKey = "eggsDeliveredData";
+const sessionKey = "awaitingItemsDelivered";
+const itemsDataKey = "itemsDeliveredData";
 
-let eggs = "";
+let items = "";
 
-const generateEggButtons = (category, currentCategoryIndex) => {
+const generateItemButtons = (category, currentCategoryIndex) => {
   console.log(currentCategoryIndex);
   const buttons = [
     currentCategoryIndex > 0 
       ? [
-          Markup.button.callback("⬅️ Oldingisi", `eggs-prev:${category}`),
-          Markup.button.callback("Keyingisi ➡️", `eggs-amount:0:${category}`)
+          Markup.button.callback("⬅️ Oldingisi", `items-prev:${category}`),
+          Markup.button.callback("Keyingisi ➡️", `items-amount:0:${category}`)
         ] 
       : [
-          Markup.button.callback("Keyingisi ➡️", `eggs-amount:0:${category}`)
+          Markup.button.callback("Keyingisi ➡️", `items-amount:0:${category}`)
         ],
     [
-      Markup.button.callback(`180 ${letters[category]}`, `eggs-amount:180:${category}`),
-      Markup.button.callback(`360 ${letters[category]}`, `eggs-amount:360:${category}`),
+      Markup.button.callback(`180 ${letters[category]}`, `items-amount:180:${category}`),
+      Markup.button.callback(`360 ${letters[category]}`, `items-amount:360:${category}`),
     ],
     [
-      Markup.button.callback(`540 ${letters[category]}`, `eggs-amount:540:${category}`),
-      Markup.button.callback(`720 ${letters[category]}`, `eggs-amount:720:${category}`),
+      Markup.button.callback(`540 ${letters[category]}`, `items-amount:540:${category}`),
+      Markup.button.callback(`720 ${letters[category]}`, `items-amount:720:${category}`),
     ],
     [
-      Markup.button.callback(`1080 ${letters[category]}`, `eggs-amount:1080:${category}`),
-      Markup.button.callback(`1440 ${letters[category]}`, `eggs-amount:1440:${category}`),
+      Markup.button.callback(`1080 ${letters[category]}`, `items-amount:1080:${category}`),
+      Markup.button.callback(`1440 ${letters[category]}`, `items-amount:1440:${category}`),
     ],
-    [Markup.button.callback("Boshqa", `eggs-other:${category}`)],
+    [Markup.button.callback("Boshqa", `items-other:${category}`)],
   ];
 
   return buttons;
@@ -44,27 +44,27 @@ const generateEggButtons = (category, currentCategoryIndex) => {
 
 let deleteMessage = false;
 
-module.exports.deliverEggs = async (ctx) => {
+module.exports.deliverItems = async (ctx) => {
   try {
-    eggs = nonZero(ctx.session.currentEggs);
+    items = nonZero(ctx.session.currentItems);
   
     if (!ctx.session.categories) {
-      ctx.session.categories = Object.keys(eggs);
+      ctx.session.categories = Object.keys(items);
       ctx.session.currentCategoryIndex = 0;
-      ctx.session[eggsDataKey] = [];
+      ctx.session[itemsDataKey] = [];
     }
   
     const [action, amount, category] = ctx.match[0].split(":");
   
-    if (action === "eggs-amount") {
+    if (action === "items-amount") {
       // Delete the previous message
       ctx.session[sessionKey] ? {} : await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
       deleteMessage ? await ctx.editMessageReplyMarkup({ inline_keyboard: [] }) : {};
 
       ctx.session[sessionKey] = false;
 
-      if (ctx.session.currentEggs[category] < amount) {
-          await ctx.reply("Siz kiritgan tuxum soni mashinada bor tuxum sonidan katta");
+      if (ctx.session.currentItems[category] < amount) {
+          await ctx.reply("Siz kiritgan maxsulot soni mashinada bor maxsulot sonidan katta");
 
           ctx.session[sessionKey] = true;
 
@@ -73,31 +73,31 @@ module.exports.deliverEggs = async (ctx) => {
           console.log(ctx.session.currentCategoryIndex);
   
           await ctx.reply(
-            `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
-            Markup.inlineKeyboard(generateEggButtons(category, ctx.session.currentCategoryIndex))
+            `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta maxsulot yetkazildi?`,
+            Markup.inlineKeyboard(generateItemButtons(category, ctx.session.currentCategoryIndex))
           );
           return;
       }
 
       deleteMessage = false;
   
-      const existingEntry = ctx.session[eggsDataKey].find(entry => entry.category === category);
+      const existingEntry = ctx.session[itemsDataKey].find(entry => entry.category === category);
       if (existingEntry) {
         existingEntry.amount = parseInt(amount, 10);
       } else {
-        ctx.session[eggsDataKey].push({
+        ctx.session[itemsDataKey].push({
           category: category,
           amount: parseInt(amount, 10)
         });
       }
       
       ctx.session.currentCategoryIndex++;
-    } else if (action === "eggs-other") {
+    } else if (action === "items-other") {
       const category = ctx.session.categories[ctx.session.currentCategoryIndex];
       
       ctx.session[sessionKey] = true;
       await ctx.reply(
-        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
+        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta maxsulot yetkazildi?`,
         Markup.keyboard([
             ["Bekor qilish ❌"]
         ]));
@@ -105,12 +105,12 @@ module.exports.deliverEggs = async (ctx) => {
       // Delete the previous message
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
       return;
-    } else if (action === "eggs-prev") {
+    } else if (action === "items-prev") {
       ctx.session.currentCategoryIndex = Math.max(ctx.session.currentCategoryIndex - 1, 0);
   
       // Delete the previous message
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-    } else if (action === "eggs-distributed-no") {
+    } else if (action === "items-distributed-no") {
       // Delete the previous message
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
     }
@@ -119,8 +119,8 @@ module.exports.deliverEggs = async (ctx) => {
       const category = ctx.session.categories[ctx.session.currentCategoryIndex];
 
       await ctx.reply(
-        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.egg_price[category]}\n\nNechta tuxum yetkazildi?`,
-        Markup.inlineKeyboard(generateEggButtons(category, ctx.session.currentCategoryIndex))
+        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta maxsulot yetkazildi?`,
+        Markup.inlineKeyboard(generateItemButtons(category, ctx.session.currentCategoryIndex))
       );
     } else {
       await sendSummaryAndCompleteDelivery(ctx);
@@ -134,21 +134,21 @@ module.exports.deliverEggs = async (ctx) => {
 const sendSummaryAndCompleteDelivery = async (ctx) => {
   try {
     const selectedBuyer = ctx.session.buyer;
-    const eggsData = ctx.session[eggsDataKey];
+    const itemsData = ctx.session[itemsDataKey];
 
     ctx.session[sessionKey] = false;
 
-    if (!eggsData || eggsData.length === 0) {
-      await ctx.reply("Tuxum yetkazilmadi");
-      await this.confirmEggsDelivered(ctx);
+    if (!itemsData || itemsData.length === 0) {
+      await ctx.reply("Maxsulot yetkazilmadi");
+      await this.confirmItemsDelivered(ctx);
       return;
     } else {
       let categorySums = {};
       let totalSum = 0;
 
-      let summaryMessage = eggsData
+      let summaryMessage = itemsData
         .map(({ category, amount }) => {
-          const price = ctx.session.buyer.egg_price[category];
+          const price = ctx.session.buyer.item_price[category];
           const sum = price * amount;
           categorySums[category] = sum;
           totalSum += sum;
@@ -166,18 +166,18 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
         summaryMessage += `\n\n❗️❗️❗️ Ushbu mijozdan kamida <b>${(newDebt - ctx.session.buyer.debt_limit).toLocaleString()}</b> so'm olishingiz shart`;
       }
 
-      await ctx.reply(`Tuxum yetkazilgan kategoriya bo'yicha umumiy ma'lumot:\n\nMijoz: ${ctx.session.buyer.full_name}\n\n${summaryMessage}`, { parse_mode: 'HTML' });
+      await ctx.reply(`Maxsulot yetkazilgan kategoriya bo'yicha umumiy ma'lumot:\n\nMijoz: ${ctx.session.buyer.full_name}\n\n${summaryMessage}`, { parse_mode: 'HTML' });
       await ctx.reply("Tasdiqlaysizmi?",
         Markup.inlineKeyboard([
-          Markup.button.callback("Ha ✅", "eggs-distributed-yes"),
-          Markup.button.callback("Yo'q ❌", "eggs-distributed-no"),
+          Markup.button.callback("Ha ✅", "items-distributed-yes"),
+          Markup.button.callback("Yo'q ❌", "items-distributed-no"),
         ])
       );
     }
 
-    selectedBuyer.eggsDelivered = eggsData || [];
+    selectedBuyer.itemsDelivered = itemsData || [];
    
-    ctx.session[eggsDataKey] = undefined;
+    ctx.session[itemsDataKey] = undefined;
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
   } catch (error) {
@@ -186,9 +186,9 @@ const sendSummaryAndCompleteDelivery = async (ctx) => {
   }
 };
 
-module.exports.confirmEggsDelivered = async (ctx) => {
+module.exports.confirmItemsDelivered = async (ctx) => {
   try {
-    if (ctx.match[0] === "eggs-distributed-yes") {
+    if (ctx.match[0] === "items-distributed-yes") {
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
     }
     await paymentReceived(ctx);

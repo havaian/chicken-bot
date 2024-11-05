@@ -24,8 +24,8 @@ module.exports = async (ctx) => {
     await ctx.reply(
       "Tanlang:",
       Markup.keyboard([
-        ["Tuxum kirimi", "Tuxum chiqimi"], 
-        ["Singan tuxum", "Qayta yuklash"],
+        ["Maxsulot kirimi", "Maxsulot chiqimi"], 
+        ["Singan maxsulot", "Qayta yuklash"],
         ["Ombor holati"]
       ])
     );

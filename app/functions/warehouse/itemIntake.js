@@ -4,20 +4,20 @@ const { Markup } = require("telegraf");
 const cancel = require("../general/cancel");
 
 const { logger, readLog } = require("../../utils/logging");
-const eggs = { 
+const items = { 
   "D1": 960,
   "D2": 990
 };
 const letters = require("../data/btnEmojis");
 
-const sessionKey = "awaitingIntakeEggs";
-const eggsDataKey = "eggsIntakeData";
+const sessionKey = "awaitingIntakeItems";
+const itemsDataKey = "itemsIntakeData";
 
 const report = require("./report");
 
-module.exports.promptEggImporter = async (ctx) => {
+module.exports.promptItemImporter = async (ctx) => {
   try {
-    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-intake-eggs-no";
+    const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-intake-items-no";
 
     if (deleteMsg) {
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
@@ -30,7 +30,7 @@ module.exports.promptEggImporter = async (ctx) => {
     });
 
     const importers = response.data;
-    ctx.session[eggsDataKey] = undefined;
+    ctx.session[itemsDataKey] = undefined;
 
     let message = "Fabrikani ro’yxatdan tanlang:\n";
     const buttons = importers.map((importer, index) => {
@@ -56,17 +56,17 @@ module.exports.promptEggImporter = async (ctx) => {
     );
   } catch (error) {
     logger.error(error);
-    await ctx.reply("Tuxum fabrikasini ko’rsatishda xatolik yuz berdi. Qayta urunib ko’ring.");
+    await ctx.reply("Maxsulot fabrikasini ko’rsatishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
-module.exports.handleEggImporter = async (ctx) => {
+module.exports.handleItemImporter = async (ctx) => {
   try {
     const [action, importerId, importerName] = ctx.match[0].split(':');
     ctx.session.selectedImporter = { importerId, importerName };
     const intakeTime = new Date().toLocaleString();
     ctx.session.intakeTime = intakeTime;
-    this.sendIntakeEggs(ctx);
+    this.sendIntakeItems(ctx);
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
   } catch (error) {
     logger.error(error);
@@ -74,12 +74,12 @@ module.exports.handleEggImporter = async (ctx) => {
   }
 }
 
-module.exports.promptEggIntake = async (ctx, type) => {
+module.exports.promptItemIntake = async (ctx, type) => {
   try {
     if (!ctx.session.categories || type === 2) {
-      ctx.session.categories = Object.keys(eggs);
+      ctx.session.categories = Object.keys(items);
       ctx.session.currentCategoryIndex = 0;
-      ctx.session[eggsDataKey] = {};
+      ctx.session[itemsDataKey] = {};
       ctx.session[sessionKey] = true;
     }
 
@@ -93,74 +93,74 @@ module.exports.promptEggIntake = async (ctx, type) => {
           return;
         }
 
-        if (!ctx.session[eggsDataKey][category]) {
-          ctx.session[eggsDataKey][category] = 0;
+        if (!ctx.session[itemsDataKey][category]) {
+          ctx.session[itemsDataKey][category] = 0;
         }
-        ctx.session[eggsDataKey][category] += amount;
+        ctx.session[itemsDataKey][category] += amount;
 
         ctx.session.currentCategoryIndex++;
       }
 
       if (ctx.session.currentCategoryIndex < ctx.session.categories.length) {
         const nextCategory = ctx.session.categories[ctx.session.currentCategoryIndex];
-        await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya tuxum kirim bo’ldi?`);
+        await ctx.reply(`Nechta ${letters[nextCategory]} kategoriya maxsulot kirim bo’ldi?`);
       } else {
-        await confirmIntakeEggs(ctx);
+        await confirmIntakeItems(ctx);
       }
     }
   } catch (error) {
     logger.error(error);
-    await ctx.reply("Olingdan tuxum sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring.");
+    await ctx.reply("Olingdan maxsulot sonini kiritishda xatolik yuz berdi. Qayta urunib ko’ring.");
   }
 };
 
-module.exports.sendIntakeEggs = async (ctx) => {
+module.exports.sendIntakeItems = async (ctx) => {
   try {
-    const type = ((ctx?.match && ctx?.match[0] === "confirm-intake-eggs-no") || typeof ctx.session[eggsDataKey] === "undefined") ? 2 : 1;
+    const type = ((ctx?.match && ctx?.match[0] === "confirm-intake-items-no") || typeof ctx.session[itemsDataKey] === "undefined") ? 2 : 1;
 
     if (type === 2) {
-      await ctx.reply(`Tuxum kirimi sonini kiriting`,
+      await ctx.reply(`Maxsulot kirimi sonini kiriting`,
         Markup.keyboard([
           ["Bekor qilish ❌"]
         ]));
     }
 
-    this.promptEggIntake(ctx, type);
+    this.promptItemIntake(ctx, type);
   } catch (error) {
     logger.error(error);
     await ctx.reply(
-      "Tuxum kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Maxsulot kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
   }
 };
 
-const confirmIntakeEggs = async (ctx) => {
+const confirmIntakeItems = async (ctx) => {
   try {
     let amountMsg = "";
 
-    for (let y in Object.keys(ctx.session[eggsDataKey])) {
-      const x = Object.keys(ctx.session[eggsDataKey])[y];
-      amountMsg += `${letters[x]}: ${ctx.session[eggsDataKey][x]}\n`
+    for (let y in Object.keys(ctx.session[itemsDataKey])) {
+      const x = Object.keys(ctx.session[itemsDataKey])[y];
+      amountMsg += `${letters[x]}: ${ctx.session[itemsDataKey][x]}\n`
     }
 
-    ctx.session.awaitingIntakeEggs = false;
+    ctx.session.awaitingIntakeItems = false;
 
-    await ctx.reply(`Tuxum kirimi\n\n${amountMsg}\n\n`);
-    await ctx.reply(`Tuxum kirimini kiritilganini tasdiqlaysizmi?`,
+    await ctx.reply(`Maxsulot kirimi\n\n${amountMsg}\n\n`);
+    await ctx.reply(`Maxsulot kirimini kiritilganini tasdiqlaysizmi?`,
       Markup.inlineKeyboard([
-        [Markup.button.callback("Ha ✅", "confirm-intake-eggs-yes")],
-        [Markup.button.callback("Yo’q ❌", "confirm-intake-eggs-no")],
+        [Markup.button.callback("Ha ✅", "confirm-intake-items-yes")],
+        [Markup.button.callback("Yo’q ❌", "confirm-intake-items-no")],
       ])
     );
   } catch (error) {
     logger.error(error);
     await ctx.reply(
-      "Tuxum kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Maxsulot kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
   }
 };
 
-exports.addIntakeEggs = async (ctx) => {
+exports.addIntakeItems = async (ctx) => {
   try {
     const { importerId, importerName } = ctx.session.selectedImporter;
     const { intakeTime } = ctx.session;
@@ -181,26 +181,26 @@ exports.addIntakeEggs = async (ctx) => {
     const warehouseCurrent = warehouseActivity.current || {};
     const importerCurrent = importerActivity.amount || {};
 
-    for (let y in Object.keys(ctx.session[eggsDataKey])) {
-      const x = Object.keys(ctx.session[eggsDataKey])[y];
+    for (let y in Object.keys(ctx.session[itemsDataKey])) {
+      const x = Object.keys(ctx.session[itemsDataKey])[y];
 
       // If current[x] is not defined, set it to 0
       if (typeof warehouseCurrent[x] === 'undefined') {
         warehouseCurrent[x] = 0;
       }
 
-      warehouseCurrent[x] = warehouseCurrent[x] + ctx.session[eggsDataKey][x];
-      importerCurrent[x] = ctx.session[eggsDataKey][x];
+      warehouseCurrent[x] = warehouseCurrent[x] + ctx.session[itemsDataKey][x];
+      importerCurrent[x] = ctx.session[itemsDataKey][x];
     }
 
-    const eggsReceived = ctx.session[eggsDataKey];
+    const itemsReceived = ctx.session[itemsDataKey];
 
     const updatedWarehouseActivity = {
       ...warehouseActivity,
       current: warehouseCurrent,
       accepted: [
         ...warehouseActivity.accepted,
-        { importerId, importerName, eggsReceived, date: intakeTime }
+        { importerId, importerName, itemsReceived, date: intakeTime }
       ],
     };
 
@@ -215,7 +215,7 @@ exports.addIntakeEggs = async (ctx) => {
     );
 
     const importerUpdate = {
-      amount: ctx.session[eggsDataKey],
+      amount: ctx.session[itemsDataKey],
       date: intakeTime,
     };
 
@@ -232,15 +232,15 @@ exports.addIntakeEggs = async (ctx) => {
     // Delete the previous message
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     
-    await report(updatedWarehouseActivity, ctx, "Tuxum kirimi", true);
+    await report(updatedWarehouseActivity, ctx, "Maxsulot kirimi", true);
 
-    await cancel(ctx, "Tuxum kirimi qabul qilindi");
+    await cancel(ctx, "Maxsulot kirimi qabul qilindi");
 
-    ctx.session[eggsDataKey] = {};
+    ctx.session[itemsDataKey] = {};
   } catch (error) {
     logger.error(error);
     await ctx.reply(
-      "Tuxum kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
+      "Maxsulot kirimini qo’shishda xatolik yuz berdi. Qayta urunib ko’ring"
     );
   }
 };

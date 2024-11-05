@@ -8,8 +8,8 @@ const courierAccepted = async (ctx, next) => {
     if ((ctx.session.user && ctx.session.user.userType === "courier")) {
       if (!(ctx.hasOwnProperty("update") && ctx.update.hasOwnProperty("callback_query"))) {
         if ((
-          !ctx.session.courierEggsInCar && 
-          !ctx.session.currentEggs
+          !ctx.session.courierItemsInCar && 
+          !ctx.session.currentItems
         ) || 
         (typeof ctx.session.dayFinished === true &&
         !ctx.session.awaitingDayFinish)) {
@@ -22,7 +22,7 @@ const courierAccepted = async (ctx, next) => {
           const courierActivity = response.data;
   
           if (!courierActivity.accepted_today) {
-            await ctx.reply("Ishni boshlashdan oldin siz ombordan tuxum olganingizni tasdiqlab olishingiz kerak.");
+            await ctx.reply("Ishni boshlashdan oldin siz ombordan maxsulot olganingizni tasdiqlab olishingiz kerak.");
             return;
           }
 
@@ -37,17 +37,17 @@ const courierAccepted = async (ctx, next) => {
             return;
           } 
   
-          ctx.session.courierEggsInCar = courierActivity.accepted_today;
+          ctx.session.courierItemsInCar = courierActivity.accepted_today;
           return next();
         } else {
-          ctx.session.courierEggsInCar = true;
+          ctx.session.courierItemsInCar = true;
           return next();
         }
       } else {
         return next();
       }
     } else {
-      if (!ctx.session.currentEggs || typeof ctx.session.currentEggs === "undefined" || Object.keys(ctx.session.currentEggs).length === 0) {
+      if (!ctx.session.currentItems || typeof ctx.session.currentItems === "undefined" || Object.keys(ctx.session.currentItems).length === 0) {
         const response = await axios.get(`/warehouse/activity/today`, {
           headers: {
             "x-user-telegram-chat-id": ctx.chat.id,
@@ -56,7 +56,7 @@ const courierAccepted = async (ctx, next) => {
     
         const warehouseActivity = response.data;
   
-        ctx.session.currentEggs = warehouseActivity.current;
+        ctx.session.currentItems = warehouseActivity.current;
       }
   
       return next();

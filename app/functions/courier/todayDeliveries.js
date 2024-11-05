@@ -37,7 +37,7 @@ module.exports = async (ctx) => {
     await ctx.reply(
       "Tanlang:",
       Markup.keyboard([
-        ["Tuxum yetkazildi", "Kunni yakunlash"],
+        ["Maxsulot yetkazildi", "Kunni yakunlash"],
         ["Chiqim", "Hisobot"]
       ])
     );

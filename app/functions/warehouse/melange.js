@@ -7,7 +7,7 @@ const { logger, readLog } = require("../../utils/logging");
 
 const { categoriesByTextObject } = require("../general/categories");
 
-const eggs = {
+const items = {
     "D1": 960,
     "D2": 990
 };
@@ -41,16 +41,16 @@ module.exports.promptBroken = async (ctx) => {
         // ]);
 
         // if (type === 2) {
-        //     await ctx.reply("Ombordagi singan tuxumlar sonini kiriting",
+        //     await ctx.reply("Ombordagi singan maxsulotlar sonini kiriting",
         //         Markup.keyboard([
         //             ["Bekor qilish ❌"]
         //         ]));
         // }
 
-        // categoriesByTextObject(ctx, "awaitingWarehouseDailyBroken", "singan", keyboard, type, "dailyBroken", eggs);
+        // categoriesByTextObject(ctx, "awaitingWarehouseDailyBroken", "singan", keyboard, type, "dailyBroken", items);
     } catch (error) {
         logger.error(error);
-        await ctx.reply("Singan tuxumlar sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
+        await ctx.reply("Singan maxsulotlar sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
@@ -62,7 +62,7 @@ module.exports.confirmBroken = async (ctx) => {
         await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
         logger.error(error);
-        await ctx.reply("Nasechka tuxum sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
+        await ctx.reply("Nasechka maxsulot sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
@@ -84,16 +84,16 @@ module.exports.promptIncision = async (ctx) => {
         ]);
 
         if (type === 2) {
-            await ctx.reply("Nasechka tuxum sonini kiriting",
+            await ctx.reply("Nasechka maxsulot sonini kiriting",
                 Markup.keyboard([
                     ["Bekor qilish ❌"]
                 ]));
         }
 
-        categoriesByTextObject(ctx, "awaitingWarehouseDailyIncision", "nasechka", keyboard, type, "dailyIncision", eggs);
+        categoriesByTextObject(ctx, "awaitingWarehouseDailyIncision", "nasechka", keyboard, type, "dailyIncision", items);
     } catch (error) {
         logger.error(error);
-        await ctx.reply("Nasechka tuxumlar kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
+        await ctx.reply("Nasechka maxsulotlar kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
@@ -105,7 +105,7 @@ module.exports.confirmIncision = async (ctx) => {
         await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
         logger.error(error);
-        await ctx.reply("Butun tuxum sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
+        await ctx.reply("Butun maxsulot sonini kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
@@ -127,16 +127,16 @@ module.exports.promptIntact = async (ctx) => {
         ]);
 
         if (type === 2) {
-            await ctx.reply("Ombordagi qolgan tuxum sonini kiriting",
+            await ctx.reply("Ombordagi qolgan maxsulot sonini kiriting",
                 Markup.keyboard([
                     ["Bekor qilish ❌"]
                 ]));
         }
 
-        categoriesByTextObject(ctx, "awaitingWarehouseDailyIntact", "butun", keyboard, type, "dailyIntact", eggs);
+        categoriesByTextObject(ctx, "awaitingWarehouseDailyIntact", "butun", keyboard, type, "dailyIntact", items);
     } catch (error) {
         logger.error(error);
-        await ctx.reply("Butun tuxum kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
+        await ctx.reply("Butun maxsulot kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 }
 
@@ -186,7 +186,7 @@ module.exports.confirmIntact = async (ctx) => {
         // const combinedBroken = updateCategorySum(totalBroken, dailyBroken);
 
         // if (exceedsBrokenByCategory(combinedBroken, dailyIntact, dailyIncision)) {
-        //     await cancel(ctx, "Butun va nasechka tuxumlar soni singan tuxumlar sonidan ko’p bo’lishi mumkin emas", true);
+        //     await cancel(ctx, "Butun va nasechka maxsulotlar soni singan maxsulotlar sonidan ko’p bo’lishi mumkin emas", true);
         //     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
         //     return;
         // }
@@ -196,7 +196,7 @@ module.exports.confirmIntact = async (ctx) => {
         await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     } catch (error) {
         logger.error(error);
-        await ctx.reply("Butun tuxumlarni kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
+        await ctx.reply("Butun maxsulotlarni kiritishda xatolik yuz berdi. Qayta uruni ko’ring");
     }
 };
 
@@ -224,7 +224,7 @@ module.exports.promptMelange = async (ctx) => {
         //     }
         // }
 
-        categoriesByTextObject(ctx, "awaitingWarehouseDailyMelange", "litr melanj", keyboard, type, "dailyMelange", eggs, true);
+        categoriesByTextObject(ctx, "awaitingWarehouseDailyMelange", "litr melanj", keyboard, type, "dailyMelange", items, true);
     } catch (error) {
         logger.error(error);
         await ctx.reply("Melanj kiritishda xatolik yuz berdi. Qayta uruni ko’ring");

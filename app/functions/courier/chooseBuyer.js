@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { logger, readLog } = require("../../utils/logging");
-const eggsDelivered = require("./eggsDelivered");
+const itemsDelivered = require("./itemsDelivered");
 const cancel = require("../general/cancel");
 
 // Function to read the debt limit
@@ -76,9 +76,9 @@ module.exports = async (ctx) => {
     ctx.session.buyer = {
       ...buyer,
       addedAt: new Date(),
-      eggsDelivered: 0,
+      itemsDelivered: 0,
       paymentAmount: 0,
-      egg_price: buyerActivity.price || prices,
+      item_price: buyerActivity.price || prices,
       debt: buyerDebt,
       debt_limit: buyer.debt_limit || debtLimit
     };
@@ -87,12 +87,12 @@ module.exports = async (ctx) => {
       return;
     }
 
-    await ctx.reply("Yetkazilgan tuxumlar sonini kiriting:",
+    await ctx.reply("Yetkazilgan maxsulotlar sonini kiriting:",
       Markup.keyboard([
         ["Bekor qilish ❌"]
     ]));
     
-    eggsDelivered.deliverEggs(ctx);
+    itemsDelivered.deliverItems(ctx);
 
   } catch (error) {
     logger.error(error);

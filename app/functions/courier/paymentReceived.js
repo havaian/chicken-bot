@@ -112,26 +112,26 @@ const handleCircleVideo = async (ctx) => {
     const paymentAmount = parseInt(selectedBuyer.paymentAmount, 10);
 
     let totalPrice = 0;
-    let eggsMsg = "";
+    let itemsMsg = "";
 
     const current = courierActivity.current || {};
 
-    const egg_price = selectedBuyer.egg_price;
+    const item_price = selectedBuyer.item_price;
 
-    for (let x in selectedBuyer.eggsDelivered) {   
-      const amount = selectedBuyer.eggsDelivered[x].amount;
-      const category = selectedBuyer.eggsDelivered[x].category;
+    for (let x in selectedBuyer.itemsDelivered) {   
+      const amount = selectedBuyer.itemsDelivered[x].amount;
+      const category = selectedBuyer.itemsDelivered[x].category;
 
-      // Necessary to have the price of eggs in the report
-      selectedBuyer.eggsDelivered[x].price = egg_price[selectedBuyer.eggsDelivered[x].category];
+      // Necessary to have the price of items in the report
+      selectedBuyer.itemsDelivered[x].price = item_price[selectedBuyer.itemsDelivered[x].category];
 
-      totalPrice += amount * egg_price[category];
+      totalPrice += amount * item_price[category];
       
-      eggsMsg += amount > 0 ? `${category}: ${amount}ta (${egg_price[category]})\n` : "";
+      itemsMsg += amount > 0 ? `${category}: ${amount}ta (${item_price[category]})\n` : "";
 
       if (Object.keys(current).length > 0) {
         if (current[category] - amount < 0) { 
-          await ctx.reply("Sizning moshinangizda tuxum yetarli emas"); 
+          await ctx.reply("Sizning moshinangizda maxsulot yetarli emas"); 
           return; 
         } else { 
           current[category] = current[category] - amount;
@@ -150,7 +150,7 @@ const handleCircleVideo = async (ctx) => {
         phone_num: courier.phone_num,
         car_num: courier.car_num,
       },
-      eggs: selectedBuyer.eggsDelivered || [],
+      items: selectedBuyer.itemsDelivered || [],
       payment: paymentAmount || 0,
       debt: buyerActivity.debt + (totalPrice || 0) - (paymentAmount || 0),
       time: new Date().toLocaleString(),
@@ -172,7 +172,7 @@ const handleCircleVideo = async (ctx) => {
     console.log(updatedBuyerActivity.debt);
 
     const text = await message(
-      eggsMsg,
+      itemsMsg,
       selectedBuyer.paymentAmount,
       totalPrice - paymentAmount,
       totalPrice,
@@ -199,7 +199,7 @@ const handleCircleVideo = async (ctx) => {
         full_name: selectedBuyer.full_name,
         phone_num: selectedBuyer.phone_num,
       },
-      eggs: selectedBuyer.eggsDelivered || [],
+      items: selectedBuyer.itemsDelivered || [],
       payment: paymentAmount || 0,
       debt: buyerActivity.debt + totalPrice - paymentAmount,
       time: new Date().toLocaleString(), // Add the time of the delivery
@@ -233,7 +233,7 @@ const handleCircleVideo = async (ctx) => {
     updatedCourierActivity.car_num = courier.car_num;
     
     try {
-      await report(updatedCourierActivity, ctx, phone_num, full_name, "Tuxum yetkazildi", forward = true);
+      await report(updatedCourierActivity, ctx, phone_num, full_name, "Maxsulot yetkazildi", forward = true);
     } catch (reportError) {
       console.log("Error in report function:", reportError);
       // Optionally, you can send a message to the user or perform any other error handling

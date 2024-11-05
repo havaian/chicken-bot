@@ -69,7 +69,7 @@ module.exports = async (ctx) => {
         await ctx.reply(
           "Salom!",
           Markup.keyboard([
-            ["Tuxum yetkazildi", "Kunni yakunlash"],
+            ["Maxsulot yetkazildi", "Kunni yakunlash"],
             ["Chiqim", "Hisobot"]
           ])
         );
@@ -78,9 +78,9 @@ module.exports = async (ctx) => {
       await ctx.reply(
         "Salom!",
         Markup.keyboard([
-          ["Tuxum kirimi", "Tuxum chiqimi"], 
-          ["Singan tuxum", "Qayta yuklash"],
-          // ["Singan tuxum", "Qolgan tuxum"], 
+          ["Maxsulot kirimi", "Maxsulot chiqimi"], 
+          ["Singan maxsulot", "Qayta yuklash"],
+          // ["Singan maxsulot", "Qolgan maxsulot"], 
           ["Ombor holati"]
         ])
       );

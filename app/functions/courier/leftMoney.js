@@ -7,7 +7,7 @@ const cancel = require("../general/cancel");
 
 const { sendDayFinished } = require("./finishDay");
 
-const eggsDataKey = "leftMoneyAmount";
+const itemsDataKey = "leftMoneyAmount";
 
 exports.sendLeftMoney = async (ctx) => {
   try {
@@ -44,7 +44,7 @@ exports.confirmLeftMoney = async (ctx) => {
         );
         return;
       }
-      ctx.session[eggsDataKey] = amount;
+      ctx.session[itemsDataKey] = amount;
   
       await ctx.reply(
         `Siz ${amount} so’m pul kassaga topshirdingizmi?`,
@@ -68,7 +68,7 @@ exports.addLeftMoney = async (ctx) => {
   try {
     ctx.session.updatedActivity = {
       ...ctx.session.updatedActivity,
-      money_by_courier: ctx.session[eggsDataKey],
+      money_by_courier: ctx.session[itemsDataKey],
     };
 
     const deleteMsg = ctx?.match && ctx?.match[0] === "confirm-money-left-yes";
@@ -77,7 +77,7 @@ exports.addLeftMoney = async (ctx) => {
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });;
     }
   
-    ctx.session[eggsDataKey] = undefined;
+    ctx.session[itemsDataKey] = undefined;
     ctx.session.categories = null;
     ctx.session.currentCategoryIndex = null;
 

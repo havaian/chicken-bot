@@ -2,14 +2,14 @@ const { Markup } = require("telegraf");
 const cancel = require("../functions/general/cancel");
 const location = require("../functions/courier/location");
 const expenses = require("../functions/courier/expenses");
-const leftEggs = require("../functions/courier/leftEggs");
+const leftItems = require("../functions/courier/leftItems");
 const leftMoney = require("../functions/courier/leftMoney");
-const brokenEggs = require("../functions/courier/brokenEggs");
+const brokenItems = require("../functions/courier/brokenItems");
 const incision = require("../functions/courier/incision");
 const courierMelange = require("../functions/courier/melange");
-const eggsDelivered = require("../functions/courier/eggsDelivered");
+const itemsDelivered = require("../functions/courier/itemsDelivered");
 const paymentReceived = require("../functions/courier/paymentReceived");
-const eggIntake = require("../functions/warehouse/eggIntake");
+const itemIntake = require("../functions/warehouse/itemIntake");
 const selectCourier = require("../functions/warehouse/selectCourier");
 const selectCourierAccepted = require("../functions/warehouse/selectCourierAccepted");
 const melange = require("../functions/warehouse/melange");
@@ -29,22 +29,22 @@ const awaitingPromptHandler = async (ctx, next) => {
       }
   
       const falseUnhandleList = [
-        "awaitingCourierBrokenEggs",
-        "awaitingEggsDistributedEggs",
-        "awaitingEggsDistributedAcceptedEggs",
-        "awaitingCourierRemainedEggs",
-        "awaitingCourierMelangeEggs",
-        "awaitingBrokenEggs",
-        "awaitingIncisionEggs",
-        "awaitingMelangeEggs",
+        "awaitingCourierBrokenItems",
+        "awaitingItemsDistributedItems",
+        "awaitingItemsDistributedAcceptedItems",
+        "awaitingCourierRemainedItems",
+        "awaitingCourierMelangeItems",
+        "awaitingBrokenItems",
+        "awaitingIncisionItems",
+        "awaitingMelangeItems",
         "awaitingLeft",
-        "awaitingIntakeEggs",
+        "awaitingIntakeItems",
         "awaitingWarehouseDailyBroken",
         "awaitingWarehouseDailyIncision",
         "awaitingWarehouseDailyIntact",
         "awaitingWarehouseRemained",
         "awaitingWarehouseDailyMelange",
-        "awaitingEggsDelivered",
+        "awaitingItemsDelivered",
         "awaitingPaymentAmount"
       ]
   
@@ -65,7 +65,7 @@ const awaitingPromptHandler = async (ctx, next) => {
         }
         ctx.match = [`${matchPrefix}:${text}:${specialKey}`];
         await handler(ctx);
-        if (sessionKey != "awaitingEggsDelivered") {
+        if (sessionKey != "awaitingItemsDelivered") {
           ctx.session[sessionKey] = true;
         }
       };
@@ -95,13 +95,13 @@ const awaitingPromptHandler = async (ctx, next) => {
         case ctx.session.awaitingCircleVideoWarehouse2:
           await remained.handleCircleVideo(ctx);
           break;
-        case ctx.session.awaitingEggsDelivered:
+        case ctx.session.awaitingItemsDelivered:
           await handleNumericInput(
             ctx,
             text,
-            "eggs-amount",
-            eggsDelivered.deliverEggs,
-            "awaitingEggsDelivered",
+            "items-amount",
+            itemsDelivered.deliverItems,
+            "awaitingItemsDelivered",
             ctx.session.categories[ctx.session.currentCategoryIndex]
           );
           break;
@@ -120,38 +120,38 @@ const awaitingPromptHandler = async (ctx, next) => {
         case ctx.session.awaitingMoney:
           await handleSpecificNumericInput(ctx, leftMoney.confirmLeftMoney, "awaitingMoney");
           break;
-        case ctx.session.awaitingBrokenEggs:
-          await handleSpecificNumericInput(ctx, brokenEggs.sendBrokenEggs, "awaitingBrokenEggs");
+        case ctx.session.awaitingBrokenItems:
+          await handleSpecificNumericInput(ctx, brokenItems.sendBrokenItems, "awaitingBrokenItems");
           break;
-        case ctx.session.awaitingIncisionEggs:
-          await handleSpecificNumericInput(ctx, incision.sendIncisionEggs, "awaitingIncisionEggs");
+        case ctx.session.awaitingIncisionItems:
+          await handleSpecificNumericInput(ctx, incision.sendIncisionItems, "awaitingIncisionItems");
           break;
-        case ctx.session.awaitingIntactEggs:
-          await handleSpecificNumericInput(ctx, intact.sendIntactEggs, "awaitingIntactEggs");
+        case ctx.session.awaitingIntactItems:
+          await handleSpecificNumericInput(ctx, intact.sendIntactItems, "awaitingIntactItems");
           break;
-        case ctx.session.awaitingMelangeEggs:
-          await handleSpecificNumericInput(ctx, courierMelange.sendMelange, "awaitingMelangeEggs");
+        case ctx.session.awaitingMelangeItems:
+          await handleSpecificNumericInput(ctx, courierMelange.sendMelange, "awaitingMelangeItems");
           break;
         case ctx.session.awaitingLeft:
-          await handleSpecificNumericInput(ctx, leftEggs.sendLeft, "awaitingLeft");
+          await handleSpecificNumericInput(ctx, leftItems.sendLeft, "awaitingLeft");
           break;
-        case ctx.session.awaitingIntakeEggs:
-          await handleSpecificNumericInput(ctx, eggIntake.sendIntakeEggs, "awaitingIntakeEggs");
+        case ctx.session.awaitingIntakeItems:
+          await handleSpecificNumericInput(ctx, itemIntake.sendIntakeItems, "awaitingIntakeItems");
           break;
-        case ctx.session.awaitingEggsDistributedEggs:
-          await handleSpecificNumericInput(ctx, selectCourier.promptDistribution, "awaitingEggsDistributedEggs");
+        case ctx.session.awaitingItemsDistributedItems:
+          await handleSpecificNumericInput(ctx, selectCourier.promptDistribution, "awaitingItemsDistributedItems");
           break;
-        case ctx.session.awaitingEggsDistributedAcceptedEggs:
-          await handleSpecificNumericInput(ctx, selectCourierAccepted.promptDistribution, "awaitingEggsDistributedAcceptedEggs");
+        case ctx.session.awaitingItemsDistributedAcceptedItems:
+          await handleSpecificNumericInput(ctx, selectCourierAccepted.promptDistribution, "awaitingItemsDistributedAcceptedItems");
           break;
-        case ctx.session.awaitingCourierRemainedEggs:
-          await handleSpecificNumericInput(ctx, selectCourier.promptCourierRemained, "awaitingCourierRemainedEggs");
+        case ctx.session.awaitingCourierRemainedItems:
+          await handleSpecificNumericInput(ctx, selectCourier.promptCourierRemained, "awaitingCourierRemainedItems");
           break;
-        case ctx.session.awaitingCourierMelangeEggs:
-          await handleSpecificNumericInput(ctx, selectCourier.promptCourierMelange,  "awaitingCourierMelangeEggs");
+        case ctx.session.awaitingCourierMelangeItems:
+          await handleSpecificNumericInput(ctx, selectCourier.promptCourierMelange,  "awaitingCourierMelangeItems");
           break;
-        case ctx.session.awaitingCourierBrokenEggs:
-          await handleSpecificNumericInput(ctx, selectCourier.promptCourierBroken, "awaitingCourierBrokenEggs");
+        case ctx.session.awaitingCourierBrokenItems:
+          await handleSpecificNumericInput(ctx, selectCourier.promptCourierBroken, "awaitingCourierBrokenItems");
           break;
         case ctx.session.awaitingWarehouseDailyBroken:
           await handleSpecificNumericInput(ctx, melange.promptBroken, "awaitingWarehouseDailyBroken");
