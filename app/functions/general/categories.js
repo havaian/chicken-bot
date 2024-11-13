@@ -93,11 +93,7 @@ module.exports.categoriesByTextObject = async (ctx, sessionKey, message, keyboar
                 }
 
                 if (checkForItems && ctx.session.currentItems[category] < amount) {
-<<<<<<< Updated upstream
                     await ctx.reply("Siz kiritgan maxsulot soni bor maxsulot sonidan katta");
-=======
-                    await ctx.reply("Siz kiritgan tuxum soni bor tuxum sonidan katta");
->>>>>>> Stashed changes
                     return;
                 }
     

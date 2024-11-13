@@ -79,13 +79,8 @@ module.exports = async (ctx) => {
         "Salom!",
         Markup.keyboard([
           ["Maxsulot kirimi", "Maxsulot chiqimi"], 
-<<<<<<< Updated upstream
           ["Singan maxsulot", "Qayta yuklash"],
           // ["Singan maxsulot", "Qolgan maxsulot"], 
-=======
-          ["Singan tuxum", "Qayta yuklash"],
-          // ["Singan tuxum", "Qolgan tuxum"], 
->>>>>>> Stashed changes
           ["Ombor holati"]
         ])
       );

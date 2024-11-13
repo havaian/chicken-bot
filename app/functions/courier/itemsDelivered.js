@@ -64,11 +64,7 @@ module.exports.deliverItems = async (ctx) => {
       ctx.session[sessionKey] = false;
 
       if (ctx.session.currentItems[category] < amount) {
-<<<<<<< Updated upstream:app/functions/courier/itemsDelivered.js
           await ctx.reply("Siz kiritgan maxsulot soni mashinada bor maxsulot sonidan katta");
-=======
-          await ctx.reply("Siz kiritgan tuxum soni mashinada bor tuxum sonidan katta");
->>>>>>> Stashed changes:app/functions/courier/eggsDelivered.js
 
           ctx.session[sessionKey] = true;
 
@@ -77,11 +73,7 @@ module.exports.deliverItems = async (ctx) => {
           console.log(ctx.session.currentCategoryIndex);
   
           await ctx.reply(
-<<<<<<< Updated upstream:app/functions/courier/itemsDelivered.js
             `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta maxsulot yetkazildi?`,
-=======
-            `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta tuxum yetkazildi?`,
->>>>>>> Stashed changes:app/functions/courier/eggsDelivered.js
             Markup.inlineKeyboard(generateItemButtons(category, ctx.session.currentCategoryIndex))
           );
           return;
@@ -105,11 +97,7 @@ module.exports.deliverItems = async (ctx) => {
       
       ctx.session[sessionKey] = true;
       await ctx.reply(
-<<<<<<< Updated upstream:app/functions/courier/itemsDelivered.js
         `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta maxsulot yetkazildi?`,
-=======
-        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta tuxum yetkazildi?`,
->>>>>>> Stashed changes:app/functions/courier/eggsDelivered.js
         Markup.keyboard([
             ["Bekor qilish ❌"]
         ]));
@@ -131,11 +119,7 @@ module.exports.deliverItems = async (ctx) => {
       const category = ctx.session.categories[ctx.session.currentCategoryIndex];
 
       await ctx.reply(
-<<<<<<< Updated upstream:app/functions/courier/itemsDelivered.js
         `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta maxsulot yetkazildi?`,
-=======
-        `Mijoz: ${ctx.session.buyer.full_name || ""}\n\nKategoriya: ${letters[category]}\n\nNarxi: ${ctx.session.buyer.item_price[category]}\n\nNechta tuxum yetkazildi?`,
->>>>>>> Stashed changes:app/functions/courier/eggsDelivered.js
         Markup.inlineKeyboard(generateItemButtons(category, ctx.session.currentCategoryIndex))
       );
     } else {

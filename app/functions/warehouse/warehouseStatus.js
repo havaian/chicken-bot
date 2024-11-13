@@ -25,11 +25,7 @@ module.exports = async (ctx) => {
       "Tanlang:",
       Markup.keyboard([
         ["Maxsulot kirimi", "Maxsulot chiqimi"], 
-<<<<<<< Updated upstream
         ["Singan maxsulot", "Qayta yuklash"],
-=======
-        ["Singan tuxum", "Qayta yuklash"],
->>>>>>> Stashed changes
         ["Ombor holati"]
       ])
     );

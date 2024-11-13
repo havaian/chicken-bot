@@ -132,15 +132,9 @@ const generateCourierHTML = (data, filename) => {
     // Function to generate the full HTML report
     const generateFullHTML = (deliveryTableHTML, partNumber, totalParts) => {
       const rows = [
-<<<<<<< Updated upstream
         ["1", "Tarqatilgan maxsulot soni", ...Object.keys(itemPrices).map(category => formatNumber(totalDeliveredByCategory[category] || 0)), "", "Umumiy yig'ilgan pul:", formatNumber(totalPayments)],
         ["2", "Qolgan maxsulot soni", ...Object.keys(itemPrices).map(category => formatNumber(current_by_courier[category] || 0)), "", "Chiqim:", formatNumber(expenses)],
         ["3", "Nasechka maxsulot soni", ...Object.keys(itemPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", expenses > 0 ? formatNumber(totalPayments - expenses) : 0],
-=======
-        ["1", "Tarqatilgan tuxum soni", ...Object.keys(itemPrices).map(category => formatNumber(totalDeliveredByCategory[category] || 0)), "", "Umumiy yig'ilgan pul:", formatNumber(totalPayments)],
-        ["2", "Qolgan tuxum soni", ...Object.keys(itemPrices).map(category => formatNumber(current_by_courier[category] || 0)), "", "Chiqim:", formatNumber(expenses)],
-        ["3", "Nasechka tuxum soni", ...Object.keys(itemPrices).map(category => formatNumber(incision[category] || 0)), "", "Topshiriladigan pul:", expenses > 0 ? formatNumber(totalPayments - expenses) : 0],
->>>>>>> Stashed changes
         ["4", "Maxsulot kamomad", ...Object.keys(itemPrices).map(category => {
           const shortage = calculateShortage(category);
           return day_finished ? formatNumber(shortage) : 0;
