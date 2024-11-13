@@ -46,11 +46,7 @@ const promptIncision = async (ctx, type) => {
         }
 
         // if (amount > items[category]) {
-<<<<<<< Updated upstream
         //   await ctx.reply(`Sizning mashinangizda ${items[category]}ta ${letters[category]} kategoriya maxsulot qolgan!`);
-=======
-        //   await ctx.reply(`Sizning mashinangizda ${items[category]}ta ${letters[category]} kategoriya tuxum qolgan!`);
->>>>>>> Stashed changes
         //   return;
         // }
   
@@ -112,11 +108,7 @@ const confirmIncisionItems = async (ctx) => {
 
     if (!incisionItems || Object.keys(incisionItems).length === 0) {
       amountMsg = "yo'q";
-<<<<<<< Updated upstream
       await ctx.reply(`Nasechka maxsulotlar: ${amountMsg}\n\n`);
-=======
-      await ctx.reply(`Nasechka tuxumlar: ${amountMsg}\n\n`);
->>>>>>> Stashed changes
       this.addIncisionItems(ctx);
       return;
     } else {
@@ -172,11 +164,7 @@ exports.addIncisionItems = async (ctx) => {
       }     
 
       // if (current[x] < ctx.session[itemsDataKey][x]) {
-<<<<<<< Updated upstream
       //   await ctx.reply(`Sizning mashinangizdagi ${letters[x]} qolgan maxsulot soni ${ctx.session.currentItems[x]}!`);
-=======
-      //   await ctx.reply(`Sizning mashinangizdagi ${letters[x]} qolgan tuxum soni ${ctx.session.currentItems[x]}!`);
->>>>>>> Stashed changes
   
       //   ctx.session[itemsDataKey] = undefined;
       //   ctx.session.categories = null;
