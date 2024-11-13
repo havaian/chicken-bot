@@ -188,7 +188,11 @@ const handleCircleVideo = async (ctx) => {
         current[z] = 0;
       }
       if (current[z] - ctx.session.distributedItemsData[x] < 0) {
+<<<<<<< Updated upstream
         await ctx.reply("Kuryerga yuklangan maxsulot soni omborda bor maxsulot sonidan katta");
+=======
+        await ctx.reply("Kuryerga yuklangan tuxum soni omborda bor tuxum sonidan katta");
+>>>>>>> Stashed changes
         return;
       }
     }
@@ -236,7 +240,11 @@ const handleCircleVideo = async (ctx) => {
     const courier = courierResponse.data;
     
     const finalMessageGroup = `⚠️ Tasdiqlashni kutilmoqda\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedItemsMessage}`;
+<<<<<<< Updated upstream
     const finalMessageCourier = `⚠️ Sizning xisobingizga maxsulot qo’shildi.\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedItemsMessage}`;
+=======
+    const finalMessageCourier = `⚠️ Sizning xisobingizga tuxum qo’shildi.\n\n${full_name} ${car_num ? "(" + car_num + ")" : ""}:\n\nQayta yuklangan:\n${distributedItemsMessage}`;
+>>>>>>> Stashed changes
 
     // Send message to courier
     const messageToCourier = await botInstance.telegram.sendMessage(

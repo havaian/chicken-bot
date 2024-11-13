@@ -21,8 +21,13 @@ module.exports = async (ctx, message = "Bekor qilindi.", showKeyboard = true, de
       } else if (ctx.session.user.userType === "warehouse") {
         keyboardOptions = Markup.keyboard([
           ["Maxsulot kirimi", "Maxsulot chiqimi"],
+<<<<<<< Updated upstream
           ["Singan maxsulot", "Qayta yuklash"],
           // ["Singan maxsulot", "Qolgan maxsulot"],
+=======
+          ["Singan tuxum", "Qayta yuklash"],
+          // ["Singan tuxum", "Qolgan tuxum"],
+>>>>>>> Stashed changes
           ["Ombor holati"]
         ]);
       }

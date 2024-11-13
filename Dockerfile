@@ -71,5 +71,5 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 # Run the application
 # CMD ["npm", "run", "build"]
-# CMD ["npm", "run", "dev"]
-CMD ["npm", "run", "stop"]
+CMD ["npm", "run", "dev"]
+# CMD ["npm", "run", "stop"]

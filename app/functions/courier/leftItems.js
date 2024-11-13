@@ -34,7 +34,11 @@ const promptLeft = async (ctx, type) => {
         }
 
         // if (amount > items[category]) {
+<<<<<<< Updated upstream:app/functions/courier/leftItems.js
         //   await ctx.reply(`Sizning mashinangizda ${items[category]}ta ${letters[category]} kategoriya maxsulot qolgan!`);
+=======
+        //   await ctx.reply(`Sizning mashinangizda ${items[category]}ta ${letters[category]} kategoriya tuxum qolgan!`);
+>>>>>>> Stashed changes:app/functions/courier/leftEggs.js
         //   return;
         // }
   
